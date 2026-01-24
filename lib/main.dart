@@ -42,22 +42,7 @@ class _AtioraAppState extends State<AtioraApp> {
       theme: AppTheme.getTheme(context, ThemeMode.light),
       darkTheme: AppTheme.getTheme(context, ThemeMode.dark),
       initialRoute: AppRouter.login,
-      onGenerateRoute: _generateRoute,
+      onGenerateRoute: AppRouter.generateRoute,
     );
-  }
-
-  Route<dynamic> _generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case AppRouter.login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
-      case AppRouter.register:
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
-      case AppRouter.home:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(body: Text('Home TODO')),
-        );
-      default:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
-    }
   }
 }

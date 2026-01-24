@@ -1,7 +1,6 @@
 import 'package:atiora/data/models/user_model.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 abstract class AuthEvent {}
