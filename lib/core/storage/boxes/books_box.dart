@@ -1,6 +1,6 @@
-import 'package:atiora/data/models/book_model.dart';
+/*import 'package:atiora/data/models/book_model.dart';
 import 'package:hive/hive.dart';
-/*
+
 part 'books_box.g.dart';
 
 @HiveType(typeId: 0)

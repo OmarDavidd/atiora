@@ -8,12 +8,10 @@ class SupabaseProvider {
 
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
       throw Exception(
-        '⚠️ Variables .env no configuradas. Verifica SUPABASE_URL y SUPABASE_ANON_KEY.',
+        ' Variables .env no configuradas. Verifica SUPABASE_URL y SUPABASE_ANON_KEY.',
       );
     }
 
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
-
-    print('[Supabase] ✅ Conectado correctamente');
   }
 }

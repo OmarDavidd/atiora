@@ -18,8 +18,6 @@ class HiveService {
     booksBox = await Hive.openBox('books');
     notesBox = await Hive.openBox('notes');
     profileBox = await Hive.openBox('profiles');
-
-    print('✅ Hive JSON inicializado - 100% offline');
   }
 
   // BOOKS
@@ -30,9 +28,7 @@ class HiveService {
   }
 
   List<BookModel> getAllBooks() {
-    return booksBox.values
-        .map((json) => BookModel.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return booksBox.values.map((json) => BookModel.fromJson(json)).toList();
   }
 
   Future<void> deleteBook(String id) => booksBox.delete(id);
@@ -47,7 +43,7 @@ class HiveService {
   List<NoteModel> getNotesByBook(String bookId) {
     return notesBox.values
         .where((json) => (json as Map)['book_id'] == bookId)
-        .map((json) => NoteModel.fromJson(json as Map<String, dynamic>))
+        .map((json) => NoteModel.fromJson(json))
         .toList();
   }
 

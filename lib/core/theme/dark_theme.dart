@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../utils/constants.dart';
 
@@ -54,28 +55,28 @@ class DarkTheme {
       filled: true,
       fillColor: AppColors.neutral500.withAlpha(26), // Reemplaza withOpacity
     ),
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
+    textTheme: TextTheme(
+      headlineLarge: GoogleFonts.jaini(
         fontSize: 28,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w400,
         color: AppColors.neutral0,
       ),
-      headlineMedium: TextStyle(
+      headlineMedium: GoogleFonts.jaini(
         fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w400,
         color: AppColors.neutral0,
       ),
-      bodyLarge: TextStyle(
+      bodyLarge: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: AppColors.neutral0,
       ),
-      bodyMedium: TextStyle(
+      bodyMedium: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: AppColors.neutral400,
       ),
-      labelLarge: TextStyle(
+      labelLarge: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.backgroundPrimary,
