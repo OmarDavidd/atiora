@@ -26,6 +26,13 @@ class AppHelpers {
     }
   }
 
+  static const List<String> status = [
+    'Leyendo',
+    'Completado',
+    'Pausado',
+    'Pendiente',
+  ];
+
   /// Icono por tipo de nota
   static IconData getNoteTypeIcon(String type) {
     switch (type.toLowerCase()) {
@@ -43,4 +50,16 @@ class AppHelpers {
         return Icons.note;
     }
   }
+
+  static const List<String> allGenres = [
+    'Ficción',
+    'Ciencia Ficción',
+    'Fantasía',
+    'Romance',
+    'Misterio',
+    'Terror',
+    'No Ficción',
+    'Biografía',
+    'Autoayuda',
+  ];
 }

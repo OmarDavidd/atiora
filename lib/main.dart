@@ -1,11 +1,11 @@
-import 'package:atiora/features/auth/presentation/screens/login_screen.dart';
-import 'package:atiora/features/auth/presentation/screens/register_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'core/di/injection_container.dart';
-import 'core/theme/app_theme.dart';
-import 'core/navigation/app_router.dart';
+import 'package:atiora/core/di/injection_container.dart';
+import 'package:atiora/core/theme/app_theme.dart';
+import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:atiora/features/auth/presentation/widgets/auth_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,27 +22,27 @@ class AtioraApp extends StatefulWidget {
 }
 
 class _AtioraAppState extends State<AtioraApp> {
-  @override
-  void initState() {
-    super.initState();
-    _loadTheme();
-  }
-
   Future<void> _loadTheme() async {
     await AppTheme.loadThemeMode();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Atiora',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      //themeMode: _themeMode,
-      theme: AppTheme.getTheme(context, ThemeMode.light),
-      darkTheme: AppTheme.getTheme(context, ThemeMode.dark),
-      initialRoute: AppRouter.login,
-      onGenerateRoute: AppRouter.generateRoute,
+    return FutureBuilder(
+      future: _loadTheme(),
+      builder: (context, snapshot) {
+        return BlocProvider<AuthBloc>(
+          create: (_) => sl<AuthBloc>()..add(CheckAuthEvent()),
+          child: MaterialApp(
+            title: 'Atiora',
+            debugShowCheckedModeBanner: false,
+            themeMode: ThemeMode.dark,
+            theme: AppTheme.getTheme(context, ThemeMode.light),
+            darkTheme: AppTheme.getTheme(context, ThemeMode.dark),
+            home: const AuthWrapper(),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,10 +1,8 @@
-import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:atiora/core/navigation/app_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -36,23 +34,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AuthBloc>(),
-      child: Scaffold(
-        body: BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(context, AppRouter.main);
-            } else if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 4),
-                ),
-              );
-            }
-          },
+    return Scaffold(
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             return Center(
               child: Padding(
@@ -125,10 +120,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         Center(
                           child: TextButton(
-                            onPressed: () => Navigator.pushNamed(
-                              context,
-                              AppRouter.register,
-                            ),
+                            onPressed: () {
+                              // TODO: Navigator.pushNamed(AppRouter.register)
+                            },
                             child: const Text('¿No tienes cuenta? Regístrate'),
                           ),
                         ),

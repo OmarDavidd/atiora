@@ -1,5 +1,3 @@
-import 'package:atiora/core/di/injection_container.dart';
-import 'package:atiora/core/navigation/app_router.dart';
 import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/widgets/auth_text_field.dart';
@@ -40,23 +38,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AuthBloc>(),
-      child: Scaffold(
-        body: BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(context, AppRouter.main);
-            } else if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 4),
-                ),
-              );
-            }
-          },
+    return Scaffold(
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          // Solo maneja errores localmente
+          if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             return Center(
               child: Padding(
@@ -102,14 +98,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Email requerido';
                             }
-
                             final emailRegExp = RegExp(
                               r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                             );
                             if (!emailRegExp.hasMatch(value)) {
                               return 'Email inválido (use ejemplo@gmail.com)';
                             }
-
                             return null;
                           },
                         ),
@@ -134,10 +128,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           icon: Icons.lock_outline,
                           obscureText: true,
                           validator: (value) {
-                            if (value?.isEmpty ?? true)
+                            if (value?.isEmpty ?? true) {
                               return 'Confirmación requerida';
-                            if (value != _passwordController.text)
+                            }
+                            if (value != _passwordController.text) {
                               return 'Las contraseñas no coinciden';
+                            }
                             return null;
                           },
                         ),
@@ -165,8 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 16),
                         Center(
                           child: TextButton(
-                            onPressed: () =>
-                                Navigator.pushNamed(context, AppRouter.login),
+                            onPressed: () => Navigator.pop(context),
                             child: const Text(
                               '¿Ya tienes cuenta? Inicia sesión',
                             ),

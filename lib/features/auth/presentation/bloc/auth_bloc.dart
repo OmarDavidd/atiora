@@ -1,3 +1,5 @@
+import 'package:atiora/core/di/injection_container.dart';
+import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/data/models/user_model.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
@@ -14,6 +16,8 @@ class SignUpEvent extends AuthEvent {
   final String email, password;
   SignUpEvent(this.email, this.password);
 }
+
+class CheckAuthEvent extends AuthEvent {}
 
 abstract class AuthState {}
 
@@ -34,10 +38,12 @@ class AuthError extends AuthState {
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInUseCase signInUseCase;
   final SignUpUseCase signUpUseCase;
+  final AuthProvider authProvider = sl<AuthProvider>();
 
   AuthBloc(this.signInUseCase, this.signUpUseCase) : super(AuthInitial()) {
     on<SignInEvent>(_onSignIn);
     on<SignUpEvent>(_onSignUp);
+    on<CheckAuthEvent>(_onCheckAuth);
   }
 
   Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
@@ -50,7 +56,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError('Credenciales inválidas'));
       }
     } catch (e) {
-      emit(AuthError('Error de login: ${e.toString()}'));
+      emit(AuthError(e.toString()));
     }
   }
 
@@ -61,10 +67,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (user != null) {
         emit(AuthAuthenticated(user));
       } else {
-        emit(AuthError('Error de registro'));
+        emit(AuthError('Registro falló'));
       }
     } catch (e) {
-      emit(AuthError('Error: ${e.toString()}'));
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onCheckAuth(
+    CheckAuthEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = authProvider.currentUser;
+
+    if (user != null) {
+      emit(AuthAuthenticated(UserModel(id: user.id, email: user.email ?? '')));
+    } else {
+      emit(AuthInitial());
     }
   }
 }

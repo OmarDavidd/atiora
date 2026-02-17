@@ -10,12 +10,14 @@ class MainNavPage extends StatefulWidget {
 
 class MainNavPageState extends State<MainNavPage> {
   int _currentIndex = 0;
-  final List<Widget> _tabs = [HomeScreen(), HomeScreen(), HomeScreen()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _tabs),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [HomeScreen(), HomeScreen(), HomeScreen()],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

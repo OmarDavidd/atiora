@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/note_model.dart';
@@ -8,54 +9,53 @@ class HiveService {
   static HiveService get instance => _instance ??= HiveService._();
   HiveService._();
 
-  late Box<Map<String, dynamic>> booksBox;
-  late Box<Map<String, dynamic>> notesBox;
-  late Box<Map<String, dynamic>> profileBox;
+  late Box<dynamic> booksBox;
+  late Box<dynamic> notesBox;
+  late Box<dynamic> profileBox;
 
   Future<void> init() async {
     await Hive.initFlutter();
-
     booksBox = await Hive.openBox('books');
     notesBox = await Hive.openBox('notes');
     profileBox = await Hive.openBox('profiles');
   }
 
-  // BOOKS
-  Future<void> saveBook(BookModel book) => booksBox.put(book.id, book.toJson());
-  BookModel? getBook(String id) {
-    final json = booksBox.get(id);
-    return json != null ? BookModel.fromJson(json) : null;
+  Future<void> saveBook(BookModel book) async {
+    await booksBox.put(book.id, book.toJson());
   }
 
   List<BookModel> getAllBooks() {
-    return booksBox.values.map((json) => BookModel.fromJson(json)).toList();
+    final List<BookModel> books = [];
+    for (int i = 0; i < booksBox.length; i++) {
+      final dynamic raw = booksBox.getAt(i);
+      if (raw != null) {
+        try {
+          final Map<String, dynamic> json = <String, dynamic>{};
+          final map = raw as Map<dynamic, dynamic>;
+          map.forEach((dynamic k, dynamic v) => json[k.toString()] = v);
+          final book = BookModel.fromJson(json);
+          books.add(book);
+        } catch (e) {
+          debugPrint(' Skip invalid: $e');
+        }
+      }
+    }
+    return books;
+  }
+
+  BookModel? getBook(String id) {
+    final raw = booksBox.get(id);
+    if (raw == null) return null;
+    final Map<String, dynamic> json = {};
+    (raw as Map).forEach((k, v) => json[k.toString()] = v);
+    return BookModel.fromJson(json);
   }
 
   Future<void> deleteBook(String id) => booksBox.delete(id);
 
-  // NOTES
   Future<void> saveNote(NoteModel note) => notesBox.put(note.id, note.toJson());
-  NoteModel? getNote(String id) {
-    final json = notesBox.get(id);
-    return json != null ? NoteModel.fromJson(json) : null;
-  }
-
-  List<NoteModel> getNotesByBook(String bookId) {
-    return notesBox.values
-        .where((json) => (json as Map)['book_id'] == bookId)
-        .map((json) => NoteModel.fromJson(json))
-        .toList();
-  }
-
-  // PROFILE
   Future<void> saveProfile(ProfileModel profile) =>
       profileBox.put(profile.userId, profile.toJson());
-  ProfileModel? getProfile(String userId) {
-    final json = profileBox.get(userId);
-    return json != null ? ProfileModel.fromJson(json) : null;
-  }
 
-  Future<void> close() async {
-    await Hive.close();
-  }
+  Future<void> close() async => await Hive.close();
 }

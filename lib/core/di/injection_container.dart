@@ -44,10 +44,9 @@ Future<void> init() async {
   sl.registerLazySingleton<SignoutUseCase>(
     () => SignoutUseCase(sl<AuthRepository>()),
   );
-  sl.registerFactory<AuthBloc>(
+  sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(sl<SignInUseCase>(), sl<SignUpUseCase>()),
   );
-
   sl.registerLazySingleton<BooksLocalDataSource>(
     () => BooksLocalDataSource(sl<HiveService>()),
   );

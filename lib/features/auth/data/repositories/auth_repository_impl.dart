@@ -22,12 +22,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserModel?> signIn(String email, String password) async {
     try {
       final response = await _provider.signIn(email, password);
+
       if (response.user != null) {
-        return UserModel(id: response.user!.id, email: response.user!.email!);
+        final user = UserModel(
+          id: response.user!.id,
+          email: response.user!.email!,
+        );
+        return user;
       }
       return null;
     } catch (e) {
-      return null;
+      rethrow;
     }
   }
 
@@ -35,12 +40,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserModel?> signUp(String email, String password) async {
     try {
       final response = await _provider.signUp(email, password);
+
       if (response.user != null) {
-        return UserModel(id: response.user!.id, email: response.user!.email!);
+        final user = UserModel(
+          id: response.user!.id,
+          email: response.user!.email!,
+        );
+        return user;
       }
       return null;
     } catch (e) {
-      return null;
+      rethrow;
     }
   }
 
@@ -49,7 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _provider.signOut();
     } catch (e) {
-      print(e);
+      rethrow;
     }
   }
 }

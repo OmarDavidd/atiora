@@ -6,9 +6,8 @@ import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 class BooksRepositoryImpl implements BooksRepository {
   final BooksLocalDataSource _local;
   final BooksRemoteDataSource _remote;
-  final String _userId;
 
-  BooksRepositoryImpl(this._local, this._remote, this._userId);
+  BooksRepositoryImpl(this._local, this._remote);
 
   @override
   Future<List<BookModel>> getBooks() async {
