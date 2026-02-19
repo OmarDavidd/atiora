@@ -3,16 +3,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BooksRemoteDataSource {
   final SupabaseClient _supabase;
-  final String _userId;
-  BooksRemoteDataSource(this._supabase, this._userId);
+
+  BooksRemoteDataSource(this._supabase);
 
   Future<List<BookModel>> getBooks() async {
     try {
-      final books = await _supabase
+      final response = await _supabase
           .from('books')
           .select()
-          .eq('user_id', _userId);
-      return books.map((json) => BookModel.fromJson(json)).toList();
+          .eq('user_id', _supabase.auth.currentUser!.id);
+      return response.map((json) => BookModel.fromJson(json)).toList();
     } catch (e) {
       return [];
     }
@@ -20,13 +20,13 @@ class BooksRemoteDataSource {
 
   Future<BookModel?> getBook(String id) async {
     try {
-      final book = await _supabase
+      final response = await _supabase
           .from('books')
           .select()
           .eq('id', id)
-          .eq('user_id', _userId)
-          .single();
-      return BookModel.fromJson(book);
+          .eq('user_id', _supabase.auth.currentUser!.id)
+          .maybeSingle();
+      return response != null ? BookModel.fromJson(response) : null;
     } catch (e) {
       return null;
     }
@@ -34,25 +34,33 @@ class BooksRemoteDataSource {
 
   Future<void> addBook(BookModel book) async {
     try {
-      await _supabase.from('books').insert(book.toJson());
+      final data = book.toJson()..remove('id');
+
+      //..remove('user_id');
+      await _supabase.from('books').insert(data);
     } catch (e) {
-      return;
+      rethrow;
     }
   }
 
   Future<void> updateBook(BookModel book) async {
     try {
-      await _supabase.from('books').upsert(book.toJson());
+      final data = {...book.toJson()..remove('user_id'), 'id': book.id};
+      await _supabase.from('books').upsert(data);
     } catch (e) {
-      return;
+      rethrow;
     }
   }
 
   Future<void> deleteBook(String id) async {
     try {
-      await _supabase.from('books').delete().eq('id', id);
+      await _supabase
+          .from('books')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', _supabase.auth.currentUser!.id);
     } catch (e) {
-      return;
+      rethrow;
     }
   }
 }

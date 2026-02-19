@@ -12,11 +12,9 @@ class BooksRepositoryImpl implements BooksRepository {
   @override
   Future<List<BookModel>> getBooks() async {
     final books = await _local.getBooks();
-
     if (await _isOnline()) {
       await _syncBooks();
     }
-
     return books;
   }
 
@@ -25,7 +23,11 @@ class BooksRepositoryImpl implements BooksRepository {
     await _local.addBook(book);
 
     if (await _isOnline()) {
-      await _remote.addBook(book);
+      try {
+        await _remote.addBook(book);
+      } catch (e) {
+        print('Remote sync failed: $e');
+      }
     }
   }
 
@@ -33,7 +35,11 @@ class BooksRepositoryImpl implements BooksRepository {
   Future<void> deleteBook(String id) async {
     await _local.deleteBook(id);
     if (await _isOnline()) {
-      await _remote.deleteBook(id);
+      try {
+        await _remote.deleteBook(id);
+      } catch (e) {
+        print('Remote delete failed: $e');
+      }
     }
   }
 
@@ -46,7 +52,11 @@ class BooksRepositoryImpl implements BooksRepository {
   Future<void> updateBook(BookModel book) async {
     await _local.updateBook(book);
     if (await _isOnline()) {
-      await _remote.updateBook(book);
+      try {
+        await _remote.updateBook(book);
+      } catch (e) {
+        print('Remote update failed: $e');
+      }
     }
   }
 
@@ -56,9 +66,13 @@ class BooksRepositoryImpl implements BooksRepository {
   }
 
   Future<void> _syncBooks() async {
-    final books = await _remote.getBooks();
-    for (var b in books) {
-      await _local.addBook(b);
+    try {
+      final remoteBooks = await _remote.getBooks();
+      for (var book in remoteBooks) {
+        await _local.addBook(book);
+      }
+    } catch (e) {
+      print('Sync failed: $e');
     }
   }
 }

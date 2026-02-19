@@ -212,12 +212,21 @@ class _AddBookModalState extends State<AddBookModal> {
 
     setState(() => isLoading = true);
     try {
+      final authProvider = sl<AuthProvider>();
+      final currentUser = authProvider.currentUser;
+
+      print('Current user: $currentUser'); // DEBUG
+
+      if (currentUser == null) {
+        throw Exception('No autenticado');
+      }
+
       final uuid = const Uuid().v4();
       final now = DateTime.now();
 
       final book = BookModel(
         id: uuid,
-        userId: sl<AuthProvider>().currentUser!.id,
+        userId: currentUser.id,
         title: _titleController.text.trim(),
         author: _authorController.text.trim(),
         genre: selectedGenres,
@@ -229,9 +238,13 @@ class _AddBookModalState extends State<AddBookModal> {
         updatedAt: now,
       );
 
+      print('Saving book: ${book.toString()}'); // DEBUG
+
       await widget.repository.addBook(book);
 
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context, book);
+      }
     } catch (e) {
       setState(() => _errorMessage = 'Error: $e');
     } finally {

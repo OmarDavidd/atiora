@@ -40,10 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 void _showAddBookModal(BuildContext context) {
-  final authProvider = sl<AuthProvider>();
-  final userId = authProvider.currentUser?.id.toString() ?? 'guest_user';
-
-  final repository = sl<BooksRepository>(param1: userId);
+  final repository = sl<BooksRepository>();
   showDialog(
     context: context,
     builder: (_) => Dialog(

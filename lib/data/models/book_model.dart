@@ -29,6 +29,17 @@ class BookModel extends Equatable {
     required this.updatedAt,
   });
 
+  Map<String, dynamic> toRemoteJson() => {
+    'title': title,
+    'author': author,
+    'genre': genre,
+    'total_pages': totalPages,
+    'current_page': currentPage,
+    'status': status,
+    'rating': rating,
+    'cover_url': coverUrl,
+  };
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'user_id': userId,
