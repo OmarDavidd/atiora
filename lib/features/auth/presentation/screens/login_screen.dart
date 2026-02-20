@@ -1,3 +1,4 @@
+import 'package:atiora/core/navigation/app_router.dart';
 import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/widgets/auth_text_field.dart';
@@ -121,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Center(
                           child: TextButton(
                             onPressed: () {
-                              // TODO: Navigator.pushNamed(AppRouter.register)
+                              Navigator.pushNamed(context, AppRouter.register);
                             },
                             child: const Text('¿No tienes cuenta? Regístrate'),
                           ),

@@ -238,8 +238,6 @@ class _AddBookModalState extends State<AddBookModal> {
         updatedAt: now,
       );
 
-      print('Saving book: ${book.toString()}'); // DEBUG
-
       await widget.repository.addBook(book);
 
       if (mounted) {

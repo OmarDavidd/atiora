@@ -60,7 +60,7 @@ class BooksRepositoryImpl implements BooksRepository {
     }
   }
 
-  //TODO corregir
+  //TODO corregir con una libreria o algo
   Future<bool> _isOnline() async {
     return true;
   }

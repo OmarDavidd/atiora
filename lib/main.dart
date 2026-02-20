@@ -1,3 +1,4 @@
+import 'package:atiora/core/navigation/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -40,6 +41,7 @@ class _AtioraAppState extends State<AtioraApp> {
             theme: AppTheme.getTheme(context, ThemeMode.light),
             darkTheme: AppTheme.getTheme(context, ThemeMode.dark),
             home: const AuthWrapper(),
+            onGenerateRoute: AppRouter.generateRoute,
           ),
         );
       },

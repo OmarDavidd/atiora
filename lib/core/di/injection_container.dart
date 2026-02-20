@@ -10,6 +10,7 @@ import 'package:atiora/features/books/data/datasources/books_local_datasource.da
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
 import 'package:atiora/features/books/data/repositories/books_repositorie_impl.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -67,4 +68,7 @@ Future<void> init() async {
       sl<BooksRemoteDataSource>(),
     ),
   );
+
+  // Books Bloc
+  sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));
 }
