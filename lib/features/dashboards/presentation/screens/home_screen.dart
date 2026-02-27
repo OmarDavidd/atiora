@@ -43,9 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: BlocProvider.value(
         value: _booksBloc,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
-          child: Column(children: [BooksCarousel(), Spacer()]),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
+            child: Column(children: [BooksCarousel()]),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

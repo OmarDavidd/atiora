@@ -24,6 +24,15 @@ class HiveService {
     await booksBox.put(book.id, book.toJson());
   }
 
+  Future<void> clearAllBooks() async {
+    await booksBox.clear();
+  }
+
+  Future<void> saveAllBooks(List<BookModel> books) async {
+    final map = {for (var b in books) b.id: b.toJson()};
+    await booksBox.putAll(map);
+  }
+
   List<BookModel> getAllBooks() {
     final List<BookModel> books = [];
     for (int i = 0; i < booksBox.length; i++) {
@@ -36,7 +45,7 @@ class HiveService {
           final book = BookModel.fromJson(json);
           books.add(book);
         } catch (e) {
-          debugPrint(' Skip invalid: $e');
+          debugPrint('Skip invalid: $e');
         }
       }
     }

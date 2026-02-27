@@ -7,6 +7,7 @@ environment:
   sdk: ^3.10.7
 
 dependencies:
+  bloc_concurrency: ^0.3.0
   build_runner: ^2.10.5
   carousel_slider: ^5.1.2
   connectivity_plus: ^7.0.0

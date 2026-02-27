@@ -15,14 +15,22 @@ class BooksLocalDataSource {
   }
 
   Future<void> addBook(BookModel book) async {
-    _hive.saveBook(book);
+    await _hive.saveBook(book);
   }
 
   Future<void> updateBook(BookModel book) async {
-    _hive.saveBook(book);
+    await _hive.saveBook(book);
   }
 
   Future<void> deleteBook(String id) async {
-    _hive.deleteBook(id);
+    await _hive.deleteBook(id);
+  }
+
+  Future<void> clearAll() async {
+    await _hive.clearAllBooks();
+  }
+
+  Future<void> addBooks(List<BookModel> books) async {
+    await _hive.saveAllBooks(books);
   }
 }

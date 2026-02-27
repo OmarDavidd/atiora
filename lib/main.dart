@@ -11,6 +11,7 @@ import 'package:atiora/features/auth/presentation/widgets/auth_wrapper.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  // ignore: invalid_use_of_visible_for_testing_member
   SharedPreferences.setMockInitialValues({});
   await init();
   runApp(const AtioraApp());
@@ -23,14 +24,18 @@ class AtioraApp extends StatefulWidget {
 }
 
 class _AtioraAppState extends State<AtioraApp> {
-  Future<void> _loadTheme() async {
-    await AppTheme.loadThemeMode();
+  late Future<void> _themeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeFuture = AppTheme.loadThemeMode();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _loadTheme(),
+      future: _themeFuture,
       builder: (context, snapshot) {
         return BlocProvider<AuthBloc>(
           create: (_) => sl<AuthBloc>()..add(CheckAuthEvent()),

@@ -1,7 +1,11 @@
+import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/screens/main_nav_page.dart';
+import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/screens/login_screen.dart';
 import 'package:atiora/features/auth/presentation/screens/register_screen.dart';
+import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
+import 'package:atiora/features/books/presentation/screens/book_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -10,6 +14,7 @@ class AppRouter {
   static const String register = '/register';
   static const String home = '/home';
   static const String main = '/main';
+  static const String bookDetail = '/book-detail';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -25,6 +30,17 @@ class AppRouter {
 
       case main:
         return MaterialPageRoute(builder: (_) => const MainNavPage());
+      case bookDetail:
+        final book = settings.arguments as BookModel;
+        return MaterialPageRoute(
+          settings: settings,
+          fullscreenDialog: true,
+          builder: (context) => BlocProvider.value(
+            value: sl<BooksBloc>(),
+            child: BookDetailScreen(book: book),
+          ),
+        );
+
       default:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
     }

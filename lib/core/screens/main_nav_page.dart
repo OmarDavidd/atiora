@@ -11,13 +11,17 @@ class MainNavPage extends StatefulWidget {
 class MainNavPageState extends State<MainNavPage> {
   int _currentIndex = 0;
 
+  // Una pantalla real por tab — las otras son placeholders por ahora
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    Scaffold(body: Center(child: Text("Search"))),
+    Scaffold(body: Center(child: Text("Perfil"))),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: const [HomeScreen(), HomeScreen(), HomeScreen()],
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

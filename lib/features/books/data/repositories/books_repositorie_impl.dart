@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
@@ -7,26 +8,33 @@ class BooksRepositoryImpl implements BooksRepository {
   final BooksLocalDataSource _local;
   final BooksRemoteDataSource _remote;
 
+  DateTime? _lastSync;
+
   BooksRepositoryImpl(this._local, this._remote);
 
   @override
   Future<List<BookModel>> getBooks() async {
-    final books = await _local.getBooks();
-    if (await _isOnline()) {
+    final now = DateTime.now();
+    final shouldSync =
+        _lastSync == null ||
+        now.difference(_lastSync!) > const Duration(minutes: 5);
+
+    if (shouldSync && await _isOnline()) {
       await _syncBooks();
+      _lastSync = now;
     }
-    return books;
+
+    return await _local.getBooks();
   }
 
   @override
   Future<void> addBook(BookModel book) async {
     await _local.addBook(book);
-
     if (await _isOnline()) {
       try {
         await _remote.addBook(book);
       } catch (e) {
-        print('Remote sync failed: $e');
+        debugPrint('Remote addBook failed: $e');
       }
     }
   }
@@ -38,7 +46,7 @@ class BooksRepositoryImpl implements BooksRepository {
       try {
         await _remote.deleteBook(id);
       } catch (e) {
-        print('Remote delete failed: $e');
+        debugPrint('Remote deleteBook failed: $e');
       }
     }
   }
@@ -55,24 +63,20 @@ class BooksRepositoryImpl implements BooksRepository {
       try {
         await _remote.updateBook(book);
       } catch (e) {
-        print('Remote update failed: $e');
+        debugPrint('Remote updateBook failed: $e');
       }
     }
   }
 
-  //TODO corregir con una libreria o algo
-  Future<bool> _isOnline() async {
-    return true;
-  }
+  Future<bool> _isOnline() async => true; // TODO: connectivity_plus
 
   Future<void> _syncBooks() async {
     try {
       final remoteBooks = await _remote.getBooks();
-      for (var book in remoteBooks) {
-        await _local.addBook(book);
-      }
+      await _local.clearAll();
+      await _local.addBooks(remoteBooks);
     } catch (e) {
-      print('Sync failed: $e');
+      debugPrint('Sync failed: $e');
     }
   }
 }

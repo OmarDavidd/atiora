@@ -1,0 +1,16 @@
+[
+  {
+    "label": "Flutter Run",
+    "command": "flutter",
+    "args": ["run", "-d", "192.168.1.163:5555"],
+    "cwd": ".",
+    "use_floating_panel": true
+  },
+  {
+    "label": "Hot Reload",
+    "command": "sh",
+    "args": ["-c", "while inotifywait -q -r -e modify lib; do echo r | nc localhost 1024; done"],
+    "cwd": ".",
+    "use_floating_panel": true
+  }
+]

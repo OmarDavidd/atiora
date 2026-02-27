@@ -16,7 +16,7 @@ class AppColors {
   static const Color backgroundPrimary = Color(
     0xFF121F20,
   ); // Fondo principal dark
-  static const Color surfacePrimary = Color(0xFF2B2E33); // Cards, panels
+  static const Color surfacePrimary = Color(0xFF24272B); // Cards, panels
   static const Color neutral0 = Color(0xFFFFFFFF); // Blanco puro
   static const Color neutral900 = Color(0xFF0F172A); // Negro casi
   static const Color neutral600 = Color(0xFF475569); // Gris medio oscuro
@@ -25,7 +25,8 @@ class AppColors {
 
   // Status & Book States
   static const Color reading = Color(0xFF32A8DB); // Azul "📖 Leyendo"
-  static const Color completed = Color(0xFF4CC767); // Verde "✅ Completado"
+  //static const Color completed = Color(0xFF4CC767); // Verde "✅ Completado"
+  static const Color completed = Color(0xFF4CC767);
   static const Color paused = Color(0xFFF28D2B); // Naranja "⏸ Pausado"
   static const Color pending = Color(0xFFFBBF24); // Amarillo "📚 Pendiente"
 

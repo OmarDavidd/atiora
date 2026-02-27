@@ -62,4 +62,29 @@ class AppHelpers {
     'Biografía',
     'Autoayuda',
   ];
+
+  // Calcular porcentaje
+  static String calcPercentage(int totalPages, int currentPage) {
+    if (totalPages == 0) return "0%";
+    double percentage = (currentPage / totalPages) * 100.0;
+    return "${percentage.toStringAsFixed(0)}%";
+  }
+
+  static Color getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'leyendo':
+        return AppColors.reading;
+      case 'completado':
+      case 'terminado':
+        return AppColors.completed;
+      case 'pausado':
+        return AppColors.paused;
+      case 'pendiente':
+        return AppColors.pending;
+      default:
+        return Colors.grey;
+    }
+  }
+
+
 }
