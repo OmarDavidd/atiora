@@ -28,12 +28,16 @@ class _BooksCarouselState extends State<BooksCarousel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Leyendo ahora",
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w400,
-            color: AppColors.neutral0,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal:16),
+          child: Text(
+            "LEYENDO AHORA",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: AppColors.primaryDark,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
         const SizedBox(height: 20),

@@ -18,7 +18,7 @@ class CustomStateWidget extends StatelessWidget {
 
       child: Center(
         child: Text(
-          text,
+          text.toUpperCase(),
           style: TextStyle(
             color: color,
             fontSize: 10,

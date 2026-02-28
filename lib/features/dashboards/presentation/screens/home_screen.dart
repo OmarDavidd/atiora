@@ -4,6 +4,7 @@ import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_modal.dart';
+import 'package:atiora/features/dashboards/presentation/widgets/home_stats_section.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/books_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +47,19 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
-            child: Column(children: [BooksCarousel()]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                BooksCarousel(),
+                SizedBox(height: 30),
+                HomeStatsSection(
+                  totalBooksRead: '',
+                  totalPagesRead: '',
+                  streak: '',
+                  average: '',
+                ),
+              ],
+            ),
           ),
         ),
       ),
