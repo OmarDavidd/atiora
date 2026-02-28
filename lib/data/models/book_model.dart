@@ -13,6 +13,8 @@ class BookModel extends Equatable {
   final String? coverUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? startedAt;
+  final DateTime? finishedAt;
 
   const BookModel({
     required this.id,
@@ -27,6 +29,8 @@ class BookModel extends Equatable {
     this.coverUrl,
     required this.createdAt,
     required this.updatedAt,
+    this.startedAt,
+    this.finishedAt,
   });
 
   Map<String, dynamic> toRemoteJson() => {
@@ -38,6 +42,8 @@ class BookModel extends Equatable {
     'status': status,
     'rating': rating,
     'cover_url': coverUrl,
+    if (startedAt != null) 'started_at': startedAt!.toIso8601String(),
+    if (finishedAt != null) 'finished_at': finishedAt!.toIso8601String(),
   };
 
   Map<String, dynamic> toJson() => {
@@ -53,6 +59,8 @@ class BookModel extends Equatable {
     'cover_url': coverUrl,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
+    if (startedAt != null) 'started_at': startedAt!.toIso8601String(),
+    if (finishedAt != null) 'finished_at': finishedAt!.toIso8601String(),
   };
 
   factory BookModel.fromJson(Map<String, dynamic> json) => BookModel(
@@ -68,6 +76,12 @@ class BookModel extends Equatable {
     coverUrl: json['cover_url'] as String?,
     createdAt: DateTime.parse(json['created_at'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
+    startedAt: json['started_at'] != null
+        ? DateTime.parse(json['started_at'])
+        : null,
+    finishedAt: json['finished_at'] != null
+        ? DateTime.parse(json['finished_at'])
+        : null,
   );
 
   @override
@@ -84,6 +98,8 @@ class BookModel extends Equatable {
     coverUrl,
     createdAt,
     updatedAt,
+    startedAt,
+    finishedAt,
   ];
 
   BookModel copyWith({
@@ -99,6 +115,8 @@ class BookModel extends Equatable {
     String? coverUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? startedAt,
+    DateTime? finishedAt,
   }) {
     return BookModel(
       id: id ?? this.id,
@@ -113,6 +131,8 @@ class BookModel extends Equatable {
       coverUrl: coverUrl ?? this.coverUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      startedAt: startedAt ?? this.startedAt,
+      finishedAt: finishedAt ?? this.finishedAt,
     );
   }
 }
