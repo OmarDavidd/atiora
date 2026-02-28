@@ -6,4 +6,5 @@ abstract class BooksRepository {
   Future<void> addBook(BookModel book);
   Future<void> updateBook(BookModel book);
   Future<void> deleteBook(String id);
+  Future<Map<String, dynamic>> loadHomeStats();
 }

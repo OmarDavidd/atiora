@@ -79,4 +79,9 @@ class BooksRepositoryImpl implements BooksRepository {
       debugPrint('Sync failed: $e');
     }
   }
+
+  @override
+  Future<Map<String, dynamic>> loadHomeStats() async {
+    return await _remote.loadHomeStats();
+  }
 }

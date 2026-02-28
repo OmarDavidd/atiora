@@ -13,11 +13,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
       if (state is BooksLoading) return;
       emit(BooksLoading());
       try {
-        debugPrint('⏳ getBooks start: ${DateTime.now()}');
         final books = await _repository.getBooks();
-        debugPrint(
-          '✅ getBooks done: ${DateTime.now()} — ${books.length} libros',
-        );
         emit(BooksLoaded(books));
       } catch (e) {
         debugPrint('❌ getBooks error: $e');

@@ -63,4 +63,25 @@ class BooksRemoteDataSource {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> loadHomeStats() async {
+    final statsResponse = await _supabase
+        .from('current_month_stats')
+        .select()
+        .eq('user_id', _supabase.auth.currentUser!.id)
+        .maybeSingle();
+
+    final streakResponse = await _supabase.rpc(
+      'get_current_streak',
+      params: {'p_user_id': _supabase.auth.currentUser!.id},
+    );
+
+    return {
+      'pagesThisMonth': statsResponse?['total_pages_mes'] ?? 0,
+      'booksTouched': statsResponse?['libros_tocados_mes'] ?? 0,
+      'booksFinished': statsResponse?['libros_terminados_mes'] ?? 0,
+      'streak': streakResponse as int? ?? 0,
+    };
+  }
+
 }
