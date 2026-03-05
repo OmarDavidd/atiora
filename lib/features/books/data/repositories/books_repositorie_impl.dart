@@ -84,4 +84,13 @@ class BooksRepositoryImpl implements BooksRepository {
   Future<Map<String, dynamic>> loadHomeStats() async {
     return await _remote.loadHomeStats();
   }
+
+  @override
+  Future<void> updateBookState(String bookId, String newState) async {
+    try {
+      await _remote.updateBookState(bookId, newState);
+    } catch (e) {
+      debugPrint('Fallo actualizar estado: $e');
+    }
+  }
 }

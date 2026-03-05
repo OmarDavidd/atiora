@@ -20,5 +20,15 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         emit(BooksError("Error al cargar los libros"));
       }
     }, transformer: droppable());
+
+    on<UpdateBookState>((event, emit) async {
+      try {
+        await _repository.updateBookState(event.bookId, event.newState);
+        emit(BookStateUpdateSuccess());
+      } catch (e) {
+        debugPrint('X updateBookState error: $e');
+        emit(BookStateUpdateError('error al actualizar estado'));
+      }
+    });
   }
 }

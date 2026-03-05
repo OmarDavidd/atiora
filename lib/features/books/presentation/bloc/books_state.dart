@@ -17,3 +17,10 @@ class BooksError extends BooksState {
 
   BooksError(this.message);
 }
+
+class BookStateUpdateSuccess extends BooksState {}
+
+class BookStateUpdateError extends BooksState {
+  final String message;
+  BookStateUpdateError(this.message);
+}

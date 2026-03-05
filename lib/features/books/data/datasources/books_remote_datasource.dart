@@ -84,4 +84,15 @@ class BooksRemoteDataSource {
     };
   }
 
+  Future<void> updateBookState(String bookId, String newState) async {
+    try {
+      await _supabase
+          .from('books')
+          .update({'state': newState})
+          .eq('id', bookId)
+          .eq('user_id', _supabase.auth.currentUser!.id);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
