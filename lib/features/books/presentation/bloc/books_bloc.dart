@@ -22,13 +22,25 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
     }, transformer: droppable());
 
     on<UpdateBookState>((event, emit) async {
+      if (state is BooksLoaded) {
+        final currentBooks = (state as BooksLoaded).books;
+        final updatedBooks = currentBooks.map((book) {
+          if (book.id == event.bookId) {
+            return book.copyWith(status: event.newState);
+          }
+          return book;
+        }).toList();
+        emit(BooksLoaded(updatedBooks));
+      }
       try {
         await _repository.updateBookState(event.bookId, event.newState);
+        debugPrint('✅ Estado actualizado: ${event.newState}');
         emit(BookStateUpdateSuccess());
       } catch (e) {
-        debugPrint('X updateBookState error: $e');
-        emit(BookStateUpdateError('error al actualizar estado'));
+        debugPrint('❌ updateBookState error: $e');
+        add(LoadBooks());
+        emit(BookStateUpdateError('Error al actualizar estado'));
       }
-    });
+    }, transformer: restartable());
   }
 }

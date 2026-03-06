@@ -27,7 +27,8 @@ class _InfoBookSectionState extends State<InfoBookSection> {
   @override
   void initState() {
     super.initState();
-    estadoActual = AppConstants.bookStates.indexOf(widget.book.status);
+    final index = AppConstants.bookStates.indexOf(widget.book.status);
+    estadoActual = index >= 0 ? index : 0;
   }
 
   @override
@@ -35,12 +36,13 @@ class _InfoBookSectionState extends State<InfoBookSection> {
     return BlocListener<BooksBloc, BooksState>(
       listener: (context, state) {
         if (state is BookStateUpdateSuccess) {
-          setState(() {
-            estadoActual = _pendingIndex;
-          });
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text("Estado actualizado")));
+          ).showSnackBar(SnackBar(content: Text("¡Estado actualizado!")));
+        } else if (state is BookStateUpdateError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       child: Column(
@@ -90,24 +92,27 @@ class _InfoBookSectionState extends State<InfoBookSection> {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black54,
       isScrollControlled: true,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.4,
-        decoration: BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: StateModal(
-          estados: AppConstants.bookStates,
-          seleccionado: estadoActual,
-          onSeleccionar: (nuevoIndex) {
-            _pendingIndex = nuevoIndex;
-            context.read<BooksBloc>().add(
-              UpdateBookState(
-                bookId: widget.book.id,
-                newState: AppConstants.bookStates[nuevoIndex],
-              ),
-            );
-          },
+      builder: (modalContext) => BlocProvider.value(
+        value: context.read<BooksBloc>(),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.4,
+          decoration: BoxDecoration(
+            color: AppColors.backgroundPrimary,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: StateModal(
+            estados: AppConstants.bookStates,
+            seleccionado: estadoActual,
+            onSeleccionar: (nuevoIndex) {
+              _pendingIndex = nuevoIndex;
+              modalContext.read<BooksBloc>().add(
+                UpdateBookState(
+                  bookId: widget.book.id,
+                  newState: AppConstants.bookStates[nuevoIndex],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

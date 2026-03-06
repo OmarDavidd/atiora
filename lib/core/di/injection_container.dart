@@ -8,7 +8,7 @@ import 'package:atiora/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
-import 'package:atiora/features/books/data/repositories/books_repositorie_impl.dart';
+import 'package:atiora/features/books/data/repositories/books_repository_impl.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';

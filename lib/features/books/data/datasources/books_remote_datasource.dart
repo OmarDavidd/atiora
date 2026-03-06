@@ -1,4 +1,5 @@
 import 'package:atiora/data/models/book_model.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BooksRemoteDataSource {
@@ -71,16 +72,29 @@ class BooksRemoteDataSource {
         .eq('user_id', _supabase.auth.currentUser!.id)
         .maybeSingle();
 
-    final streakResponse = await _supabase.rpc(
-      'get_current_streak',
-      params: {'p_user_id': _supabase.auth.currentUser!.id},
-    );
+    debugPrint('🟡 Antes RPC: user ${_supabase.auth.currentUser!.id}');
+    dynamic streakResponse;
+    try {
+      streakResponse = await _supabase.rpc(
+        'get_current_streak',
+        params: {'p_user_id': _supabase.auth.currentUser!.id},
+      );
+      debugPrint(
+        '🟢 Streak RAW: $streakResponse (type: ${streakResponse.runtimeType})',
+      );
+    } catch (e) {
+      debugPrint('🔴 Streak RPC error: $e');
+        streakResponse = 0;
+    }
+
+    final streak = _extractStreak(streakResponse);
+    debugPrint('🟢 Streak final: $streak');
 
     return {
       'pagesThisMonth': statsResponse?['total_pages_mes'] ?? 0,
       'booksTouched': statsResponse?['libros_tocados_mes'] ?? 0,
       'booksFinished': statsResponse?['libros_terminados_mes'] ?? 0,
-      'streak': streakResponse as int? ?? 0,
+      'streak': streak,
     };
   }
 
@@ -94,5 +108,17 @@ class BooksRemoteDataSource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  int _extractStreak(dynamic response) {
+    if (response == null) return 0;
+    if (response is int) return response;
+    if (response is List) {
+      return response.isNotEmpty ? (response.first as int? ?? 0) : 0;
+    }
+    if (response is Map && response.containsKey('streak')) {
+      return response['streak'] as int? ?? 0;
+    }
+    return 0;
   }
 }
