@@ -38,9 +38,11 @@ class AuthError extends AuthState {
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInUseCase signInUseCase;
   final SignUpUseCase signUpUseCase;
-  final AuthProvider authProvider = sl<AuthProvider>();
+  final AuthProvider authProvider;
 
-  AuthBloc(this.signInUseCase, this.signUpUseCase) : super(AuthInitial()) {
+  AuthBloc(this.signInUseCase, this.signUpUseCase, {AuthProvider? authProvider})
+    : authProvider = authProvider ?? sl<AuthProvider>(),
+      super(AuthInitial()) {
     on<SignInEvent>(_onSignIn);
     on<SignUpEvent>(_onSignUp);
     on<CheckAuthEvent>(_onCheckAuth);
