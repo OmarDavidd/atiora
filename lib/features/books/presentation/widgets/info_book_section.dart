@@ -186,7 +186,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
         child: Container(
           height: MediaQuery.of(modalContext).size.height * 0.4,
           decoration: BoxDecoration(
-            color: AppColors.backgroundPrimary,
+            color: Theme.of(modalContext).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: StateModal(
