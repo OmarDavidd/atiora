@@ -98,11 +98,22 @@ class BooksRemoteDataSource {
     };
   }
 
-  Future<void> updateBookState(String bookId, String newState) async {
+  Future<void> updateBookState(
+    String bookId,
+    String newState, {
+    int? currentPage,
+    double? rating,
+    DateTime? finishedAt,
+  }) async {
     try {
+      final payload = <String, dynamic>{'status': newState};
+      if (currentPage != null) payload['current_page'] = currentPage;
+      if (rating != null) payload['rating'] = rating;
+      payload['finished_at'] = finishedAt?.toIso8601String();
+
       await _supabase
           .from('books')
-          .update({'status': newState})
+          .update(payload)
           .eq('id', bookId)
           .eq('user_id', _supabase.auth.currentUser!.id);
       debugPrint('✅ Supabase OK');

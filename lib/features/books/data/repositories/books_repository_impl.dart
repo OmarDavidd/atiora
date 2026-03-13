@@ -86,9 +86,33 @@ class BooksRepositoryImpl implements BooksRepository {
   }
 
   @override
-  Future<void> updateBookState(String bookId, String newState) async {
+  Future<void> updateBookState(
+    String bookId,
+    String newState, {
+    int? currentPage,
+    double? rating,
+    DateTime? finishedAt,
+  }) async {
     try {
-      await _remote.updateBookState(bookId, newState);
+      await _remote.updateBookState(
+        bookId,
+        newState,
+        currentPage: currentPage,
+        rating: rating,
+        finishedAt: finishedAt,
+      );
+      final localBook = await _local.getBook(bookId);
+      if (localBook != null) {
+        await _local.updateBook(
+          localBook.copyWith(
+            status: newState,
+            updatedAt: DateTime.now(),
+            currentPage: currentPage ?? localBook.currentPage,
+            rating: rating ?? localBook.rating,
+            finishedAt: finishedAt ?? localBook.finishedAt,
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Fallo actualizar estado: $e');
     }

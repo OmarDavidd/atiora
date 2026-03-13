@@ -1,6 +1,4 @@
-import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/screens/main_nav_page.dart';
-import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/screens/login_screen.dart';
 import 'package:atiora/features/auth/presentation/screens/register_screen.dart';
@@ -31,13 +29,15 @@ class AppRouter {
       case main:
         return MaterialPageRoute(builder: (_) => const MainNavPage());
       case bookDetail:
-        final book = settings.arguments as BookModel;
+        final args = settings.arguments as Map<String, dynamic>;
+        final bookId = args['bookId'] as String;
+        final booksBloc = args['booksBloc'] as BooksBloc;
         return MaterialPageRoute(
           settings: settings,
           fullscreenDialog: true,
           builder: (context) => BlocProvider.value(
-            value: sl<BooksBloc>(),
-            child: BookDetailScreen(book: book),
+            value: booksBloc,
+            child: BookDetailScreen(bookId: bookId),
           ),
         );
 

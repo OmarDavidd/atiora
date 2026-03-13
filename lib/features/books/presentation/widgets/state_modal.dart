@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class StateModal extends StatelessWidget {
   final List<String> estados;
   final int seleccionado;
-  final Function(int) onSeleccionar;
+  final Future<bool> Function(int) onSeleccionar;
 
   const StateModal({
     super.key,
@@ -78,6 +78,10 @@ class StateModal extends StatelessWidget {
                           letterSpacing: 0.5,
                         ),
                       ),
+                      subtitle: Text(
+                        _getStatusHint(estados[index]),
+                        style: subtitleStyle?.copyWith(fontSize: 12),
+                      ),
                       trailing: isSelected
                           ? Icon(Icons.check, color: theme.colorScheme.primary)
                           : null,
@@ -91,6 +95,19 @@ class StateModal extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getStatusHint(String status) {
+    switch (status.trim().toLowerCase()) {
+      case 'leyendo':
+        return 'Registra tu progreso actual';
+      case 'completado':
+        return 'Marca el libro como finalizado';
+      case 'pendiente':
+        return 'Déjalo en cola para luego';
+      default:
+        return '';
+    }
   }
 
   Future<void> _confirmarCambio(BuildContext context, int nuevoIndex) async {
@@ -117,8 +134,8 @@ class StateModal extends StatelessWidget {
     );
 
     if (confirmado == true) {
-      onSeleccionar(nuevoIndex);
-      if (context.mounted) {
+      final shouldClose = await onSeleccionar(nuevoIndex);
+      if (shouldClose && context.mounted) {
         Navigator.pop(context);
       }
     }

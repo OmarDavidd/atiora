@@ -11,8 +11,13 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
 
   BooksBloc(this._repository) : super(BooksInitial()) {
     on<LoadBooks>((event, emit) async {
-      if (state is BooksLoading) return;
-      emit(BooksLoading());
+      final currentState = state;
+      if (currentState is BooksLoaded) {
+        emit(BooksLoading());
+      } else if (currentState is! BooksLoading) {
+        emit(BooksLoading());
+      }
+
       try {
         final books = await _repository.getBooks();
         emit(BooksLoaded(books));
@@ -20,23 +25,75 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         debugPrint('❌ getBooks error: $e');
         emit(BooksError("Error al cargar los libros"));
       }
-    }, transformer: droppable());
+    }, transformer: restartable());
 
     on<UpdateBookState>((event, emit) async {
+      final normalizedState = event.newState.toLowerCase();
+      final shouldComplete = normalizedState == 'completado';
+      final revertingToReading = normalizedState == 'leyendo';
+      final completionTimestamp = shouldComplete
+          ? (event.finishedAt ?? DateTime.now())
+          : null;
+
+      BookModel? updatedBook;
+      BookModel? originalBook;
+
       if (state is BooksLoaded) {
         final books = List<BookModel>.from((state as BooksLoaded).books);
         final idx = books.indexWhere((b) => b.id == event.bookId);
-        if (idx != -1) books[idx] = books[idx].copyWith(status: event.newState);
+        if (idx != -1) {
+          originalBook = books[idx];
+          final nextCurrentPage = shouldComplete
+              ? originalBook.totalPages
+              : (event.updatedPage ?? originalBook.currentPage);
+          final nextFinishedAt = shouldComplete
+              ? completionTimestamp
+              : ((revertingToReading || event.clearFinishedAt)
+                    ? null
+                    : event.finishedAt ?? originalBook.finishedAt);
+          final nextRating = event.rating ?? originalBook.rating;
+
+          final nextBook = originalBook.copyWith(
+            status: event.newState,
+            currentPage: nextCurrentPage,
+            rating: nextRating,
+            finishedAt: nextFinishedAt,
+          );
+
+          books[idx] = nextBook;
+          updatedBook = nextBook;
+        }
         emit(BooksLoaded(books));
       }
+
+      final repoCurrentPage =
+          updatedBook?.currentPage ??
+          (shouldComplete
+              ? originalBook?.totalPages ?? event.updatedPage
+              : event.updatedPage ?? originalBook?.currentPage);
+      final repoFinishedAt =
+          updatedBook?.finishedAt ??
+          (shouldComplete
+              ? completionTimestamp
+              : ((revertingToReading || event.clearFinishedAt)
+                    ? null
+                    : event.finishedAt ?? originalBook?.finishedAt));
+
       try {
-        await _repository.updateBookState(event.bookId, event.newState);
+        await _repository.updateBookState(
+          event.bookId,
+          event.newState,
+          currentPage: repoCurrentPage,
+          rating: event.rating,
+          finishedAt: repoFinishedAt,
+        );
         debugPrint('✅ DB actualizado: ${event.newState}');
       } catch (e) {
         debugPrint('❌ DB error: $e');
         add(LoadBooks());
         return;
       }
+      add(LoadBooks());
     }, transformer: restartable());
   }
 }

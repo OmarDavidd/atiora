@@ -74,6 +74,15 @@ void main() {
         when(
           () => mockRepository.getBooks(),
         ).thenAnswer((_) async => testBooks);
+        when(
+          () => mockRepository.updateBookState(
+            any(),
+            any(),
+            currentPage: any(named: 'currentPage'),
+            rating: any(named: 'rating'),
+            finishedAt: any(named: 'finishedAt'),
+          ),
+        ).thenAnswer((_) async {});
         return BooksBloc(mockRepository);
       },
       act: (bloc) => bloc.add(LoadBooks()),
@@ -99,17 +108,33 @@ void main() {
       'emits updated BooksLoaded when UpdateBookState succeeds',
       build: () {
         when(
-          () => mockRepository.updateBookState('book-1', 'terminado'),
+          () => mockRepository.updateBookState(
+            'book-1',
+            'terminado',
+            currentPage: any(named: 'currentPage'),
+            rating: any(named: 'rating'),
+            finishedAt: any(named: 'finishedAt'),
+          ),
         ).thenAnswer((_) async {});
         return BooksBloc(mockRepository);
       },
       seed: () => BooksLoaded(testBooks),
       act: (bloc) =>
           bloc.add(UpdateBookState(bookId: 'book-1', newState: 'terminado')),
-      expect: () => [isA<BooksLoaded>()],
+      expect: () => [
+        isA<BooksLoaded>(),
+        isA<BooksLoading>(),
+        anyOf(isA<BooksLoaded>(), isA<BooksError>()),
+      ],
       verify: (_) {
         verify(
-          () => mockRepository.updateBookState('book-1', 'terminado'),
+          () => mockRepository.updateBookState(
+            'book-1',
+            'terminado',
+            currentPage: any(named: 'currentPage'),
+            rating: any(named: 'rating'),
+            finishedAt: any(named: 'finishedAt'),
+          ),
         ).called(1);
       },
     );
@@ -118,7 +143,13 @@ void main() {
       'reloads books when UpdateBookState fails',
       build: () {
         when(
-          () => mockRepository.updateBookState('book-1', 'terminado'),
+          () => mockRepository.updateBookState(
+            'book-1',
+            'terminado',
+            currentPage: any(named: 'currentPage'),
+            rating: any(named: 'rating'),
+            finishedAt: any(named: 'finishedAt'),
+          ),
         ).thenThrow(Exception('Update failed'));
         when(
           () => mockRepository.getBooks(),

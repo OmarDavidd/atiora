@@ -1,4 +1,4 @@
-package com.example.notium
+package com.atiora.app
 
 import io.flutter.embedding.android.FlutterActivity
 

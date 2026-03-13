@@ -73,11 +73,14 @@ class _BooksCarouselState extends State<BooksCarousel> {
                       final book = books[index];
                       return GestureDetector(
                         onTap: () {
-                          Navigator.of(
-                            context,
-                          ).pushNamed(AppRouter.bookDetail, arguments: book);
+                          Navigator.of(context).pushNamed(
+                            AppRouter.bookDetail,
+                            arguments: {
+                              'bookId': book.id,
+                              'booksBloc': context.read<BooksBloc>(),
+                            },
+                          );
                         },
-
                         child: BookCard(
                           title: book.title,
                           author: book.author ?? "",

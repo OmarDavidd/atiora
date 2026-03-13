@@ -12,11 +12,17 @@ class MainNavPageState extends State<MainNavPage> {
   int _currentIndex = 0;
 
   // Una pantalla real por tab — las otras son placeholders por ahora
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    Scaffold(body: Center(child: Text("Search"))),
-    Scaffold(body: Center(child: Text("Perfil"))),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeScreen(),
+      const Scaffold(body: Center(child: Text("Search"))),
+      const Scaffold(body: Center(child: Text("Perfil"))),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

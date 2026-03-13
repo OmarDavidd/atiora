@@ -1,4 +1,3 @@
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/core/utils/helpers.dart';
 import 'package:atiora/data/models/book_model.dart';
@@ -8,6 +7,7 @@ import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 import 'package:atiora/features/books/presentation/widgets/custom_state_widget.dart';
 import 'package:atiora/features/books/presentation/widgets/state_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class InfoBookSection extends StatefulWidget {
@@ -20,161 +20,123 @@ class InfoBookSection extends StatefulWidget {
 }
 
 class _InfoBookSectionState extends State<InfoBookSection> {
-  int pendingIndex = 0;
-  late int estadoActual;
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<BooksBloc, BooksState>(
-      builder: (context, state) {
-        final currentStatus = _getCurrentBookStatus(state);
-        final currentIndex = _getSafeStateIndex(currentStatus);
-
-        return BlocListener<BooksBloc, BooksState>(
-          listener: (context, state) {
-            if (state is BookStateUpdateError) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
-            }
-          },
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              SizedBox(
-                height: 260,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  child: Container(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                    child: Image.asset(
-                      'assets/missingbook.webp',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.book,
-                        size: 80,
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              CustomStateWidget(
-                color: AppHelpers.getStatusColor(currentStatus),
-                text: currentStatus,
-                onTap: _showStateModal,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                widget.book.title,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.book.genre.join(' • '),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  late String _currentStatus;
+  BooksState? _lastSyncedState;
+  BookModel? _bookSnapshot;
 
   @override
   void initState() {
     super.initState();
-    final index = AppConstants.bookStates.indexOf(widget.book.status);
-    estadoActual = index >= 0 ? index : 0;
-    debugPrint(
-      '📌 initState: status=${widget.book.status}, index=$estadoActual',
-    );
+    _currentStatus = widget.book.status;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncStatusWithBloc(context.read<BooksBloc>().state);
+    });
   }
 
-  Widget buildStaticUI(int index) {
+  @override
+  Widget build(BuildContext context) {
     return BlocListener<BooksBloc, BooksState>(
+      listenWhen: (previous, current) {
+        if (current is BookStateUpdateError) return true;
+        return current is BooksLoaded;
+      },
       listener: (context, state) {
-        if (state is BookStateUpdateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("¡Estado actualizado! ✅")),
-          );
-        } else if (state is BookStateUpdateError) {
+        if (state is BookStateUpdateError) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(state.message)));
+          if (_lastSyncedState != null) {
+            _syncStatusWithBloc(_lastSyncedState!);
+          }
+        } else if (state is BooksLoaded) {
+          _syncStatusWithBloc(state);
         }
       },
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 40),
-          SizedBox(
-            height: 260,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: Container(
-                color: AppColors.neutral400,
-                child: Image.asset(
-                  'assets/missingbook.webp',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.book, size: 80, color: AppColors.neutral400),
+          Center(
+            child: SizedBox(
+              height: 260,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: Image.asset(
+                    'assets/missingbook.webp',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.book,
+                      size: 80,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
           const SizedBox(height: 30),
-          CustomStateWidget(
-            color: AppHelpers.getStatusColor(AppConstants.bookStates[index]),
-            text: AppConstants.bookStates[index],
-            onTap: _showStateModal,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            widget.book.title,
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            widget.book.genre.join(' • '),
-            style: Theme.of(context).textTheme.bodyMedium,
+          Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CustomStateWidget(
+                  color: AppHelpers.getStatusColor(_currentStatus),
+                  text: _currentStatus,
+                  onTap: _showStateModal,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  widget.book.title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.book.genre.join(' • '),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  String _getCurrentBookStatus(BooksState state) {
+  void _syncStatusWithBloc(BooksState state) {
     if (state is BooksLoaded) {
-      try {
-        final book = state.books.firstWhere((b) => b.id == widget.book.id);
-        return book.status;
-      } catch (e) {
-        debugPrint('Libro no encontrado en lista: ${widget.book.id}');
+      _lastSyncedState = state;
+      for (final book in state.books) {
+        if (book.id == widget.book.id) {
+          _bookSnapshot = book;
+          if (book.status != _currentStatus) {
+            if (mounted) {
+              setState(() => _currentStatus = book.status);
+            } else {
+              _currentStatus = book.status;
+            }
+          }
+          break;
+        }
       }
     }
-    return widget.book.status;
-  }
-
-  int _getSafeStateIndex(String status) {
-    final index = AppConstants.bookStates.indexOf(status);
-    return index >= 0 ? index : 0;
   }
 
   void _showStateModal() {
     final bloc = context.read<BooksBloc>();
-    final currentStatus = _getCurrentBookStatus(bloc.state);
-    debugPrint('🔍 Status actual: "$currentStatus"');
-    debugPrint('🔍 Estados disponibles: ${AppConstants.bookStates}');
+    final referenceBook = _bookSnapshot ?? widget.book;
     final currentIndex = AppConstants.bookStates.indexWhere((estado) {
-      return estado.toLowerCase() == currentStatus.toLowerCase().trim();
+      return estado.toLowerCase() == _currentStatus.toLowerCase().trim();
     });
 
     final safeIndex = currentIndex >= 0 ? currentIndex : 0;
-    debugPrint('🔍 Índice calculado: $safeIndex');
 
     showModalBottomSheet(
       context: context,
@@ -192,18 +154,145 @@ class _InfoBookSectionState extends State<InfoBookSection> {
           child: StateModal(
             estados: AppConstants.bookStates,
             seleccionado: safeIndex,
-            onSeleccionar: (nuevoIndex) {
-              pendingIndex = nuevoIndex;
-              bloc.add(
-                UpdateBookState(
-                  bookId: widget.book.id,
-                  newState: AppConstants.bookStates[nuevoIndex],
-                ),
+            onSeleccionar: (nuevoIndex) async {
+              final newState = AppConstants.bookStates[nuevoIndex];
+              final handled = await _handleStateChange(
+                bloc,
+                referenceBook,
+                newState,
               );
+              return handled;
             },
           ),
         ),
       ),
+    );
+  }
+
+  Future<bool> _handleStateChange(
+    BooksBloc bloc,
+    BookModel book,
+    String newState,
+  ) async {
+    final normalized = newState.toLowerCase();
+    final completed = normalized == 'completado';
+    final revertedToReading = normalized == 'leyendo';
+
+    int? updatedPage;
+    DateTime? finishedAt;
+    bool clearFinishedAt = revertedToReading;
+
+    if (revertedToReading) {
+      final newProgress = await _requestProgressInput(book);
+      if (newProgress == null) {
+        return false;
+      }
+      updatedPage = newProgress;
+    } else if (completed) {
+      updatedPage = book.totalPages;
+      finishedAt = DateTime.now();
+    }
+
+    if (!mounted) return true;
+
+    setState(() => _currentStatus = newState);
+    bloc.add(
+      UpdateBookState(
+        bookId: book.id,
+        newState: newState,
+        updatedPage: updatedPage,
+        finishedAt: finishedAt,
+        clearFinishedAt: clearFinishedAt,
+      ),
+    );
+
+    return true;
+  }
+
+  Future<int?> _requestProgressInput(BookModel book) async {
+    return showDialog<int>(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (_) => _ProgressInputDialog(
+        initialPage: book.currentPage,
+        totalPages: book.totalPages,
+      ),
+    );
+  }
+}
+
+class _ProgressInputDialog extends StatefulWidget {
+  final int initialPage;
+  final int totalPages;
+
+  const _ProgressInputDialog({
+    required this.initialPage,
+    required this.totalPages,
+  });
+
+  @override
+  State<_ProgressInputDialog> createState() => _ProgressInputDialogState();
+}
+
+class _ProgressInputDialogState extends State<_ProgressInputDialog> {
+  late final TextEditingController _controller;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialPage.toString());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxPage = widget.totalPages;
+    return AlertDialog(
+      title: const Text('Actualiza tu progreso'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(labelText: 'Página actual (0-$maxPage)'),
+          validator: (value) {
+            final text = value?.trim();
+            if (text == null || text.isEmpty) {
+              return 'Ingresa un número válido';
+            }
+            final page = int.tryParse(text);
+            if (page == null) {
+              return 'Solo números';
+            }
+            if (page < 0 || page > maxPage) {
+              return 'Debe estar entre 0 y $maxPage';
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() != true) return;
+            final value = int.tryParse(_controller.text.trim());
+            Navigator.of(context).pop(value);
+          },
+          child: const Text('Guardar'),
+        ),
+      ],
     );
   }
 }
