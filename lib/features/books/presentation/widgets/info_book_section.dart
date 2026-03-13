@@ -12,33 +12,95 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class InfoBookSection extends StatefulWidget {
-  const InfoBookSection({super.key, required this.book});
-
   final BookModel book;
+
+  const InfoBookSection({super.key, required this.book});
 
   @override
   State<InfoBookSection> createState() => _InfoBookSectionState();
 }
 
 class _InfoBookSectionState extends State<InfoBookSection> {
-  int estadoActual = 0;
-  int _pendingIndex = 0;
+  int pendingIndex = 0;
+  late int estadoActual;
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<BooksBloc, BooksState>(
+      builder: (context, state) {
+        final currentStatus = _getCurrentBookStatus(state);
+        final currentIndex = _getSafeStateIndex(currentStatus);
+
+        return BlocListener<BooksBloc, BooksState>(
+          listener: (context, state) {
+            if (state is BookStateUpdateError) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+            }
+          },
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              SizedBox(
+                height: 260,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  child: Container(
+                    color: AppColors.neutral400,
+                    child: Image.asset(
+                      'assets/missingbook.webp',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.book,
+                        size: 80,
+                        color: AppColors.neutral400,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              CustomStateWidget(
+                color: AppHelpers.getStatusColor(currentStatus),
+                text: currentStatus,
+                onTap: _showStateModal,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                widget.book.title,
+                style: GoogleFonts.jaini(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.neutral0,
+                ),
+              ),
+              Text(widget.book.genre.join('●')),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     final index = AppConstants.bookStates.indexOf(widget.book.status);
     estadoActual = index >= 0 ? index : 0;
+    debugPrint(
+      '📌 initState: status=${widget.book.status}, index=$estadoActual',
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildStaticUI(int index) {
     return BlocListener<BooksBloc, BooksState>(
       listener: (context, state) {
         if (state is BookStateUpdateSuccess) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("¡Estado actualizado!")));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("¡Estado actualizado! ✅")),
+          );
         } else if (state is BookStateUpdateError) {
           ScaffoldMessenger.of(
             context,
@@ -47,11 +109,13 @@ class _InfoBookSectionState extends State<InfoBookSection> {
       },
       child: Column(
         children: [
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
           SizedBox(
             height: 260,
             child: ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: Container(
                 color: AppColors.neutral400,
                 child: Image.asset(
@@ -63,15 +127,13 @@ class _InfoBookSectionState extends State<InfoBookSection> {
               ),
             ),
           ),
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           CustomStateWidget(
-            color: AppHelpers.getStatusColor(
-              AppConstants.bookStates[estadoActual],
-            ),
-            text: AppConstants.bookStates[estadoActual],
+            color: AppHelpers.getStatusColor(AppConstants.bookStates[index]),
+            text: AppConstants.bookStates[index],
             onTap: _showStateModal,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             widget.book.title,
             style: GoogleFonts.jaini(
@@ -86,26 +148,54 @@ class _InfoBookSectionState extends State<InfoBookSection> {
     );
   }
 
+  String _getCurrentBookStatus(BooksState state) {
+    if (state is BooksLoaded) {
+      try {
+        final book = state.books.firstWhere((b) => b.id == widget.book.id);
+        return book.status;
+      } catch (e) {
+        debugPrint('Libro no encontrado en lista: ${widget.book.id}');
+      }
+    }
+    return widget.book.status;
+  }
+
+  int _getSafeStateIndex(String status) {
+    final index = AppConstants.bookStates.indexOf(status);
+    return index >= 0 ? index : 0;
+  }
+
   void _showStateModal() {
+    final bloc = context.read<BooksBloc>();
+    final currentStatus = _getCurrentBookStatus(bloc.state);
+    debugPrint('🔍 Status actual: "$currentStatus"');
+    debugPrint('🔍 Estados disponibles: ${AppConstants.bookStates}');
+    final currentIndex = AppConstants.bookStates.indexWhere((estado) {
+      return estado.toLowerCase() == currentStatus.toLowerCase().trim();
+    });
+
+    final safeIndex = currentIndex >= 0 ? currentIndex : 0;
+    debugPrint('🔍 Índice calculado: $safeIndex');
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black54,
       isScrollControlled: true,
       builder: (modalContext) => BlocProvider.value(
-        value: context.read<BooksBloc>(),
+        value: bloc,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.4,
+          height: MediaQuery.of(modalContext).size.height * 0.4,
           decoration: BoxDecoration(
             color: AppColors.backgroundPrimary,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: StateModal(
             estados: AppConstants.bookStates,
-            seleccionado: estadoActual,
+            seleccionado: safeIndex,
             onSeleccionar: (nuevoIndex) {
-              _pendingIndex = nuevoIndex;
-              modalContext.read<BooksBloc>().add(
+              pendingIndex = nuevoIndex;
+              bloc.add(
                 UpdateBookState(
                   bookId: widget.book.id,
                   newState: AppConstants.bookStates[nuevoIndex],

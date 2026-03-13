@@ -84,7 +84,7 @@ class BooksRemoteDataSource {
       );
     } catch (e) {
       debugPrint('🔴 Streak RPC error: $e');
-        streakResponse = 0;
+      streakResponse = 0;
     }
 
     final streak = _extractStreak(streakResponse);
@@ -102,9 +102,10 @@ class BooksRemoteDataSource {
     try {
       await _supabase
           .from('books')
-          .update({'state': newState})
+          .update({'status': newState})
           .eq('id', bookId)
           .eq('user_id', _supabase.auth.currentUser!.id);
+      debugPrint('✅ Supabase OK');
     } catch (e) {
       rethrow;
     }

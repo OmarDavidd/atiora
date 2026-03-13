@@ -1,3 +1,4 @@
+import 'package:atiora/data/models/book_model.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,23 +24,18 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
 
     on<UpdateBookState>((event, emit) async {
       if (state is BooksLoaded) {
-        final currentBooks = (state as BooksLoaded).books;
-        final updatedBooks = currentBooks.map((book) {
-          if (book.id == event.bookId) {
-            return book.copyWith(status: event.newState);
-          }
-          return book;
-        }).toList();
-        emit(BooksLoaded(updatedBooks));
+        final books = List<BookModel>.from((state as BooksLoaded).books);
+        final idx = books.indexWhere((b) => b.id == event.bookId);
+        if (idx != -1) books[idx] = books[idx].copyWith(status: event.newState);
+        emit(BooksLoaded(books));
       }
       try {
         await _repository.updateBookState(event.bookId, event.newState);
-        debugPrint('✅ Estado actualizado: ${event.newState}');
-        emit(BookStateUpdateSuccess());
+        debugPrint('✅ DB actualizado: ${event.newState}');
       } catch (e) {
-        debugPrint('❌ updateBookState error: $e');
+        debugPrint('❌ DB error: $e');
         add(LoadBooks());
-        emit(BookStateUpdateError('Error al actualizar estado'));
+        return;
       }
     }, transformer: restartable());
   }

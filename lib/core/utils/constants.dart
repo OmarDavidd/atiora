@@ -24,10 +24,10 @@ class AppConstants {
 
   // Book States
   static const List<String> bookStates = [
-    'leyendo',
-    'completado',
-    'pausado',
-    'pendiente',
+    'Leyendo',
+    'Completado',
+    'Pausado',
+    'Pendiente',
   ];
 
   // Storage Keys
