@@ -12,10 +12,7 @@ class StatsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalPages = book.totalPages;
     final currentPage = book.currentPage;
-    final percentage = AppHelpers.calcPercentage(
-      totalPages,
-      currentPage,
-    );
+    final percentage = AppHelpers.calcPercentage(totalPages, currentPage);
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -34,7 +31,7 @@ class StatsSection extends StatelessWidget {
           Expanded(
             child: CustomStatCard(
               title: "CALIFICACION",
-              subtitle: book.rating.toString(),
+              subtitle: book.rating.toStringAsFixed(1),
               widget: CustomRatingWidget(rating: book.rating),
             ),
           ),

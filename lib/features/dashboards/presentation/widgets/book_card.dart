@@ -1,6 +1,4 @@
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class BookCard extends StatelessWidget {
   final String title;
@@ -35,14 +33,14 @@ class BookCard extends StatelessWidget {
                   child: Container(
                     height: 200,
                     width: double.infinity,
-                    color: AppColors.neutral400,
+                    color: Theme.of(context).colorScheme.surfaceVariant,
                     child: Image.asset(
                       coverPath,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.book,
                         size: 60,
-                        color: AppColors.neutral400,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
                   ),
@@ -54,23 +52,9 @@ class BookCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.neutral0,
-                      ),
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
                     SizedBox(height: 4),
-                    Text(
-                      author,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.neutral400,
-                      ),
-                    ),
+                    Text(author, style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),

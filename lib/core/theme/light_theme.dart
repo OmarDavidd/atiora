@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
+
 import '../utils/app_colors.dart';
-import '../utils/constants.dart';
 
 class LightTheme {
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.light,
-    ),
+    colorScheme:
+        ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.light,
+        ).copyWith(
+          surface: AppColors.neutral0,
+          background: AppColors.neutral0,
+          onBackground: AppColors.neutral900,
+          outline: AppColors.neutral500,
+          surfaceVariant: const Color(0xFFE2E8F0),
+        ),
     scaffoldBackgroundColor: AppColors.neutral0,
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.neutral0,
       foregroundColor: AppColors.neutral900,
-      elevation: AppConstants.cardElevation,
+      elevation: 0,
       titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
         color: AppColors.neutral900,
+        letterSpacing: 3,
       ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -28,40 +36,35 @@ class LightTheme {
     ),
     cardTheme: CardThemeData(
       color: AppColors.neutral0,
-      elevation: AppConstants.cardElevation,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-      ),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.neutral0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
-        ),
-        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       focusedBorder: OutlineInputBorder(
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
+        borderRadius: BorderRadius.circular(12),
       ),
       filled: true,
-      fillColor: AppColors.neutral400.withAlpha(26), // Reemplaza withOpacity
+      fillColor: const Color(0xFFF8FAFC),
     ),
     textTheme: const TextTheme(
       headlineLarge: TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.w700,
         color: AppColors.neutral900,
+        letterSpacing: 3,
       ),
       headlineMedium: TextStyle(
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: FontWeight.w600,
         color: AppColors.neutral900,
       ),
@@ -77,7 +80,7 @@ class LightTheme {
       ),
       labelLarge: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: AppColors.neutral0,
       ),
     ),

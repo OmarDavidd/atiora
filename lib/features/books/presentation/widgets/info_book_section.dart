@@ -9,7 +9,6 @@ import 'package:atiora/features/books/presentation/widgets/custom_state_widget.d
 import 'package:atiora/features/books/presentation/widgets/state_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class InfoBookSection extends StatefulWidget {
   final BookModel book;
@@ -48,14 +47,14 @@ class _InfoBookSectionState extends State<InfoBookSection> {
                     top: Radius.circular(12),
                   ),
                   child: Container(
-                    color: AppColors.neutral400,
+                    color: Theme.of(context).colorScheme.surfaceVariant,
                     child: Image.asset(
                       'assets/missingbook.webp',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.book,
                         size: 80,
-                        color: AppColors.neutral400,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
                   ),
@@ -70,13 +69,13 @@ class _InfoBookSectionState extends State<InfoBookSection> {
               const SizedBox(height: 10),
               Text(
                 widget.book.title,
-                style: GoogleFonts.jaini(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.neutral0,
-                ),
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
-              Text(widget.book.genre.join('●')),
+              const SizedBox(height: 4),
+              Text(
+                widget.book.genre.join(' • '),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
         );
@@ -136,13 +135,13 @@ class _InfoBookSectionState extends State<InfoBookSection> {
           const SizedBox(height: 10),
           Text(
             widget.book.title,
-            style: GoogleFonts.jaini(
-              fontSize: 30,
-              fontWeight: FontWeight.w400,
-              color: AppColors.neutral0,
-            ),
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
-          Text(widget.book.genre.join('●')),
+          const SizedBox(height: 4),
+          Text(
+            widget.book.genre.join(' • '),
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );

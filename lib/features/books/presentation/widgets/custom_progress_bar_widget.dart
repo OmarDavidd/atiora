@@ -1,4 +1,3 @@
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomProgressBarWidget extends StatelessWidget {
@@ -27,13 +26,18 @@ class CustomProgressBarWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hintPercentage == true)
-            Text(percentage, style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              percentage,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
           SizedBox(height: 8),
           LinearProgressIndicator(value: progress),
           SizedBox(height: 4),
           Text(
             "Página $currentPage de $totalPages",
-            style: TextStyle(color: AppColors.neutral600, fontSize: 10),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),

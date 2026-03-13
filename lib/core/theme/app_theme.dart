@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../utils/constants.dart';
-import 'light_theme.dart';
 import 'dark_theme.dart';
+import 'light_theme.dart';
 
 class AppTheme {
   static ThemeData getTheme(BuildContext context, ThemeMode mode) {
@@ -19,8 +20,11 @@ class AppTheme {
     }
   }
 
+  @visibleForTesting
+  static SharedPreferences? sharedPreferences;
+
   static Future<void> saveThemeMode(ThemeMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setString(
       AppConstants.themeModeKey,
       mode == ThemeMode.dark ? 'dark' : 'light',
@@ -28,10 +32,18 @@ class AppTheme {
   }
 
   static Future<ThemeMode> loadThemeMode() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     final themeString = prefs.getString(AppConstants.themeModeKey);
 
     if (themeString == 'dark') return ThemeMode.dark;
     return ThemeMode.light;
+  }
+
+  static Future<SharedPreferences> get _prefs async {
+    if (sharedPreferences != null) {
+      return sharedPreferences!;
+    }
+    sharedPreferences = await SharedPreferences.getInstance();
+    return sharedPreferences!;
   }
 }

@@ -1,5 +1,4 @@
 import 'package:atiora/core/di/injection_container.dart';
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
@@ -11,7 +10,7 @@ import 'package:atiora/features/dashboards/presentation/widgets/books_carousel.d
 import 'package:atiora/features/dashboards/presentation/widgets/home_stats_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:atiora/core/theme/theme_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = context.watch<ThemeCubit>().state;
+    final isDark = themeMode == ThemeMode.dark;
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _booksBloc),
@@ -45,14 +46,17 @@ class _HomeScreenState extends State<HomeScreen> {
           automaticallyImplyLeading: false,
           title: Text(
             "Atiora",
-            style: GoogleFonts.jaini(
-              fontSize: 30,
-              fontWeight: FontWeight.w300,
-              color: AppColors.neutral0,
-              letterSpacing: 6,
-              height: 1.0,
-            ),
+            style: Theme.of(context).textTheme.headlineLarge,
           ),
+          actions: [
+            IconButton(
+              tooltip: 'Cambiar tema',
+              icon: Icon(
+                isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+              ),
+              onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+            ),
+          ],
         ),
         body: BlocListener<HomeStatsBloc, HomeStatsState>(
           listener: (context, state) {
@@ -72,7 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(height: 30),
                   BlocBuilder<HomeStatsBloc, HomeStatsState>(
                     builder: (context, state) {
-                      final stats = state is HomeStatsLoaded ? state.stats : null;
+                      final stats = state is HomeStatsLoaded
+                          ? state.stats
+                          : null;
 
                       return HomeStatsSection(
                         totalBooksRead: stats?.booksMonth.toString() ?? '0',
@@ -82,7 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-
                 ],
               ),
             ),

@@ -1,4 +1,3 @@
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/books/presentation/widgets/custom_stat_card.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +16,8 @@ class HomeStatsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -24,10 +25,9 @@ class HomeStatsSection extends StatelessWidget {
         children: [
           Text(
             "TU ACTIVIDAD",
-            style: TextStyle(
-              fontSize: 15,
+            style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w900,
-              color: AppColors.primaryDark,
+              color: colorScheme.primary,
               letterSpacing: 0.5,
             ),
           ),
@@ -43,22 +43,31 @@ class HomeStatsSection extends StatelessWidget {
               CustomStatCard(
                 title: "LEIDOS",
                 subtitle: totalBooksRead,
-                widget: Text("Libros totales leidos"),
+                widget: Text(
+                  "Libros totales leídos",
+                  style: textTheme.bodySmall,
+                ),
               ),
               CustomStatCard(
                 title: "LEIDAS",
                 subtitle: totalPagesRead,
-                widget: Text("Paginas totales leidas"),
+                widget: Text(
+                  "Páginas totales leídas",
+                  style: textTheme.bodySmall,
+                ),
               ),
               CustomStatCard(
                 title: "RACHA",
                 subtitle: streak,
-                widget: Text("Dias de racha"),
+                widget: Text("Días de racha", style: textTheme.bodySmall),
               ),
               CustomStatCard(
                 title: "PROMEDIO",
                 subtitle: average,
-                widget: Text("Estrellas en promedio"),
+                widget: Text(
+                  "Estrellas en promedio",
+                  style: textTheme.bodySmall,
+                ),
               ),
             ],
           ),

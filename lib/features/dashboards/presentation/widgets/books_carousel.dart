@@ -1,5 +1,4 @@
 import 'package:atiora/core/navigation/app_router.dart';
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
@@ -7,7 +6,6 @@ import 'package:atiora/features/dashboards/presentation/widgets/book_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class BooksCarousel extends StatefulWidget {
   const BooksCarousel({super.key});
@@ -29,13 +27,12 @@ class _BooksCarouselState extends State<BooksCarousel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal:16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             "LEYENDO AHORA",
-            style: TextStyle(
-              fontSize: 15,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w900,
-              color: AppColors.primaryDark,
+              color: Theme.of(context).colorScheme.primary,
               letterSpacing: 0.5,
             ),
           ),
@@ -44,7 +41,7 @@ class _BooksCarouselState extends State<BooksCarousel> {
         BlocBuilder<BooksBloc, BooksState>(
           builder: (context, state) {
             if (state is BooksLoading) {
-              return CircularProgressIndicator();
+              return const Center(child: CircularProgressIndicator());
             }
             if (state is BooksLoaded) {
               final books = state.books;
@@ -56,15 +53,12 @@ class _BooksCarouselState extends State<BooksCarousel> {
                       Icon(
                         Icons.book_outlined,
                         size: 60,
-                        color: AppColors.neutral400,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                       SizedBox(height: 12),
                       Text(
                         "No tienes libros aún",
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          color: AppColors.neutral400,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),

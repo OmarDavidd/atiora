@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:atiora/core/utils/app_colors.dart';
 
 class CustomRatingWidget extends StatelessWidget {
   final double rating;
@@ -12,13 +11,14 @@ class CustomRatingWidget extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
+        final icon = index < rating.floor()
+            ? Icons.star
+            : index < rating
+            ? Icons.star_half
+            : Icons.star_border;
         return Icon(
-          index < rating.floor()
-              ? Icons.star
-              : index < rating
-              ? Icons.star_half
-              : Icons.star_border,
-          color: AppColors.pending,
+          icon,
+          color: Theme.of(context).colorScheme.tertiary,
           size: size,
         );
       }),
