@@ -67,11 +67,13 @@ class HomeStatsSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Tu actividad', style: textTheme.headlineLarge),
-                    const SizedBox(height: 6),
                     Text(
-                      'Resumen rápido de tus hábitos recientes',
-                      style: textTheme.bodySmall,
+                      'TU ACTIVIDAD',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.primary,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ],
                 ),
@@ -83,12 +85,21 @@ class HomeStatsSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
-              final isSingleColumn = constraints.maxWidth < 520;
-              final crossAxisCount = isSingleColumn ? 1 : 2;
-              final aspectRatio = isSingleColumn ? 2.4 : 1.45;
+              final fallbackWidth = MediaQuery.sizeOf(context).width - 32;
+              final availableWidth = constraints.hasBoundedWidth
+                  ? constraints.maxWidth
+                  : fallbackWidth;
+              final forceTwoColumns = availableWidth >= 220;
+              final crossAxisCount = forceTwoColumns ? 2 : 1;
+              final isSingleColumn = crossAxisCount == 1;
+              final totalSpacing = (crossAxisCount - 1) * 16;
+              final tileWidth =
+                  (availableWidth - totalSpacing) / crossAxisCount;
+              final desiredHeight = isSingleColumn ? 190.0 : 160.0;
+              final aspectRatio = tileWidth / desiredHeight;
 
               return GridView.builder(
                 shrinkWrap: true,
@@ -165,38 +176,17 @@ class _StatTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             color: colors.surface,
             border: Border.all(color: colors.outline.withValues(alpha: 0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow.withValues(
-                  alpha: Theme.of(context).brightness == Brightness.dark
-                      ? 0.18
-                      : 0.04,
-                ),
-                blurRadius: 20,
-                offset: const Offset(0, 12),
-              ),
-            ],
           ),
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _IconBadge(
-                    icon: data.icon,
-                    color: data.accent,
-                    background: data.accentBackground,
-                  ),
-                  Icon(
-                    Icons.arrow_outward_rounded,
-                    color: colors.outlineVariant,
-                    size: 18,
-                  ),
-                ],
+              _IconBadge(
+                icon: data.icon,
+                color: data.accent,
+                background: data.accentBackground,
               ),
-              const Spacer(),
+              const SizedBox(height: 10),
               Text(
                 data.title,
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -205,10 +195,24 @@ class _StatTile extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(data.value, style: theme.textTheme.headlineMedium),
-              const SizedBox(height: 6),
-              Text(data.helper, style: theme.textTheme.bodySmall),
+              const SizedBox(height: 4),
+              Text(
+                data.value,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                data.helper,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.outline,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
