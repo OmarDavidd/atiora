@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/app_colors.dart';
 
@@ -16,15 +17,15 @@ class LightTheme {
           surfaceContainerHighest: const Color(0xFFE2E8F0),
         ),
     scaffoldBackgroundColor: AppColors.neutral0,
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: AppColors.neutral0,
       foregroundColor: AppColors.neutral900,
       elevation: 0,
-      titleTextStyle: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
+      titleTextStyle: GoogleFonts.jaini(
+        fontSize: 32,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 4,
         color: AppColors.neutral900,
-        letterSpacing: 3,
       ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -55,31 +56,41 @@ class LightTheme {
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
     ),
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
+    textTheme: TextTheme(
+      headlineLarge: GoogleFonts.jaini(
+        fontSize: 32,
+        fontWeight: FontWeight.w400,
         color: AppColors.neutral900,
-        letterSpacing: 3,
+        letterSpacing: 4,
       ),
-      headlineMedium: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: AppColors.neutral900,
-      ),
-      bodyLarge: TextStyle(
-        fontSize: 16,
+      headlineMedium: GoogleFonts.jaini(
+        fontSize: 24,
         fontWeight: FontWeight.w400,
         color: AppColors.neutral900,
       ),
-      bodyMedium: TextStyle(
+      titleLarge: GoogleFonts.jaini(
+        fontSize: 22,
+        fontWeight: FontWeight.w400,
+        color: AppColors.neutral900,
+      ),
+      bodyLarge: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: AppColors.neutral900,
+      ),
+      bodyMedium: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: AppColors.neutral600,
       ),
-      labelLarge: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+      bodySmall: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.neutral500,
+      ),
+      labelLarge: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
         color: AppColors.neutral0,
       ),
     ),

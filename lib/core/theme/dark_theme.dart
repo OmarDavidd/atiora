@@ -17,15 +17,15 @@ class DarkTheme {
           surfaceContainerHighest: AppColors.surfacePrimary,
         ),
     scaffoldBackgroundColor: AppColors.backgroundPrimary,
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: AppColors.backgroundPrimary,
       foregroundColor: AppColors.neutral0,
       elevation: 0,
-      titleTextStyle: TextStyle(
-        fontSize: 28,
+      titleTextStyle: GoogleFonts.jaini(
+        fontSize: 32,
         fontWeight: FontWeight.w400,
+        letterSpacing: 4,
         color: AppColors.neutral0,
-        letterSpacing: 3,
       ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -58,19 +58,24 @@ class DarkTheme {
     ),
     textTheme: TextTheme(
       headlineLarge: GoogleFonts.jaini(
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: FontWeight.w400,
         color: AppColors.neutral0,
-        letterSpacing: 3,
+        letterSpacing: 4,
       ),
       headlineMedium: GoogleFonts.jaini(
+        fontSize: 24,
+        fontWeight: FontWeight.w400,
+        color: AppColors.neutral0,
+      ),
+      titleLarge: GoogleFonts.jaini(
         fontSize: 22,
         fontWeight: FontWeight.w400,
         color: AppColors.neutral0,
       ),
       bodyLarge: GoogleFonts.inter(
         fontSize: 16,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         color: AppColors.neutral0,
       ),
       bodyMedium: GoogleFonts.inter(
@@ -78,9 +83,14 @@ class DarkTheme {
         fontWeight: FontWeight.w400,
         color: AppColors.neutral400,
       ),
+      bodySmall: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.neutral500,
+      ),
       labelLarge: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
         color: AppColors.backgroundPrimary,
       ),
     ),
