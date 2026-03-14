@@ -1,4 +1,5 @@
 import 'package:atiora/features/dashboards/presentation/screens/home_screen.dart';
+import 'package:atiora/features/library/presentation/screens/library_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainNavPage extends StatefulWidget {
@@ -10,17 +11,16 @@ class MainNavPage extends StatefulWidget {
 
 class MainNavPageState extends State<MainNavPage> {
   int _currentIndex = 0;
-
-  // Una pantalla real por tab — las otras son placeholders por ahora
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      const HomeScreen(),
-      const Scaffold(body: Center(child: Text("Search"))),
-      const Scaffold(body: Center(child: Text("Perfil"))),
+    _screens = const [
+      HomeScreen(),
+      LibraryScreen(),
+      _StatsPlaceholder(),
+      _ProfilePlaceholder(),
     ];
   }
 
@@ -28,16 +28,55 @@ class MainNavPageState extends State<MainNavPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
+      bottomNavigationBar: NavigationBar(
+        height: 72,
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Inicio',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.library_books_outlined),
+            selectedIcon: Icon(Icons.library_books_rounded),
+            label: 'Biblioteca',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart_rounded),
+            label: 'Estadísticas',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
         ],
-        type: BottomNavigationBarType.fixed,
       ),
+    );
+  }
+}
+
+class _StatsPlaceholder extends StatelessWidget {
+  const _StatsPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Explora métricas y hábitos de lectura')),
+    );
+  }
+}
+
+class _ProfilePlaceholder extends StatelessWidget {
+  const _ProfilePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Configura tu perfil y preferencias')),
     );
   }
 }

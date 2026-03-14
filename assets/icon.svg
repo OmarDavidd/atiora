@@ -1,0 +1,36 @@
+<!-- Atiora - Icono + texto (texto usando font-family: Jaini; requiere la fuente instalada)
+     Colores: bg #121F20, icon #19B399, text #FFFFFF
+     Uso: Android (lockup para branding / Play Store), no es adaptive icon -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Atiora lockup">
+  <!-- Fondo -->
+  <rect width="1024" height="1024" rx="224" fill="#121F20"/>
+
+  <!-- ICONO (arriba) -->
+  <!-- Base cuadrada interna opcional (descomenta si quieres “tile” encima del fondo)
+  <rect x="192" y="92" width="640" height="640" rx="176" fill="#121F20" opacity="0.0"/>
+  -->
+
+  <!-- Marca (forma tipo libro + marcador + líneas) -->
+  <g transform="translate(0, -22)">
+    <!-- Contenedor redondeado del símbolo -->
+    <rect x="272" y="140" width="480" height="560" rx="140" fill="#19B399"/>
+
+    <!-- Corte bookmark en V (mismo color que fondo para que se “recorte”) -->
+    <path d="M512 552L406 648c-18 16-46 4-46-20V312c0-26 22-48 48-48h208c26 0 48 22 48 48v316c0 24-28 36-46 20L512 552z"
+          fill="#121F20" opacity="1"/>
+
+    <!-- Líneas (notas) -->
+    <rect x="418" y="322" width="188" height="56" rx="28" fill="#121F20"/>
+    <rect x="418" y="416" width="188" height="56" rx="28" fill="#121F20"/>
+  </g>
+
+  <!-- TEXTO (abajo) -->
+  <text x="512" y="872"
+        text-anchor="middle"
+        font-family="Jaini, 'Jaini Regular', cursive"
+        font-size="128"
+        fill="#FFFFFF"
+        letter-spacing="1">
+    Atiora
+  </text>
+</svg>
