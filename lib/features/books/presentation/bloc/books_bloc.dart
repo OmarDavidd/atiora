@@ -123,5 +123,21 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
       }
       add(LoadBooks());
     }, transformer: restartable());
+
+    on<LogReadingSession>((event, emit) async {
+      if (event.pagesDelta == 0) {
+        return;
+      }
+      try {
+        await _repository.logReadingSession(
+          event.bookId,
+          event.pagesDelta,
+          sessionDate: event.sessionDate,
+        );
+      } catch (e) {
+        debugPrint('BooksBloc.logReadingSession failed: $e');
+        emit(BookStateUpdateError('No pudimos registrar tu sesión de lectura'));
+      }
+    });
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:atiora/core/errors/app_exception.dart';
@@ -15,6 +16,8 @@ class BooksRepositoryImpl implements BooksRepository {
   final BooksRemoteDataSource _remote;
   final ConnectivityPlatform _connectivity;
   final HiveService _hive;
+  final StreamController<void> _statsController =
+      StreamController<void>.broadcast();
 
   DateTime? _lastSync;
 
@@ -187,6 +190,7 @@ class BooksRepositoryImpl implements BooksRepository {
   Future<void> processPendingOperations() async {
     if (!await _isOnline()) return;
     final pending = _hive.getPendingOperations();
+    var statsChanged = false;
     for (final entry in pending) {
       final key = entry.key;
       final op = entry.value;
@@ -219,13 +223,36 @@ class BooksRepositoryImpl implements BooksRepository {
                   : null,
             );
             break;
+          case 'reading_session':
+            final rawDelta = op['pagesDelta'] ?? op['pagesRead'];
+            if (rawDelta is! int) {
+              throw StateError('Pending reading session missing delta');
+            }
+            await _remote.logReadingSession(
+              op['bookId'] as String,
+              rawDelta,
+              sessionDate: op['sessionDate'] != null
+                  ? DateTime.parse(op['sessionDate'] as String)
+                  : null,
+            );
+            break;
           default:
             debugPrint('Unknown pending op type: $type');
         }
         await _hive.removePendingOperation(key);
+        if (type == 'reading_session' ||
+            type == 'state' ||
+            type == 'add' ||
+            type == 'update' ||
+            type == 'delete') {
+          statsChanged = true;
+        }
       } catch (e) {
         debugPrint('Failed to process pending op $type: $e');
       }
+    }
+    if (statsChanged) {
+      _statsController.add(null);
     }
   }
 
@@ -258,6 +285,8 @@ class BooksRepositoryImpl implements BooksRepository {
     int? currentPage,
     double? rating,
     DateTime? finishedAt,
+    int? pagesDelta,
+    DateTime? sessionDate,
   }) async {
     await _hive.enqueuePendingOperation({
       'type': type,
@@ -267,6 +296,9 @@ class BooksRepositoryImpl implements BooksRepository {
       if (currentPage != null) 'currentPage': currentPage,
       if (rating != null) 'rating': rating,
       if (finishedAt != null) 'finishedAt': finishedAt.toIso8601String(),
+      if (pagesDelta != null) 'pagesDelta': pagesDelta,
+      if (pagesDelta != null) 'pagesRead': pagesDelta,
+      if (sessionDate != null) 'sessionDate': sessionDate.toIso8601String(),
     });
   }
 
@@ -282,7 +314,7 @@ class BooksRepositoryImpl implements BooksRepository {
       };
     }
 
-    int pagesRead = 0;
+    int totalRead = 0;
     int booksTouched = 0;
     int booksFinished = 0;
     double ratingSum = 0;
@@ -291,7 +323,7 @@ class BooksRepositoryImpl implements BooksRepository {
     for (final book in books) {
       final normalizedStatus = book.status.toLowerCase().trim();
       final safePage = math.min(book.currentPage, book.totalPages);
-      pagesRead += safePage;
+      totalRead += safePage;
       if (book.currentPage > 0 || normalizedStatus != 'pendiente') {
         booksTouched++;
       }
@@ -307,7 +339,7 @@ class BooksRepositoryImpl implements BooksRepository {
     final averageRating = ratedCount == 0 ? 0.0 : ratingSum / ratedCount;
 
     return {
-      'pagesThisMonth': pagesRead,
+      'pagesThisMonth': totalRead,
       'booksTouched': booksTouched,
       'booksFinished': booksFinished,
       'streak': 0,
@@ -362,6 +394,7 @@ class BooksRepositoryImpl implements BooksRepository {
           ),
         );
       }
+      _statsController.add(null);
     } catch (e) {
       debugPrint('BooksRepositoryImpl.updateBookState local update failed: $e');
       await _queueOperation(
@@ -378,6 +411,48 @@ class BooksRepositoryImpl implements BooksRepository {
       );
     }
   }
+
+  @override
+  Future<void> logReadingSession(
+    String bookId,
+    int pagesDelta, {
+    DateTime? sessionDate,
+  }) async {
+    final normalizedDate = sessionDate ?? DateTime.now();
+    if (pagesDelta == 0) {
+      return;
+    }
+    try {
+      final isOnline = await _isOnline();
+      if (isOnline) {
+        await _remote.logReadingSession(
+          bookId,
+          pagesDelta,
+          sessionDate: normalizedDate,
+        );
+      } else {
+        await _queueOperation(
+          'reading_session',
+          bookId: bookId,
+          pagesDelta: pagesDelta,
+          sessionDate: normalizedDate,
+        );
+      }
+    } catch (e) {
+      debugPrint('BooksRepositoryImpl.logReadingSession failed: $e');
+      await _queueOperation(
+        'reading_session',
+        bookId: bookId,
+        pagesDelta: pagesDelta,
+        sessionDate: normalizedDate,
+      );
+    } finally {
+      _statsController.add(null);
+    }
+  }
+
+  @override
+  Stream<void> get statsChanges => _statsController.stream;
 
   @override
   Future<void> saveAddBookDraft(String userId, AddBookDraft draft) async {

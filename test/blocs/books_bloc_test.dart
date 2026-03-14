@@ -12,6 +12,10 @@ class MockBooksRepository extends Mock implements BooksRepository {}
 
 class MockHiveService extends Mock implements HiveService {}
 
+class _FakeLogEvent extends LogReadingSession {
+  _FakeLogEvent() : super(bookId: 'book', pagesDelta: 1);
+}
+
 void main() {
   late MockBooksRepository mockRepository;
   late MockHiveService mockHiveService;
@@ -37,6 +41,7 @@ void main() {
         updatedAt: DateTime.now(),
       ),
     );
+    registerFallbackValue(_FakeLogEvent());
   });
 
   group('BooksBloc', () {
@@ -215,6 +220,122 @@ void main() {
       expect: () => [isA<BooksLoading>(), isA<BooksLoaded>()],
       verify: (_) {
         verify(() => mockRepository.processPendingOperations()).called(1);
+      },
+    );
+
+    blocTest<BooksBloc, BooksState>(
+      'delegates LogReadingSession with signed delta to repository',
+      build: () {
+        when(
+          () => mockRepository.logReadingSession(
+            any(),
+            any(),
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).thenAnswer((_) async {});
+        return BooksBloc(mockRepository, hive: mockHiveService);
+      },
+      act: (bloc) =>
+          bloc.add(LogReadingSession(bookId: 'book-1', pagesDelta: -12)),
+      expect: () => <BooksState>[],
+      verify: (_) {
+        verify(
+          () => mockRepository.logReadingSession(
+            'book-1',
+            -12,
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BooksBloc, BooksState>(
+      'emits error state when LogReadingSession throws',
+      build: () {
+        when(
+          () => mockRepository.logReadingSession(
+            any(),
+            any(),
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).thenThrow(Exception('boom'));
+        return BooksBloc(mockRepository, hive: mockHiveService);
+      },
+      act: (bloc) =>
+          bloc.add(LogReadingSession(bookId: 'book-1', pagesDelta: 8)),
+      expect: () => [
+        isA<BookStateUpdateError>().having(
+          (state) => state.message,
+          'message',
+          'No pudimos registrar tu sesión de lectura',
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => mockRepository.logReadingSession(
+            'book-1',
+            8,
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BooksBloc, BooksState>(
+      'delegates LogReadingSession with signed delta to repository',
+      build: () {
+        when(
+          () => mockRepository.logReadingSession(
+            any(),
+            any(),
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).thenAnswer((_) async {});
+        return BooksBloc(mockRepository, hive: mockHiveService);
+      },
+      act: (bloc) =>
+          bloc.add(LogReadingSession(bookId: 'book-1', pagesDelta: -12)),
+      expect: () => <BooksState>[],
+      verify: (_) {
+        verify(
+          () => mockRepository.logReadingSession(
+            'book-1',
+            -12,
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<BooksBloc, BooksState>(
+      'emits error state when LogReadingSession throws',
+      build: () {
+        when(
+          () => mockRepository.logReadingSession(
+            any(),
+            any(),
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).thenThrow(Exception('boom'));
+        return BooksBloc(mockRepository, hive: mockHiveService);
+      },
+      act: (bloc) =>
+          bloc.add(LogReadingSession(bookId: 'book-1', pagesDelta: 8)),
+      expect: () => [
+        isA<BookStateUpdateError>().having(
+          (state) => state.message,
+          'message',
+          'No pudimos registrar tu sesión de lectura',
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => mockRepository.logReadingSession(
+            'book-1',
+            8,
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).called(1);
       },
     );
   });

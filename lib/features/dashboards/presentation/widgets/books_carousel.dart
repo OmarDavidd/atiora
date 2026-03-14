@@ -1,26 +1,14 @@
 import 'package:atiora/core/navigation/app_router.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
-import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/book_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class BooksCarousel extends StatefulWidget {
+class BooksCarousel extends StatelessWidget {
   const BooksCarousel({super.key});
-
-  @override
-  State<BooksCarousel> createState() => _BooksCarouselState();
-}
-
-class _BooksCarouselState extends State<BooksCarousel> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<BooksBloc>().add(LoadBooks());
-  }
 
   @override
   Widget build(BuildContext context) {

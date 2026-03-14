@@ -128,6 +128,25 @@ class BooksRemoteDataSource {
     }
   }
 
+  Future<void> logReadingSession(
+    String bookId,
+    int pagesDelta, {
+    DateTime? sessionDate,
+  }) async {
+    final userId = _requireUser();
+    try {
+      await _supabase.from('reading_sessions').insert({
+        'user_id': userId,
+        'book_id': bookId,
+        'pages_read': pagesDelta,
+        'session_date': (sessionDate ?? DateTime.now()).toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('BooksRemoteDataSource.logReadingSession failed: $e');
+      rethrow;
+    }
+  }
+
   int _extractStreak(dynamic response) {
     if (response == null) return 0;
     if (response is int) return response;

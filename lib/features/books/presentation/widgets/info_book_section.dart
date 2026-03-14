@@ -168,17 +168,29 @@ class _InfoBookSectionState extends State<InfoBookSection> {
     double? rating;
 
     if (revertedToReading) {
-      final newProgress = await _requestProgressInput(book);
+      final reference = _bookSnapshot ?? book;
+      final newProgress = await _requestProgressInput(reference);
       if (newProgress == null) {
         return false;
       }
       updatedPage = newProgress;
+      final delta = newProgress - reference.currentPage;
+      if (delta != 0) {
+        bloc.add(LogReadingSession(bookId: book.id, pagesDelta: delta));
+      }
     } else if (completed) {
-      updatedPage = book.totalPages;
+      final reference = _bookSnapshot ?? book;
+      updatedPage = reference.totalPages;
       finishedAt = DateTime.now();
-      rating = await _requestRatingInput(book);
+      rating = await _requestRatingInput(reference);
       if (rating == null) {
         return false;
+      }
+      final remainingPages = reference.totalPages - reference.currentPage;
+      if (remainingPages > 0) {
+        bloc.add(
+          LogReadingSession(bookId: book.id, pagesDelta: remainingPages),
+        );
       }
     }
 

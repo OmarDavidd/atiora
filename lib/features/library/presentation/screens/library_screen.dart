@@ -60,6 +60,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'library-add-book-fab',
           onPressed: () => _openAddBookModal(context),
           icon: const Icon(Icons.add),
           label: const Text('Agregar libro'),

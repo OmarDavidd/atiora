@@ -59,6 +59,13 @@ void main() {
     when(() => mockRemoteDataSource.updateBook(any())).thenAnswer((_) async {});
     when(() => mockRemoteDataSource.deleteBook(any())).thenAnswer((_) async {});
     when(
+      () => mockRemoteDataSource.logReadingSession(
+        any(),
+        any(),
+        sessionDate: any(named: 'sessionDate'),
+      ),
+    ).thenAnswer((_) async {});
+    when(
       () => mockRemoteDataSource.updateBookState(
         any(),
         any(),
@@ -248,6 +255,112 @@ void main() {
       ).called(1);
     });
 
+    group('logReadingSession', () {
+      test('envía sesión al remoto cuando está online y emite stats', () async {
+        connectivity.isOnline = true;
+        when(
+          () => mockRemoteDataSource.logReadingSession(
+            'book-1',
+            25,
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).thenAnswer((_) async {});
+
+        final expectation = expectLater(repository.statsChanges, emits(null));
+
+        await repository.logReadingSession('book-1', 25);
+
+        await expectation;
+        verify(
+          () => mockRemoteDataSource.logReadingSession(
+            'book-1',
+            25,
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        ).called(1);
+        verifyNever(() => mockHiveService.enqueuePendingOperation(any()));
+      });
+
+      test('cuando está offline encola la operación y emite stats', () async {
+        connectivity.isOnline = false;
+
+        final expectation = expectLater(repository.statsChanges, emits(null));
+
+        await repository.logReadingSession('book-1', 30);
+
+        await expectation;
+        final captured = verify(
+          () => mockHiveService.enqueuePendingOperation(captureAny()),
+        ).captured;
+        expect(captured, isNotEmpty);
+        final payload = captured.first as Map<String, dynamic>;
+        expect(payload['type'], 'reading_session');
+        expect(payload['bookId'], 'book-1');
+        expect(payload['pagesDelta'], 30);
+        expect(payload['sessionDate'], isNotNull);
+        verifyNever(
+          () => mockRemoteDataSource.logReadingSession(
+            any(),
+            any(),
+            sessionDate: any(named: 'sessionDate'),
+          ),
+        );
+      });
+
+      test(
+        'cuando Supabase falla encola la operación y sigue notificando',
+        () async {
+          connectivity.isOnline = true;
+          when(
+            () => mockRemoteDataSource.logReadingSession(
+              'book-1',
+              15,
+              sessionDate: any(named: 'sessionDate'),
+            ),
+          ).thenThrow(Exception('network'));
+
+          final expectation = expectLater(repository.statsChanges, emits(null));
+
+          await repository.logReadingSession('book-1', 15);
+
+          await expectation;
+          final captured = verify(
+            () => mockHiveService.enqueuePendingOperation(captureAny()),
+          ).captured;
+          expect(captured, isNotEmpty);
+          final payload = captured.first as Map<String, dynamic>;
+          expect(payload['type'], 'reading_session');
+          expect(payload['bookId'], 'book-1');
+          expect(payload['pagesDelta'], 15);
+          expect(payload['sessionDate'], isNotNull);
+        },
+      );
+
+      test(
+        'logReadingSession acepta deltas negativos cuando corrige progreso',
+        () async {
+          connectivity.isOnline = true;
+          when(
+            () => mockRemoteDataSource.logReadingSession(
+              any(),
+              any(),
+              sessionDate: any(named: 'sessionDate'),
+            ),
+          ).thenAnswer((_) async {});
+
+          await repository.logReadingSession('book-1', -12);
+
+          verify(
+            () => mockRemoteDataSource.logReadingSession(
+              'book-1',
+              -12,
+              sessionDate: any(named: 'sessionDate'),
+            ),
+          ).called(1);
+        },
+      );
+    });
+
     group('processPendingOperations', () {
       test('does nothing when offline', () async {
         connectivity.isOnline = false;
@@ -290,6 +403,35 @@ void main() {
         final saved = captured.first as BookModel;
         expect(saved.pendingSync, isFalse);
       });
+
+      test(
+        'reproduce sesiones de lectura pendientes cuando está online',
+        () async {
+          connectivity.isOnline = true;
+          final sessionDate = DateTime(2024, 2, 10);
+          when(() => mockHiveService.getPendingOperations()).thenReturn([
+            MapEntry('op-session', {
+              'type': 'reading_session',
+              'bookId': 'book-1',
+              'pagesDelta': 18,
+              'sessionDate': sessionDate.toIso8601String(),
+            }),
+          ]);
+
+          await repository.processPendingOperations();
+
+          verify(
+            () => mockRemoteDataSource.logReadingSession(
+              'book-1',
+              18,
+              sessionDate: sessionDate,
+            ),
+          ).called(1);
+          verify(
+            () => mockHiveService.removePendingOperation('op-session'),
+          ).called(1);
+        },
+      );
     });
   });
 }

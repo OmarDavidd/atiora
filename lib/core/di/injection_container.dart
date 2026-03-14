@@ -76,9 +76,9 @@ Future<void> init() async {
     ),
   );
 
-  // Books Bloc
-  sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));
-
   // Home stats Bloc
   sl.registerFactory<HomeStatsBloc>(() => HomeStatsBloc(sl<BooksRepository>()));
+
+  // Books Bloc
+  sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));
 }

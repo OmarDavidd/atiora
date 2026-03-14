@@ -17,6 +17,14 @@ abstract class BooksRepository {
     DateTime? finishedAt,
   });
 
+  Future<void> logReadingSession(
+    String bookId,
+    int pagesDelta, {
+    DateTime? sessionDate,
+  });
+
+  Stream<void> get statsChanges;
+
   Future<void> saveAddBookDraft(String userId, AddBookDraft draft);
 
   AddBookDraft? getAddBookDraft(String userId);

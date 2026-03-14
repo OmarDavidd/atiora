@@ -92,6 +92,10 @@ void _onProgressTap(BuildContext context, BookModel book) {
         clearFinishedAt: newStatus.toLowerCase() != 'completado',
       ),
     );
+    final delta = value - book.currentPage;
+    if (delta != 0) {
+      bloc.add(LogReadingSession(bookId: book.id, pagesDelta: delta));
+    }
   });
 }
 

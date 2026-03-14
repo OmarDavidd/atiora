@@ -5,7 +5,6 @@ class HomeStatsSection extends StatelessWidget {
   final String pagesThisMonth;
   final String streakDays;
   final String averageRating;
-  final String booksFinished;
   final bool isLoading;
 
   const HomeStatsSection({
@@ -14,7 +13,6 @@ class HomeStatsSection extends StatelessWidget {
     required this.pagesThisMonth,
     required this.streakDays,
     required this.averageRating,
-    required this.booksFinished,
     this.isLoading = false,
   });
 
@@ -43,15 +41,6 @@ class HomeStatsSection extends StatelessWidget {
         accentBackground: colorScheme.secondaryContainer.withValues(
           alpha: 0.25,
         ),
-        loading: isLoading,
-      ),
-      _HomeStatData(
-        title: 'Libros completados',
-        value: booksFinished,
-        helper: 'Este mes',
-        icon: Icons.emoji_events_rounded,
-        accent: colorScheme.tertiary,
-        accentBackground: colorScheme.tertiaryContainer.withValues(alpha: 0.2),
         loading: isLoading,
       ),
       _HomeStatData(

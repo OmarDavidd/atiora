@@ -21,3 +21,15 @@ class UpdateBookState extends BooksEvent {
     this.clearFinishedAt = false,
   });
 }
+
+class LogReadingSession extends BooksEvent {
+  final String bookId;
+  final int pagesDelta;
+  final DateTime sessionDate;
+
+  LogReadingSession({
+    required this.bookId,
+    required this.pagesDelta,
+    DateTime? sessionDate,
+  }) : sessionDate = sessionDate ?? DateTime.now();
+}

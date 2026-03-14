@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -10,9 +12,18 @@ class MockBooksRepository extends Mock implements BooksRepository {}
 
 void main() {
   late MockBooksRepository mockRepository;
+  late StreamController<void> statsController;
 
   setUp(() {
     mockRepository = MockBooksRepository();
+    statsController = StreamController<void>.broadcast();
+    when(
+      () => mockRepository.statsChanges,
+    ).thenAnswer((_) => statsController.stream);
+  });
+
+  tearDown(() async {
+    await statsController.close();
   });
 
   group('HomeStatsBloc', () {
@@ -25,12 +36,7 @@ void main() {
       'emits [HomeStatsLoading, HomeStatsLoaded] when LoadHomeStats succeeds',
       build: () {
         when(() => mockRepository.loadHomeStats()).thenAnswer(
-          (_) async => {
-            'pagesThisMonth': 500,
-            'booksTouched': 5,
-            'booksFinished': 2,
-            'streak': 10,
-          },
+          (_) async => {'pagesThisMonth': 500, 'booksTouched': 5, 'streak': 10},
         );
         return HomeStatsBloc(mockRepository);
       },
@@ -57,12 +63,7 @@ void main() {
       'HomeStatsLoaded contains correct data',
       build: () {
         when(() => mockRepository.loadHomeStats()).thenAnswer(
-          (_) async => {
-            'pagesThisMonth': 300,
-            'booksTouched': 3,
-            'booksFinished': 1,
-            'streak': 7,
-          },
+          (_) async => {'pagesThisMonth': 300, 'booksTouched': 3, 'streak': 7},
         );
         return HomeStatsBloc(mockRepository);
       },
@@ -72,6 +73,36 @@ void main() {
         expect(state.stats.pagesMonth, 300);
         expect(state.stats.booksMonth, 3);
         expect(state.stats.streak, 7);
+      },
+    );
+
+    blocTest<HomeStatsBloc, HomeStatsState>(
+      'recarga estadísticas cuando el stream statsChanges emite',
+      build: () {
+        var callCount = 0;
+        when(() => mockRepository.loadHomeStats()).thenAnswer((_) async {
+          callCount += 1;
+          return {
+            'pagesThisMonth': callCount * 100,
+            'booksTouched': callCount,
+            'streak': callCount,
+          };
+        });
+        return HomeStatsBloc(mockRepository);
+      },
+      act: (bloc) async {
+        bloc.add(LoadHomeStats());
+        await Future<void>.microtask(() {});
+        statsController.add(null);
+      },
+      expect: () => [
+        isA<HomeStatsLoading>(),
+        isA<HomeStatsLoaded>(),
+        isA<HomeStatsLoading>(),
+        isA<HomeStatsLoaded>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepository.loadHomeStats()).called(2);
       },
     );
   });

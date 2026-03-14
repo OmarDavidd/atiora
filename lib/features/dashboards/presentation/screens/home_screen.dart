@@ -24,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final BooksBloc _booksBloc = sl<BooksBloc>();
+  late final BooksBloc _booksBloc;
   final HomeStatsBloc _homeStatsBloc = sl<HomeStatsBloc>();
   late final Stream<List<ConnectivityResult>> _connectivityStream;
   late final ConnectivityPlatform _connectivity;
@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _booksBloc = sl<BooksBloc>();
     _connectivity = sl<ConnectivityPlatform>();
     _connectivityStream = _connectivity.onConnectivityChanged;
     _connectivitySubscription = _connectivityStream.listen((results) {
@@ -103,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         streakDays: stats?.streak.toString() ?? '0',
                         averageRating:
                             stats?.averageRating.toStringAsFixed(1) ?? '0.0',
-                        booksFinished: stats?.booksFinished.toString() ?? '0',
                         isLoading: state is HomeStatsLoading,
                       );
                     },
@@ -114,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'home-add-book-fab',
           onPressed: () => _showAddBookModal(context),
           icon: Icon(Icons.add),
           label: Text("Añadir libro"),
