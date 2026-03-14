@@ -29,157 +29,196 @@ class _AddBookModalState extends State<AddBookModal> {
   String? _status;
   int _rating = 0;
 
+  bool get _hasUnsavedChanges {
+    return _titleController.text.trim().isNotEmpty ||
+        _authorController.text.trim().isNotEmpty ||
+        selectedGenres.isNotEmpty ||
+        _totalPages != 1 ||
+        _currentPage != 1 ||
+        (_status?.isNotEmpty ?? false) ||
+        _rating != 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    "Añadir libro",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(flex: 2),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _titleController,
-                validator: (value) =>
-                    (value ?? '').trim().isEmpty ? 'Título requerido' : null,
-                decoration: InputDecoration(
-                  labelText: "Título *",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.book),
-                ),
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 20),
-
-              TextFormField(
-                controller: _authorController,
-                decoration: InputDecoration(
-                  labelText: "Autor",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.person),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              const Text(
-                "Géneros",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              CustomGenresWidget(
-                selectedGenres: selectedGenres,
-                onGenreToggled: (genre) => setState(() {
-                  if (selectedGenres.contains(genre)) {
-                    selectedGenres.remove(genre);
-                  } else {
-                    selectedGenres.add(genre);
-                  }
-                }),
-              ),
-              SizedBox(height: 20),
-
-              PagesConfigWidget(
-                totalPages: _totalPages,
-                currentPage: _currentPage,
-                onTotalPagesChanged: (val) => setState(() => _totalPages = val),
-                onCurrentPageChanged: (val) =>
-                    setState(() => _currentPage = val),
-              ),
-              if (_errorMessage != null) ...[
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.error,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade200, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.red.shade600,
-                        size: 20,
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          return;
+        }
+        _handleClose(shouldPop: true);
+      },
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + viewInsets),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      "Añadir libro",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(color: AppColors.neutral0),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const Spacer(flex: 2),
+                    IconButton(
+                      tooltip: 'Cerrar',
+                      onPressed: () => _handleClose(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 20),
-              ProgressSectionWidget(
-                status: _status,
-                rating: _rating,
-                onStatusChanged: (val) {
-                  setState(() {
-                    _status = val;
-                    if (_status != 'Completado') {
-                      _rating = 0;
-                    }
-                  });
-                },
-                onRatingChanged: (val) {
-                  setState(() => _rating = val);
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : _saveBook,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
+                const SizedBox(height: 24),
+                TextFormField(
+                  controller: _titleController,
+                  validator: (value) =>
+                      (value ?? '').trim().isEmpty ? 'Título requerido' : null,
+                  decoration: InputDecoration(
+                    labelText: "Título *",
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 0,
+                    prefixIcon: const Icon(Icons.book),
                   ),
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.next,
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _authorController,
+                  decoration: InputDecoration(
+                    labelText: "Autor",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.person),
+                  ),
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.name],
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Géneros",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                CustomGenresWidget(
+                  selectedGenres: selectedGenres,
+                  onGenreToggled: (genre) => setState(() {
+                    if (selectedGenres.contains(genre)) {
+                      selectedGenres.remove(genre);
+                    } else {
+                      selectedGenres.add(genre);
+                    }
+                  }),
+                ),
+                const SizedBox(height: 20),
+                PagesConfigWidget(
+                  totalPages: _totalPages,
+                  currentPage: _currentPage,
+                  onTotalPagesChanged: (val) =>
+                      setState(() => _totalPages = val),
+                  onCurrentPageChanged: (val) =>
+                      setState(() => _currentPage = val),
+                ),
+                const SizedBox(height: 16),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _errorMessage == null
+                      ? const SizedBox.shrink()
+                      : Container(
+                          key: ValueKey(_errorMessage),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.red.shade200,
+                              width: 1,
+                            ),
                           ),
-                        )
-                      : const Text(
-                          "Guardar libro",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                color: Colors.red.shade600,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _errorMessage!,
+                                  style: TextStyle(color: AppColors.neutral0),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                ProgressSectionWidget(
+                  status: _status,
+                  rating: _rating,
+                  onStatusChanged: (val) {
+                    setState(() {
+                      _status = val;
+                      if (_status != 'Completado') {
+                        _rating = 0;
+                      }
+                    });
+                  },
+                  onRatingChanged: (val) {
+                    setState(() => _rating = val);
+                  },
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : _saveBook,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Guardar libro",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+                if (!isLoading)
+                  TextButton.icon(
+                    onPressed: () => _handleClose(),
+                    icon: const Icon(Icons.exit_to_app_rounded),
+                    label: const Text('Salir sin guardar'),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -212,6 +251,7 @@ class _AddBookModalState extends State<AddBookModal> {
 
     setState(() => isLoading = true);
     try {
+      FocusScope.of(context).unfocus();
       final authProvider = sl<AuthProvider>();
       final currentUser = authProvider.currentUser;
 
@@ -249,6 +289,50 @@ class _AddBookModalState extends State<AddBookModal> {
     } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  Future<bool> _handleClose({bool shouldPop = false}) async {
+    if (!_hasUnsavedChanges || isLoading) {
+      if (shouldPop) {
+        return true;
+      }
+      if (mounted) {
+        Navigator.pop(context);
+      }
+      return false;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Descartar cambios'),
+        content: const Text(
+          'Perderás la información ingresada. ¿Deseas salir sin guardar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Seguir editando'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (shouldPop) {
+        return true;
+      }
+      if (mounted) {
+        Navigator.pop(context);
+      }
+      return false;
+    }
+
+    return false;
   }
 
   @override
