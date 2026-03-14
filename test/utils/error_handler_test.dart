@@ -1,5 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/utils/error_handler.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ErrorHandler', () {
@@ -38,6 +39,21 @@ void main() {
 
         expect(result, 'Credenciales inválidas. Verifica email/contraseña');
       });
+    });
+
+    test('map returns friendly message per exception type', () {
+      final authMessage = ErrorHandler.map(
+        AppException.auth('invalid_credentials'),
+      );
+      expect(authMessage, contains('Credenciales'));
+
+      final networkMessage = ErrorHandler.map(AppException.network('falló'));
+      expect(networkMessage, 'Sin conexión. Intenta nuevamente.');
+
+      final validationMessage = ErrorHandler.map(
+        AppException.validation('Campo requerido'),
+      );
+      expect(validationMessage, 'Campo requerido');
     });
   });
 }

@@ -1,5 +1,7 @@
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/di/providers/auth_provider.dart';
+import 'package:atiora/core/errors/app_exception.dart';
+import 'package:atiora/core/utils/error_handler.dart';
 import 'package:atiora/data/models/user_model.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
@@ -58,7 +60,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError('Credenciales inválidas'));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      final message = e is AppException
+          ? ErrorHandler.map(e)
+          : 'No pudimos iniciar sesión';
+      emit(AuthError(message));
     }
   }
 
@@ -72,7 +77,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError('Registro falló'));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      final message = e is AppException
+          ? ErrorHandler.map(e)
+          : 'No pudimos completar el registro';
+      emit(AuthError(message));
     }
   }
 

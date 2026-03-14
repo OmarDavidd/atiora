@@ -215,10 +215,11 @@ class _AddBookModalState extends State<AddBookModal> {
       final authProvider = sl<AuthProvider>();
       final currentUser = authProvider.currentUser;
 
-      print('Current user: $currentUser'); // DEBUG
-
       if (currentUser == null) {
-        throw Exception('No autenticado');
+        setState(
+          () => _errorMessage = 'Debes iniciar sesión para añadir libros',
+        );
+        return;
       }
 
       final uuid = const Uuid().v4();
@@ -244,7 +245,7 @@ class _AddBookModalState extends State<AddBookModal> {
         Navigator.pop(context, book);
       }
     } catch (e) {
-      setState(() => _errorMessage = 'Error: $e');
+      setState(() => _errorMessage = 'Error al guardar el libro');
     } finally {
       setState(() => isLoading = false);
     }

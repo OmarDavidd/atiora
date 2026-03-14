@@ -1,10 +1,11 @@
 import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/core/di/providers/supabase_provider.dart';
+import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:atiora/features/auth/domain/repositories/auth_repository.dart';
-import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signout_usecase.dart';
+import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
@@ -12,8 +13,9 @@ import 'package:atiora/features/books/data/repositories/books_repository_impl.da
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
+import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
+import 'package:connectivity_plus_platform_interface/method_channel_connectivity.dart';
 import 'package:get_it/get_it.dart';
-import 'package:atiora/core/storage/hive_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final sl = GetIt.instance;
@@ -52,6 +54,8 @@ Future<void> init() async {
     () => AuthBloc(sl<SignInUseCase>(), sl<SignUpUseCase>()),
   );
 
+  sl.registerLazySingleton<ConnectivityPlatform>(MethodChannelConnectivity.new);
+
   // Books Local
   sl.registerLazySingleton<BooksLocalDataSource>(
     () => BooksLocalDataSource(sl<HiveService>()),
@@ -67,6 +71,7 @@ Future<void> init() async {
     () => BooksRepositoryImpl(
       sl<BooksLocalDataSource>(),
       sl<BooksRemoteDataSource>(),
+      connectivity: sl<ConnectivityPlatform>(),
     ),
   );
 
@@ -75,5 +80,4 @@ Future<void> init() async {
 
   // Home stats Bloc
   sl.registerFactory<HomeStatsBloc>(() => HomeStatsBloc(sl<BooksRepository>()));
-
 }

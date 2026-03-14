@@ -8,19 +8,15 @@ class AuthProvider {
 
   Future<AuthResponse> signUp(String email, String password) async {
     try {
-      debugPrint("lLEGA AL PROVIDERs");
       final response = await client.auth.signUp(
         email: email,
         password: password,
       );
-      debugPrint("AAA");
-
-      debugPrint(response.user?.email);
       return response;
     } catch (e, stackTrace) {
-      debugPrint("🔴 ERROR signUp '$email': $e");
-      debugPrint("📍 StackTrace: $stackTrace");
-      rethrow; // Mantiene error para Bloc
+      debugPrint("AuthProvider.signUp failed for '$email': $e");
+      debugPrint('$stackTrace');
+      rethrow;
     }
   }
 
@@ -31,7 +27,9 @@ class AuthProvider {
         password: password,
       );
       return response;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("AuthProvider.signIn failed for '$email': $e");
+      debugPrint('$stackTrace');
       rethrow;
     }
   }
@@ -39,7 +37,9 @@ class AuthProvider {
   Future<void> signOut() async {
     try {
       await client.auth.signOut();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('AuthProvider.signOut failed: $e');
+      debugPrint('$stackTrace');
       rethrow;
     }
   }

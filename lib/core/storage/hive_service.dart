@@ -45,7 +45,7 @@ class HiveService {
           final book = BookModel.fromJson(json);
           books.add(book);
         } catch (e) {
-          debugPrint('Skip invalid: $e');
+          debugPrint('HiveService.getAllBooks skipping invalid entry: $e');
         }
       }
     }

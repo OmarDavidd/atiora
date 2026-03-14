@@ -1,11 +1,11 @@
 import 'package:atiora/core/utils/constants.dart';
-import 'package:atiora/core/utils/helpers.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
-import 'package:atiora/features/books/presentation/widgets/custom_state_widget.dart';
 import 'package:atiora/features/books/presentation/widgets/state_modal.dart';
+import 'package:atiora/features/books/presentation/widgets/info_book_cover.dart';
+import 'package:atiora/features/books/presentation/widgets/info_book_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,52 +58,12 @@ class _InfoBookSectionState extends State<InfoBookSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 40),
-          Center(
-            child: SizedBox(
-              height: 260,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Container(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: Image.asset(
-                    'assets/missingbook.webp',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      Icons.book,
-                      size: 80,
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          InfoBookCover(),
           const SizedBox(height: 30),
-          Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CustomStateWidget(
-                  color: AppHelpers.getStatusColor(_currentStatus),
-                  text: _currentStatus,
-                  onTap: _showStateModal,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  widget.book.title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.book.genre.join(' • '),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
+          InfoBookHeader(
+            currentStatus: _currentStatus,
+            book: widget.book,
+            onStateTap: _showStateModal,
           ),
         ],
       ),

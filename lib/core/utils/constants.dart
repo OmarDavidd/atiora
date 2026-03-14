@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppConstants {
-  static const String appName = 'Notium';
+  static const String appName = 'Atiora';
   static const String appVersion = '1.0.0';
   static const String googleBooksApiKey = 'TU_API_KEY_AQUI';
 

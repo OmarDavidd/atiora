@@ -1,4 +1,5 @@
 import 'package:atiora/core/di/providers/auth_provider.dart';
+import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/data/models/user_model.dart';
 import 'package:atiora/features/auth/domain/repositories/auth_repository.dart';
 
@@ -31,8 +32,12 @@ class AuthRepositoryImpl implements AuthRepository {
         return user;
       }
       return null;
-    } catch (e) {
-      rethrow;
+    } catch (e, stackTrace) {
+      throw AppException.auth(
+        'No pudimos iniciar sesión',
+        cause: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -49,8 +54,12 @@ class AuthRepositoryImpl implements AuthRepository {
         return user;
       }
       return null;
-    } catch (e) {
-      rethrow;
+    } catch (e, stackTrace) {
+      throw AppException.auth(
+        'No pudimos completar el registro',
+        cause: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -58,8 +67,12 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signOut() async {
     try {
       await _provider.signOut();
-    } catch (e) {
-      rethrow;
+    } catch (e, stackTrace) {
+      throw AppException.auth(
+        'No pudimos cerrar sesión',
+        cause: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 }

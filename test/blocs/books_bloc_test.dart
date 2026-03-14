@@ -116,6 +116,9 @@ void main() {
             finishedAt: any(named: 'finishedAt'),
           ),
         ).thenAnswer((_) async {});
+        when(
+          () => mockRepository.getBooks(),
+        ).thenAnswer((_) async => testBooks);
         return BooksBloc(mockRepository);
       },
       seed: () => BooksLoaded(testBooks),
@@ -124,7 +127,7 @@ void main() {
       expect: () => [
         isA<BooksLoaded>(),
         isA<BooksLoading>(),
-        anyOf(isA<BooksLoaded>(), isA<BooksError>()),
+        isA<BooksLoaded>(),
       ],
       verify: (_) {
         verify(
@@ -161,6 +164,7 @@ void main() {
           bloc.add(UpdateBookState(bookId: 'book-1', newState: 'terminado')),
       expect: () => [
         isA<BooksLoaded>(),
+        isA<BookStateUpdateError>(),
         isA<BooksLoading>(),
         isA<BooksLoaded>(),
       ],

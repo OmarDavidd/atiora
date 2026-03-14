@@ -8,38 +8,45 @@ class BooksRemoteDataSource {
   BooksRemoteDataSource(this._supabase);
 
   Future<List<BookModel>> getBooks() async {
+    final userId = _requireUser();
+
     try {
       final response = await _supabase
           .from('books')
           .select()
-          .eq('user_id', _supabase.auth.currentUser!.id);
+          .eq('user_id', userId);
       return response.map((json) => BookModel.fromJson(json)).toList();
-    } catch (e) {
-      return [];
+    } catch (e, stackTrace) {
+      debugPrint('BooksRemoteDataSource.getBooks failed: $e');
+      debugPrint('$stackTrace');
+      rethrow;
     }
   }
 
   Future<BookModel?> getBook(String id) async {
+    final userId = _requireUser();
+
     try {
       final response = await _supabase
           .from('books')
           .select()
           .eq('id', id)
-          .eq('user_id', _supabase.auth.currentUser!.id)
+          .eq('user_id', userId)
           .maybeSingle();
       return response != null ? BookModel.fromJson(response) : null;
-    } catch (e) {
-      return null;
+    } catch (e, stackTrace) {
+      debugPrint('BooksRemoteDataSource.getBook failed: $e');
+      debugPrint('$stackTrace');
+      rethrow;
     }
   }
 
   Future<void> addBook(BookModel book) async {
     try {
       final data = book.toJson()..remove('id');
-
-      //..remove('user_id');
       await _supabase.from('books').insert(data);
     } catch (e) {
+      debugPrint('BooksRemoteDataSource.addBook failed: $e');
       rethrow;
     }
   }
@@ -49,46 +56,43 @@ class BooksRemoteDataSource {
       final data = {...book.toJson()..remove('user_id'), 'id': book.id};
       await _supabase.from('books').upsert(data);
     } catch (e) {
+      debugPrint('BooksRemoteDataSource.updateBook failed: $e');
       rethrow;
     }
   }
 
   Future<void> deleteBook(String id) async {
+    final userId = _requireUser();
+
     try {
-      await _supabase
-          .from('books')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', _supabase.auth.currentUser!.id);
+      await _supabase.from('books').delete().eq('id', id).eq('user_id', userId);
     } catch (e) {
+      debugPrint('BooksRemoteDataSource.deleteBook failed: $e');
       rethrow;
     }
   }
 
   Future<Map<String, dynamic>> loadHomeStats() async {
+    final userId = _requireUser();
+
     final statsResponse = await _supabase
         .from('current_month_stats')
         .select()
-        .eq('user_id', _supabase.auth.currentUser!.id)
+        .eq('user_id', userId)
         .maybeSingle();
 
-    debugPrint('🟡 Antes RPC: user ${_supabase.auth.currentUser!.id}');
     dynamic streakResponse;
     try {
       streakResponse = await _supabase.rpc(
         'get_current_streak',
-        params: {'p_user_id': _supabase.auth.currentUser!.id},
-      );
-      debugPrint(
-        '🟢 Streak RAW: $streakResponse (type: ${streakResponse.runtimeType})',
+        params: {'p_user_id': userId},
       );
     } catch (e) {
-      debugPrint('🔴 Streak RPC error: $e');
+      debugPrint('BooksRemoteDataSource.loadHomeStats streak RPC failed: $e');
       streakResponse = 0;
     }
 
     final streak = _extractStreak(streakResponse);
-    debugPrint('🟢 Streak final: $streak');
 
     return {
       'pagesThisMonth': statsResponse?['total_pages_mes'] ?? 0,
@@ -105,6 +109,8 @@ class BooksRemoteDataSource {
     double? rating,
     DateTime? finishedAt,
   }) async {
+    final userId = _requireUser();
+
     try {
       final payload = <String, dynamic>{'status': newState};
       if (currentPage != null) payload['current_page'] = currentPage;
@@ -115,9 +121,9 @@ class BooksRemoteDataSource {
           .from('books')
           .update(payload)
           .eq('id', bookId)
-          .eq('user_id', _supabase.auth.currentUser!.id);
-      debugPrint('✅ Supabase OK');
+          .eq('user_id', userId);
     } catch (e) {
+      debugPrint('BooksRemoteDataSource.updateBookState failed: $e');
       rethrow;
     }
   }
@@ -132,5 +138,13 @@ class BooksRemoteDataSource {
       return response['streak'] as int? ?? 0;
     }
     return 0;
+  }
+
+  String _requireUser() {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('BooksRemoteDataSource requires an authenticated user');
+    }
+    return userId;
   }
 }

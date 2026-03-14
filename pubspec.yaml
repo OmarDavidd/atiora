@@ -11,6 +11,7 @@ dependencies:
   build_runner: ^2.10.5
   carousel_slider: ^5.1.2
   connectivity_plus: ^7.0.0
+  connectivity_plus_platform_interface: ^2.0.1
   dio: ^5.9.0
   equatable: ^2.0.8
   fl_chart: ^1.1.1

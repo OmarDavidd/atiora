@@ -56,21 +56,7 @@ class StateModal extends StatelessWidget {
                       visualDensity: const VisualDensity(vertical: -2),
                       minVerticalPadding: 6,
                       contentPadding: EdgeInsets.zero,
-                      leading: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(
-                            theme.brightness == Brightness.dark ? 0.25 : 0.12,
-                          ),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: statusColor.withOpacity(0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: Icon(Icons.circle, color: statusColor, size: 12),
-                      ),
+                      leading: _StatusDot(color: statusColor),
                       title: Text(
                         estados[index].toUpperCase(),
                         style: theme.textTheme.bodyLarge?.copyWith(
@@ -139,5 +125,28 @@ class StateModal extends StatelessWidget {
         Navigator.pop(context);
       }
     }
+  }
+}
+
+class _StatusDot extends StatelessWidget {
+  final Color color;
+
+  const _StatusDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: color.withOpacity(
+          theme.brightness == Brightness.dark ? 0.25 : 0.12,
+        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
+      ),
+      child: Icon(Icons.circle, color: color, size: 12),
+    );
   }
 }

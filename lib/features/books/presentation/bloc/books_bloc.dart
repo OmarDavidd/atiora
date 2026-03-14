@@ -1,3 +1,5 @@
+import 'package:atiora/core/errors/app_exception.dart';
+import 'package:atiora/core/utils/error_handler.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +24,11 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         final books = await _repository.getBooks();
         emit(BooksLoaded(books));
       } catch (e) {
-        debugPrint('❌ getBooks error: $e');
-        emit(BooksError("Error al cargar los libros"));
+        debugPrint('BooksBloc.getBooks failed: $e');
+        final message = e is AppException
+            ? ErrorHandler.map(e)
+            : 'Error al cargar los libros';
+        emit(BooksError(message));
       }
     }, transformer: restartable());
 
@@ -87,9 +92,13 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
           rating: event.rating,
           finishedAt: repoFinishedAt,
         );
-        debugPrint('✅ DB actualizado: ${event.newState}');
+        debugPrint('BooksBloc.updateBookState persisted: ${event.newState}');
       } catch (e) {
-        debugPrint('❌ DB error: $e');
+        debugPrint('BooksBloc.updateBookState failed: $e');
+        final message = e is AppException
+            ? ErrorHandler.map(e)
+            : 'No pudimos actualizar el estado del libro';
+        emit(BookStateUpdateError(message));
         add(LoadBooks());
         return;
       }

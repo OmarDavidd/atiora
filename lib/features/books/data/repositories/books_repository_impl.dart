@@ -1,16 +1,23 @@
-import 'package:flutter/foundation.dart';
+import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
+import 'package:flutter/foundation.dart';
 
 class BooksRepositoryImpl implements BooksRepository {
   final BooksLocalDataSource _local;
   final BooksRemoteDataSource _remote;
+  final ConnectivityPlatform _connectivity;
 
   DateTime? _lastSync;
 
-  BooksRepositoryImpl(this._local, this._remote);
+  BooksRepositoryImpl(
+    this._local,
+    this._remote, {
+    ConnectivityPlatform? connectivity,
+  }) : _connectivity = connectivity ?? ConnectivityPlatform.instance;
 
   @override
   Future<List<BookModel>> getBooks() async {
@@ -20,33 +27,69 @@ class BooksRepositoryImpl implements BooksRepository {
         now.difference(_lastSync!) > const Duration(minutes: 5);
 
     if (shouldSync && await _isOnline()) {
-      await _syncBooks();
-      _lastSync = now;
+      final synced = await _syncBooks();
+      if (synced) {
+        _lastSync = now;
+      }
     }
 
-    return await _local.getBooks();
+    try {
+      return await _local.getBooks();
+    } catch (e, stackTrace) {
+      throw AppException.cache(
+        'No pudimos leer tus libros',
+        cause: e,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   @override
   Future<void> addBook(BookModel book) async {
-    await _local.addBook(book);
+    try {
+      await _local.addBook(book);
+    } catch (e, stackTrace) {
+      throw AppException.cache(
+        'No pudimos guardar el libro localmente',
+        cause: e,
+        stackTrace: stackTrace,
+      );
+    }
     if (await _isOnline()) {
       try {
         await _remote.addBook(book);
-      } catch (e) {
-        debugPrint('Remote addBook failed: $e');
+      } catch (e, stackTrace) {
+        debugPrint('BooksRepositoryImpl.addBook remote sync failed: $e');
+        throw AppException.network(
+          'Error al sincronizar el libro',
+          cause: e,
+          stackTrace: stackTrace,
+        );
       }
     }
   }
 
   @override
   Future<void> deleteBook(String id) async {
-    await _local.deleteBook(id);
+    try {
+      await _local.deleteBook(id);
+    } catch (e, stackTrace) {
+      throw AppException.cache(
+        'No pudimos eliminar el libro localmente',
+        cause: e,
+        stackTrace: stackTrace,
+      );
+    }
     if (await _isOnline()) {
       try {
         await _remote.deleteBook(id);
-      } catch (e) {
-        debugPrint('Remote deleteBook failed: $e');
+      } catch (e, stackTrace) {
+        debugPrint('BooksRepositoryImpl.deleteBook remote sync failed: $e');
+        throw AppException.network(
+          'No se pudo eliminar el libro en la nube',
+          cause: e,
+          stackTrace: stackTrace,
+        );
       }
     }
   }
@@ -58,25 +101,48 @@ class BooksRepositoryImpl implements BooksRepository {
 
   @override
   Future<void> updateBook(BookModel book) async {
-    await _local.updateBook(book);
+    try {
+      await _local.updateBook(book);
+    } catch (e, stackTrace) {
+      throw AppException.cache(
+        'No pudimos actualizar el libro localmente',
+        cause: e,
+        stackTrace: stackTrace,
+      );
+    }
     if (await _isOnline()) {
       try {
         await _remote.updateBook(book);
-      } catch (e) {
-        debugPrint('Remote updateBook failed: $e');
+      } catch (e, stackTrace) {
+        debugPrint('BooksRepositoryImpl.updateBook remote sync failed: $e');
+        throw AppException.network(
+          'No se pudo actualizar el libro en la nube',
+          cause: e,
+          stackTrace: stackTrace,
+        );
       }
     }
   }
 
-  Future<bool> _isOnline() async => true; // TODO: connectivity_plus
+  Future<bool> _isOnline() async {
+    final connectivityResults = await _connectivity.checkConnectivity();
+    if (connectivityResults.isEmpty) {
+      return false;
+    }
+    return connectivityResults.any(
+      (result) => result != ConnectivityResult.none,
+    );
+  }
 
-  Future<void> _syncBooks() async {
+  Future<bool> _syncBooks() async {
     try {
       final remoteBooks = await _remote.getBooks();
       await _local.clearAll();
       await _local.addBooks(remoteBooks);
+      return true;
     } catch (e) {
-      debugPrint('Sync failed: $e');
+      debugPrint('BooksRepositoryImpl._syncBooks failed: $e');
+      return false;
     }
   }
 
@@ -114,7 +180,11 @@ class BooksRepositoryImpl implements BooksRepository {
         );
       }
     } catch (e) {
-      debugPrint('Fallo actualizar estado: $e');
+      debugPrint('BooksRepositoryImpl.updateBookState local update failed: $e');
+      throw AppException.network(
+        'No pudimos actualizar el estado del libro',
+        cause: e,
+      );
     }
   }
 }

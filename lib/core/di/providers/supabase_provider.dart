@@ -7,8 +7,8 @@ class SupabaseProvider {
     final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      throw Exception(
-        ' Variables .env no configuradas. Verifica SUPABASE_URL y SUPABASE_ANON_KEY.',
+      throw StateError(
+        'Variables .env no configuradas. Verifica SUPABASE_URL y SUPABASE_ANON_KEY.',
       );
     }
 
