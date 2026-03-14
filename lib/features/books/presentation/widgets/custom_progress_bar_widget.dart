@@ -5,6 +5,7 @@ class CustomProgressBarWidget extends StatelessWidget {
   final int totalPages;
   final int currentPage;
   final bool? hintPercentage;
+  final VoidCallback? onTap;
 
   const CustomProgressBarWidget({
     super.key,
@@ -12,6 +13,7 @@ class CustomProgressBarWidget extends StatelessWidget {
     required this.totalPages,
     required this.currentPage,
     this.hintPercentage,
+    this.onTap,
   });
 
   double get progress =>
@@ -21,7 +23,7 @@ class CustomProgressBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -37,12 +39,12 @@ class CustomProgressBarWidget extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          SizedBox(height: 2),
+          const SizedBox(height: 2),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(value: progress, minHeight: 6),
           ),
-          SizedBox(height: 2),
+          const SizedBox(height: 2),
           Text(
             "Página $currentPage/$totalPages",
             style: Theme.of(
@@ -53,6 +55,14 @@ class CustomProgressBarWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: content,
     );
   }
 }

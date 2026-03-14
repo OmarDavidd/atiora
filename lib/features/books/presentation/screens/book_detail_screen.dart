@@ -1,6 +1,10 @@
+import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 import 'package:atiora/features/books/presentation/widgets/info_book_section.dart';
+import 'package:atiora/features/books/presentation/widgets/progress_input_dialog.dart';
+import 'package:atiora/features/books/presentation/widgets/rating_input_dialog.dart';
 import 'package:atiora/features/books/presentation/widgets/stats_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,7 +43,11 @@ class BookDetailScreen extends StatelessWidget {
                   children: [
                     InfoBookSection(book: book),
                     const SizedBox(height: 20),
-                    StatsSection(book: book),
+                    StatsSection(
+                      book: book,
+                      onProgressTap: (b) => _onProgressTap(context, b),
+                      onRatingTap: (b) => _onRatingTap(context, b),
+                    ),
                   ],
                 ),
               ),
@@ -54,4 +62,55 @@ class BookDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _onProgressTap(BuildContext context, BookModel book) {
+  final bloc = context.read<BooksBloc>();
+  showDialog<int>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => ProgressInputDialog(
+      initialPage: book.currentPage,
+      totalPages: book.totalPages,
+    ),
+  ).then((value) {
+    if (value == null) return;
+    final normalizedStatus = book.status.toLowerCase().trim();
+    final newStatus = value >= book.totalPages
+        ? 'Completado'
+        : (value > 0 || normalizedStatus == 'leyendo'
+              ? 'Leyendo'
+              : 'Pendiente');
+    bloc.add(
+      UpdateBookState(
+        bookId: book.id,
+        newState: newStatus,
+        updatedPage: value.clamp(0, book.totalPages),
+        finishedAt: newStatus.toLowerCase() == 'completado'
+            ? DateTime.now()
+            : null,
+        clearFinishedAt: newStatus.toLowerCase() != 'completado',
+      ),
+    );
+  });
+}
+
+void _onRatingTap(BuildContext context, BookModel book) {
+  if (book.status.toLowerCase() != 'completado') {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Completa el libro para calificar.')),
+    );
+    return;
+  }
+  final bloc = context.read<BooksBloc>();
+  showDialog<double>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => RatingInputDialog(initialValue: book.rating),
+  ).then((value) {
+    if (value == null) return;
+    bloc.add(
+      UpdateBookState(bookId: book.id, newState: book.status, rating: value),
+    );
+  });
 }
