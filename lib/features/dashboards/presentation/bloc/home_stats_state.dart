@@ -19,10 +19,14 @@ class HomeStatsData {
   final int pagesMonth;
   final int streak;
   final int booksMonth;
+  final int booksFinished;
+  final double averageRating;
 
   HomeStatsData({
     required this.pagesMonth,
     required this.streak,
     required this.booksMonth,
+    required this.booksFinished,
+    required this.averageRating,
   });
 }

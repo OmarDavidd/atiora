@@ -99,9 +99,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return HomeStatsSection(
                         totalBooksRead: stats?.booksMonth.toString() ?? '0',
-                        totalPagesRead: stats?.pagesMonth.toString() ?? '0',
-                        streak: stats?.streak.toString() ?? '0',
-                        average: '4.2', // TODO: hacerlo dinamico
+                        pagesThisMonth: stats?.pagesMonth.toString() ?? '0',
+                        streakDays: stats?.streak.toString() ?? '0',
+                        averageRating:
+                            stats?.averageRating.toStringAsFixed(1) ?? '0.0',
+                        booksFinished: stats?.booksFinished.toString() ?? '0',
+                        isLoading: state is HomeStatsLoading,
                       );
                     },
                   ),

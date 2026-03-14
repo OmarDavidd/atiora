@@ -49,6 +49,7 @@ void main() {
     when(
       () => mockHiveService.removePendingOperation(any()),
     ).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.getBooks()).thenAnswer((_) async => []);
     when(() => mockLocalDataSource.addBook(any())).thenAnswer((_) async {});
     when(() => mockLocalDataSource.updateBook(any())).thenAnswer((_) async {});
     when(() => mockLocalDataSource.deleteBook(any())).thenAnswer((_) async {});
@@ -214,15 +215,18 @@ void main() {
     });
 
     test('loadHomeStats reads from remote datasource', () async {
-      final stats = {'pagesThisMonth': 10};
+      final stats = {'pagesThisMonth': 10, 'averageRating': 3.5};
       when(
         () => mockRemoteDataSource.loadHomeStats(),
       ).thenAnswer((_) async => stats);
 
       final result = await repository.loadHomeStats();
 
-      expect(result, stats);
+      expect(result['pagesThisMonth'], 10);
+      expect(result['averageRating'], 3.5);
+      expect(result['booksTouched'], isA<int>());
       verify(() => mockRemoteDataSource.loadHomeStats()).called(1);
+      verify(() => mockLocalDataSource.getBooks()).called(1);
     });
 
     test('updateBookState proxies to remote datasource', () async {

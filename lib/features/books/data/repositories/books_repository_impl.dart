@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/data/models/book_model.dart';
@@ -268,9 +270,67 @@ class BooksRepositoryImpl implements BooksRepository {
     });
   }
 
+  Future<Map<String, dynamic>> _buildLocalStats() async {
+    final books = await _local.getBooks();
+    if (books.isEmpty) {
+      return {
+        'pagesThisMonth': 0,
+        'booksTouched': 0,
+        'booksFinished': 0,
+        'streak': 0,
+        'averageRating': 0.0,
+      };
+    }
+
+    int pagesRead = 0;
+    int booksTouched = 0;
+    int booksFinished = 0;
+    double ratingSum = 0;
+    int ratedCount = 0;
+
+    for (final book in books) {
+      final normalizedStatus = book.status.toLowerCase().trim();
+      final safePage = math.min(book.currentPage, book.totalPages);
+      pagesRead += safePage;
+      if (book.currentPage > 0 || normalizedStatus != 'pendiente') {
+        booksTouched++;
+      }
+      if (normalizedStatus == 'completado') {
+        booksFinished++;
+      }
+      if (book.rating > 0) {
+        ratingSum += book.rating;
+        ratedCount++;
+      }
+    }
+
+    final averageRating = ratedCount == 0 ? 0.0 : ratingSum / ratedCount;
+
+    return {
+      'pagesThisMonth': pagesRead,
+      'booksTouched': booksTouched,
+      'booksFinished': booksFinished,
+      'streak': 0,
+      'averageRating': double.parse(averageRating.toStringAsFixed(1)),
+    };
+  }
+
   @override
   Future<Map<String, dynamic>> loadHomeStats() async {
-    return await _remote.loadHomeStats();
+    final fallback = await _buildLocalStats();
+    try {
+      final remoteStats = await _remote.loadHomeStats();
+      return {
+        ...fallback,
+        ...remoteStats,
+        'averageRating':
+            remoteStats['averageRating'] ?? fallback['averageRating'],
+      };
+    } catch (e, stackTrace) {
+      debugPrint('BooksRepositoryImpl.loadHomeStats failed: $e');
+      debugPrint('$stackTrace');
+      return fallback;
+    }
   }
 
   @override

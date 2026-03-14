@@ -13,15 +13,15 @@ class HomeStatsBloc extends Bloc<HomeStatsEvent, HomeStatsState> {
       emit(HomeStatsLoading());
       try {
         final homeStats = await _repository.loadHomeStats();
-        emit(
-          HomeStatsLoaded(
-            HomeStatsData(
-              pagesMonth: homeStats['pagesThisMonth'] ?? 0,
-              booksMonth: homeStats['booksTouched'] ?? 0,
-              streak: homeStats['streak'] ?? 0,
-            ),
-          ),
+        final data = HomeStatsData(
+          pagesMonth: homeStats['pagesThisMonth'] ?? 0,
+          booksMonth: homeStats['booksTouched'] ?? 0,
+          streak: homeStats['streak'] ?? 0,
+          booksFinished: homeStats['booksFinished'] ?? 0,
+          averageRating:
+              (homeStats['averageRating'] as num?)?.toDouble() ?? 0.0,
         );
+        emit(HomeStatsLoaded(data));
       } catch (e) {
         emit(HomeStatsError("Error: $e"));
       }

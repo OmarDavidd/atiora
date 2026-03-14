@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 
 class HomeStatsSection extends StatelessWidget {
   final String totalBooksRead;
-  final String totalPagesRead;
-  final String streak;
-  final String average;
+  final String pagesThisMonth;
+  final String streakDays;
+  final String averageRating;
+  final String booksFinished;
+  final bool isLoading;
+
   const HomeStatsSection({
     super.key,
     required this.totalBooksRead,
-    required this.totalPagesRead,
-    required this.streak,
-    required this.average,
+    required this.pagesThisMonth,
+    required this.streakDays,
+    required this.averageRating,
+    required this.booksFinished,
+    this.isLoading = false,
   });
 
   @override
@@ -19,42 +24,56 @@ class HomeStatsSection extends StatelessWidget {
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
 
-    final stats = [
+    final resolvedStats = [
       _HomeStatData(
-        title: 'Libros leídos',
+        title: 'Libros activos',
         value: totalBooksRead,
-        helper: 'Este mes',
+        helper: 'Libros tocados',
         icon: Icons.menu_book_rounded,
         accent: colorScheme.primary,
         accentBackground: colorScheme.primary.withValues(alpha: 0.12),
+        loading: isLoading,
       ),
       _HomeStatData(
         title: 'Páginas',
-        value: totalPagesRead,
+        value: pagesThisMonth,
         helper: 'Páginas totales',
         icon: Icons.auto_stories_rounded,
         accent: colorScheme.secondary,
         accentBackground: colorScheme.secondaryContainer.withValues(
           alpha: 0.25,
         ),
+        loading: isLoading,
+      ),
+      _HomeStatData(
+        title: 'Libros completados',
+        value: booksFinished,
+        helper: 'Este mes',
+        icon: Icons.emoji_events_rounded,
+        accent: colorScheme.tertiary,
+        accentBackground: colorScheme.tertiaryContainer.withValues(alpha: 0.2),
+        loading: isLoading,
       ),
       _HomeStatData(
         title: 'Racha activa',
-        value: '${streak}d',
+        value: '${streakDays}d',
         helper: 'Días consecutivos',
         icon: Icons.local_fire_department_rounded,
         accent: Colors.deepOrangeAccent,
         accentBackground: const Color(0x33FFAB76),
+        loading: isLoading,
       ),
       _HomeStatData(
         title: 'Promedio',
-        value: average,
-        helper: 'Calificación estimada',
+        value: averageRating,
+        helper: 'Calificación promedio',
         icon: Icons.star_rate_rounded,
         accent: const Color(0xFFFFC947),
         accentBackground: const Color(0x33FFC947),
+        loading: isLoading,
       ),
     ];
+    final stats = resolvedStats;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -144,6 +163,7 @@ class _HomeStatData {
   final IconData icon;
   final Color accent;
   final Color accentBackground;
+  final bool loading;
 
   const _HomeStatData({
     required this.title,
@@ -152,6 +172,7 @@ class _HomeStatData {
     required this.icon,
     required this.accent,
     required this.accentBackground,
+    this.loading = false,
   });
 }
 
@@ -197,9 +218,12 @@ class _StatTile extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                data.value,
+                data.loading ? '—' : data.value,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
+                  color: data.loading
+                      ? colors.outline.withValues(alpha: 0.5)
+                      : colors.onSurface,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
