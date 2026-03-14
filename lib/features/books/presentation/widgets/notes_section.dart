@@ -5,6 +5,7 @@ class NotesSection extends StatefulWidget {
   @override
   State<NotesSection> createState() => _NotesSectionState();
 }
+
 class _NotesSectionState extends State<NotesSection> {
   @override
   Widget build(BuildContext context) {

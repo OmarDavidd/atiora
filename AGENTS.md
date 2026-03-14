@@ -158,6 +158,7 @@ Keep it handy; it encodes the workflow, conventions, and safety rails for this F
 - Never commit `.env`, platform secrets, or generated artifacts (`*.lock` already tracked; honor that).
 - When tests fail locally, fix before handing work back; mention pending failures only if blocked by upstream issues.
 - Commits siguen el formato `<tipo>(optional-scope): descripción en modo imperativo` usando prefijos como `feat`, `fix`, `chore`, `refactor`, `docs`, `test`; mantén el mensaje bajo 72 caracteres.
+- Siempre redacta los mensajes de commit en inglés siguiendo la regla anterior.
 
 ## 21. Cursor / Copilot Rules
 - No `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` exist, so there are no external agent mandates beyond this file.

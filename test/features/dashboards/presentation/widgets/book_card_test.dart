@@ -42,7 +42,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Sin conexión'), findsOneWidget);
+      expect(find.text('En cola'), findsOneWidget);
     });
 
     testWidgets('hides pending pill when sync is not pending', (tester) async {
@@ -59,7 +59,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Sin conexión'), findsNothing);
+      expect(find.text('En cola'), findsNothing);
     });
   });
 

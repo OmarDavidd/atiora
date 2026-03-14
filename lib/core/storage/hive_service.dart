@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/note_model.dart';
 import '../../data/models/profile_model.dart';
+import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 
 class HiveService {
   static HiveService? _instance;
@@ -13,6 +14,7 @@ class HiveService {
   late Box<dynamic> notesBox;
   late Box<dynamic> profileBox;
   late Box<dynamic> pendingOpsBox;
+  late Box<dynamic> draftsBox;
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -20,6 +22,7 @@ class HiveService {
     notesBox = await Hive.openBox('notes');
     profileBox = await Hive.openBox('profiles');
     pendingOpsBox = await Hive.openBox('pending_ops');
+    draftsBox = await Hive.openBox('drafts');
   }
 
   Future<void> saveBook(BookModel book) async {
@@ -68,6 +71,22 @@ class HiveService {
   Future<void> saveProfile(ProfileModel profile) =>
       profileBox.put(profile.userId, profile.toJson());
 
+  Future<void> saveAddBookDraft(String userId, AddBookDraft draft) async {
+    await draftsBox.put(_addBookDraftKey(userId), draft.toJson());
+  }
+
+  AddBookDraft? getAddBookDraft(String userId) {
+    final raw = draftsBox.get(_addBookDraftKey(userId));
+    if (raw is! Map) return null;
+    final normalized = <String, dynamic>{};
+    raw.forEach((key, value) => normalized[key.toString()] = value);
+    return AddBookDraft.fromJson(normalized);
+  }
+
+  Future<void> clearAddBookDraft(String userId) async {
+    await draftsBox.delete(_addBookDraftKey(userId));
+  }
+
   Future<String> enqueuePendingOperation(Map<String, dynamic> operation) async {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     await pendingOpsBox.put(id, operation);
@@ -91,4 +110,6 @@ class HiveService {
       pendingOpsBox.delete(key);
 
   Future<void> close() async => await Hive.close();
+
+  String _addBookDraftKey(String userId) => 'add_book_$userId';
 }

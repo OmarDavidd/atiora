@@ -5,8 +5,8 @@ import 'package:input_quantity/input_quantity.dart';
 class PagesConfigWidget extends StatelessWidget {
   final int totalPages;
   final int currentPage;
-  final ValueChanged<dynamic> onTotalPagesChanged;
-  final ValueChanged<dynamic> onCurrentPageChanged;
+  final ValueChanged<int> onTotalPagesChanged;
+  final ValueChanged<int> onCurrentPageChanged;
 
   const PagesConfigWidget({
     super.key,
@@ -56,7 +56,7 @@ class PagesConfigWidget extends StatelessWidget {
                       const SizedBox(height: 8),
                       InputQty.int(
                         initVal: totalPages,
-                        onQtyChanged: onTotalPagesChanged,
+                        onQtyChanged: (val) => onTotalPagesChanged(val as int),
                         maxVal: 5000,
                         minVal: 1,
                         decoration: QtyDecorationProps(
@@ -98,7 +98,7 @@ class PagesConfigWidget extends StatelessWidget {
                       const SizedBox(height: 8),
                       InputQty.int(
                         initVal: currentPage,
-                        onQtyChanged: onCurrentPageChanged,
+                        onQtyChanged: (val) => onCurrentPageChanged(val as int),
                         maxVal: totalPages,
                         minVal: 1,
                         decoration: QtyDecorationProps(

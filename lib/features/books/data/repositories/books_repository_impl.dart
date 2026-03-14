@@ -3,6 +3,7 @@ import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
+import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:flutter/foundation.dart';
@@ -316,5 +317,20 @@ class BooksRepositoryImpl implements BooksRepository {
         cause: e,
       );
     }
+  }
+
+  @override
+  Future<void> saveAddBookDraft(String userId, AddBookDraft draft) async {
+    await _hive.saveAddBookDraft(userId, draft);
+  }
+
+  @override
+  AddBookDraft? getAddBookDraft(String userId) {
+    return _hive.getAddBookDraft(userId);
+  }
+
+  @override
+  Future<void> clearAddBookDraft(String userId) async {
+    await _hive.clearAddBookDraft(userId);
   }
 }

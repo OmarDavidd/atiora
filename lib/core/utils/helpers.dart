@@ -85,6 +85,4 @@ class AppHelpers {
         return Colors.grey;
     }
   }
-
-
 }

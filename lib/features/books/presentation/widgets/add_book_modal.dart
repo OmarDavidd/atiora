@@ -1,13 +1,18 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
+import 'package:uuid/uuid.dart';
+
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/di/providers/auth_provider.dart';
-import 'package:atiora/core/utils/app_colors.dart';
+import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/data/models/book_model.dart';
+import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
-import 'package:atiora/features/books/presentation/widgets/custom_genres_widget.dart';
-import 'package:atiora/features/books/presentation/widgets/pages_config_widget.dart';
-import 'package:atiora/features/books/presentation/widgets/progress_section_widget.dart';
-import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
+import 'package:atiora/features/books/presentation/helpers/add_book_validation_helper.dart';
+import 'package:atiora/features/books/presentation/widgets/add_book_body.dart';
+import 'package:atiora/features/books/presentation/widgets/add_book_validation_tips.dart';
 
 class AddBookModal extends StatefulWidget {
   final BooksRepository repository;
@@ -21,22 +26,53 @@ class _AddBookModalState extends State<AddBookModal> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
+  final _titleFocusNode = FocusNode();
+  final _authorFocusNode = FocusNode();
+  final _scrollController = ScrollController();
+  final _titleFieldKey = GlobalKey();
+  final _genresKey = GlobalKey();
+  final _pagesKey = GlobalKey();
+  final _statusKey = GlobalKey();
   List<String> selectedGenres = [];
   int _totalPages = 1;
   int _currentPage = 1;
   bool isLoading = false;
-  String? _errorMessage;
   String? _status;
   int _rating = 0;
+  String? _errorMessage;
+  bool _hasLoadedDraft = false;
+  String? _currentUserId;
+  bool _isOffline = false;
+  bool _hasPendingQueue = false;
+  List<AddBookValidationTip> _validationTips = [];
+  bool _showGenresError = false;
+  late final ConnectivityPlatform _connectivity;
+  final HiveService _hive = sl<HiveService>();
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   bool get _hasUnsavedChanges {
-    return _titleController.text.trim().isNotEmpty ||
-        _authorController.text.trim().isNotEmpty ||
-        selectedGenres.isNotEmpty ||
-        _totalPages != 1 ||
-        _currentPage != 1 ||
-        (_status?.isNotEmpty ?? false) ||
-        _rating != 0;
+    return _currentDraft.hasContent;
+  }
+
+  AddBookDraft get _currentDraft {
+    return AddBookDraft(
+      title: _titleController.text,
+      author: _authorController.text,
+      genres: selectedGenres,
+      totalPages: _totalPages,
+      currentPage: _currentPage,
+      status: _status,
+      rating: _rating,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _hydrateDraft();
+    _connectivity = sl<ConnectivityPlatform>();
+    _listenToConnectivity();
+    _refreshPendingQueue();
   }
 
   @override
@@ -52,202 +88,108 @@ class _AddBookModalState extends State<AddBookModal> {
       },
       child: Padding(
         padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + viewInsets),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      "Añadir libro",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(flex: 2),
-                    IconButton(
-                      tooltip: 'Cerrar',
-                      onPressed: () => _handleClose(),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _titleController,
-                  validator: (value) =>
-                      (value ?? '').trim().isEmpty ? 'Título requerido' : null,
-                  decoration: InputDecoration(
-                    labelText: "Título *",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.book),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                  textInputAction: TextInputAction.next,
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _authorController,
-                  decoration: InputDecoration(
-                    labelText: "Autor",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.person),
-                  ),
-                  textInputAction: TextInputAction.done,
-                  autofillHints: const [AutofillHints.name],
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Géneros",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                CustomGenresWidget(
-                  selectedGenres: selectedGenres,
-                  onGenreToggled: (genre) => setState(() {
-                    if (selectedGenres.contains(genre)) {
-                      selectedGenres.remove(genre);
-                    } else {
-                      selectedGenres.add(genre);
-                    }
-                  }),
-                ),
-                const SizedBox(height: 20),
-                PagesConfigWidget(
-                  totalPages: _totalPages,
-                  currentPage: _currentPage,
-                  onTotalPagesChanged: (val) =>
-                      setState(() => _totalPages = val),
-                  onCurrentPageChanged: (val) =>
-                      setState(() => _currentPage = val),
-                ),
-                const SizedBox(height: 16),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: _errorMessage == null
-                      ? const SizedBox.shrink()
-                      : Container(
-                          key: ValueKey(_errorMessage),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.red.shade200,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: Colors.red.shade600,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: TextStyle(color: AppColors.neutral0),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 20),
-                ProgressSectionWidget(
-                  status: _status,
-                  rating: _rating,
-                  onStatusChanged: (val) {
-                    setState(() {
-                      _status = val;
-                      if (_status != 'Completado') {
-                        _rating = 0;
-                      }
-                    });
-                  },
-                  onRatingChanged: (val) {
-                    setState(() => _rating = val);
-                  },
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _saveBook,
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            "Guardar libro",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
-                if (!isLoading)
-                  TextButton.icon(
-                    onPressed: () => _handleClose(),
-                    icon: const Icon(Icons.exit_to_app_rounded),
-                    label: const Text('Salir sin guardar'),
-                  ),
-              ],
-            ),
-          ),
+        child: AddBookBody(
+          formKey: _formKey,
+          scrollController: _scrollController,
+          titleController: _titleController,
+          authorController: _authorController,
+          titleFocusNode: _titleFocusNode,
+          authorFocusNode: _authorFocusNode,
+          titleFieldKey: _titleFieldKey,
+          genresKey: _genresKey,
+          pagesKey: _pagesKey,
+          statusKey: _statusKey,
+          selectedGenres: selectedGenres,
+          totalPages: _totalPages,
+          currentPage: _currentPage,
+          status: _status,
+          rating: _rating,
+          validationTips: _validationTips,
+          errorMessage: _errorMessage,
+          isLoading: isLoading,
+          isOffline: _isOffline,
+          hasPendingQueue: _hasPendingQueue,
+          showGenresError: _showGenresError,
+          canReset: _hasUnsavedChanges,
+          onTitleChanged: () {
+            setState(() => _removeTipSync('title'));
+            _persistDraft();
+          },
+          onAuthorChanged: _persistDraft,
+          onGenreChanged: (genre) {
+            setState(() {
+              if (selectedGenres.contains(genre)) {
+                selectedGenres.remove(genre);
+              } else {
+                selectedGenres.add(genre);
+              }
+              _removeTipSync('genres');
+              _showGenresError = selectedGenres.isEmpty;
+            });
+            _persistDraft();
+          },
+          onTotalPagesChanged: (val) {
+            setState(() {
+              _totalPages = val;
+              _removeTipSync('pages');
+            });
+            _persistDraft();
+          },
+          onCurrentPageChanged: (val) {
+            setState(() {
+              _currentPage = val;
+              _removeTipSync('pages');
+            });
+            _persistDraft();
+          },
+          onStatusChanged: (val) {
+            setState(() {
+              _status = val;
+              if (_status != 'Completado') {
+                _rating = 0;
+              }
+              _removeTipSync('status');
+              _removeTipSync('rating');
+            });
+            _persistDraft();
+          },
+          onRatingChanged: (val) {
+            setState(() {
+              _rating = val;
+              _removeTipSync('rating');
+            });
+            _persistDraft();
+          },
+          onSave: _saveBook,
+          onReset: _handleReset,
+          onExit: () => _handleClose(),
         ),
       ),
     );
   }
 
   Future<void> _saveBook() async {
-    setState(() => _errorMessage = null);
+    setState(() {
+      _errorMessage = null;
+    });
 
-    if (!_formKey.currentState!.validate()) return;
-
-    if (selectedGenres.isEmpty) {
-      setState(() => _errorMessage = 'Selecciona al menos un género');
+    final tips = _collectValidationTips();
+    final isFormValid = _formKey.currentState!.validate();
+    if (tips.isNotEmpty || !isFormValid) {
+      setState(() {
+        _showGenresError = selectedGenres.isEmpty;
+      });
+      _showValidationTips(tips);
+      if (tips.isNotEmpty) {
+        tips.first.onTap?.call();
+      }
       return;
     }
 
-    if (_currentPage > _totalPages || _totalPages < 1 || _currentPage < 1) {
-      setState(() => _errorMessage = 'Página actual ≤ total páginas');
-      return;
-    }
-
-    if (_status == null) {
-      setState(() => _errorMessage = 'Selecciona status');
-      return;
-    }
-    if (_status == 'Completado' && _rating == 0) {
-      setState(() => _errorMessage = 'Dale una calificación');
-      return;
-    }
+    _clearValidationTips();
+    setState(() {
+      _showGenresError = false;
+    });
 
     setState(() => isLoading = true);
     try {
@@ -280,6 +222,8 @@ class _AddBookModalState extends State<AddBookModal> {
       );
 
       await widget.repository.addBook(book);
+      _refreshPendingQueue();
+      await _clearDraft();
 
       if (mounted) {
         Navigator.pop(context, book);
@@ -335,10 +279,176 @@ class _AddBookModalState extends State<AddBookModal> {
     return false;
   }
 
+  Future<void> _handleReset() async {
+    if (!_hasUnsavedChanges || isLoading) {
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Limpiar formulario'),
+        content: const Text(
+          'Se borrarán todos los campos completados. ¿Quieres continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Limpiar todo'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) {
+      return;
+    }
+
+    final currentContext = context;
+    setState(() {
+      _titleController.clear();
+      _authorController.clear();
+      selectedGenres.clear();
+      _totalPages = 1;
+      _currentPage = 1;
+      _status = null;
+      _rating = 0;
+      _errorMessage = null;
+      _validationTips = [];
+      _showGenresError = false;
+    });
+    if (mounted && currentContext.mounted) {
+      FocusScope.of(currentContext).unfocus();
+    }
+    await _clearDraft();
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
     _authorController.dispose();
+    _titleFocusNode.dispose();
+    _authorFocusNode.dispose();
+    _scrollController.dispose();
+    _connectivitySubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _hydrateDraft() async {
+    final authProvider = sl<AuthProvider>();
+    final currentUser = authProvider.currentUser;
+    _currentUserId = currentUser?.id;
+    if (currentUser == null || _hasLoadedDraft) {
+      return;
+    }
+    final draft = widget.repository.getAddBookDraft(currentUser.id);
+    if (draft != null) {
+      setState(() {
+        _applyDraft(draft);
+        _hasLoadedDraft = true;
+      });
+    } else {
+      setState(() {
+        _hasLoadedDraft = true;
+      });
+    }
+  }
+
+  Future<void> _persistDraft() async {
+    if (_currentUserId == null) return;
+    await widget.repository.saveAddBookDraft(_currentUserId!, _currentDraft);
+  }
+
+  Future<void> _clearDraft() async {
+    if (_currentUserId == null) return;
+    await widget.repository.clearAddBookDraft(_currentUserId!);
+  }
+
+  void _listenToConnectivity() {
+    _connectivity.checkConnectivity().then(_updateOfflineState);
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
+      _updateOfflineState,
+    );
+  }
+
+  void _updateOfflineState(List<ConnectivityResult> results) {
+    final offline =
+        results.isEmpty ||
+        results.every((result) => result == ConnectivityResult.none);
+    if (mounted && offline != _isOffline) {
+      setState(() {
+        _isOffline = offline;
+      });
+    }
+  }
+
+  void _refreshPendingQueue() {
+    final hasPending = _hive.getPendingOperations().isNotEmpty;
+    if (mounted && hasPending != _hasPendingQueue) {
+      setState(() {
+        _hasPendingQueue = hasPending;
+      });
+    }
+  }
+
+  List<AddBookValidationTip> _collectValidationTips() {
+    return AddBookValidationHelper.collect(
+      title: _titleController.text,
+      selectedGenres: List<String>.from(selectedGenres),
+      totalPages: _totalPages,
+      currentPage: _currentPage,
+      status: _status,
+      rating: _rating,
+      onTitleTap: () {
+        _scrollToKey(_titleFieldKey);
+        _titleFocusNode.requestFocus();
+      },
+      onGenresTap: () => _scrollToKey(_genresKey),
+      onPagesTap: () => _scrollToKey(_pagesKey),
+      onStatusTap: () => _scrollToKey(_statusKey),
+      onRatingTap: () => _scrollToKey(_statusKey),
+    );
+  }
+
+  void _scrollToKey(GlobalKey key) {
+    final targetContext = key.currentContext;
+    if (targetContext == null) return;
+    Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      alignment: 0.1,
+    );
+  }
+
+  void _showValidationTips(List<AddBookValidationTip> tips) {
+    setState(() {
+      _validationTips = tips;
+    });
+  }
+
+  void _clearValidationTips() {
+    if (_validationTips.isEmpty) return;
+    setState(() {
+      _validationTips = [];
+    });
+  }
+
+  void _removeTipSync(String id) {
+    _validationTips = _validationTips.where((tip) => tip.id != id).toList();
+  }
+
+  void _applyDraft(AddBookDraft draft) {
+    _titleController.text = draft.title;
+    _authorController.text = draft.author;
+    selectedGenres = List<String>.from(draft.genres);
+    _totalPages = draft.totalPages;
+    _currentPage = draft.currentPage;
+    _status = draft.status;
+    _rating = draft.rating;
   }
 }

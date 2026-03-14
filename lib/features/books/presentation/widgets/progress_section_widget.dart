@@ -7,6 +7,8 @@ class ProgressSectionWidget extends StatelessWidget {
   final int rating;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<int> onRatingChanged;
+  final bool isOffline;
+  final bool hasPendingQueue;
 
   const ProgressSectionWidget({
     super.key,
@@ -14,6 +16,8 @@ class ProgressSectionWidget extends StatelessWidget {
     required this.rating,
     required this.onStatusChanged,
     required this.onRatingChanged,
+    required this.isOffline,
+    required this.hasPendingQueue,
   });
 
   @override
@@ -23,9 +27,17 @@ class ProgressSectionWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Progreso",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                "Progreso",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (isOffline || hasPendingQueue)
+              _OfflineBadge(label: isOffline ? 'Offline' : 'En cola'),
+          ],
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
@@ -73,6 +85,31 @@ class ProgressSectionWidget extends StatelessWidget {
           const SizedBox(height: 12),
         ],
       ],
+    );
+  }
+}
+
+class _OfflineBadge extends StatelessWidget {
+  final String label;
+
+  const _OfflineBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.secondaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: colors.onSecondaryContainer,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
