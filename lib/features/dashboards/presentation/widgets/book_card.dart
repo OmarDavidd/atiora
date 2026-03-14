@@ -22,7 +22,7 @@ class BookCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 180,
-        margin: EdgeInsets.symmetric(horizontal: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 8),
         child: _BookCardContent(
           title: title,
           author: author,
@@ -50,6 +50,7 @@ class _BookCardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return Stack(
       children: [
         Card(

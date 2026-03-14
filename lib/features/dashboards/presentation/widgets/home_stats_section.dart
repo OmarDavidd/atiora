@@ -32,44 +32,49 @@ class HomeStatsSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 0.85,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            children: [
-              CustomStatCard(
-                title: "LEIDOS",
-                subtitle: totalBooksRead,
-                widget: Text(
-                  "Libros totales leídos",
-                  style: textTheme.bodySmall,
-                ),
-              ),
-              CustomStatCard(
-                title: "LEIDAS",
-                subtitle: totalPagesRead,
-                widget: Text(
-                  "Páginas totales leídas",
-                  style: textTheme.bodySmall,
-                ),
-              ),
-              CustomStatCard(
-                title: "RACHA",
-                subtitle: streak,
-                widget: Text("Días de racha", style: textTheme.bodySmall),
-              ),
-              CustomStatCard(
-                title: "PROMEDIO",
-                subtitle: average,
-                widget: Text(
-                  "Estrellas en promedio",
-                  style: textTheme.bodySmall,
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 520;
+              return GridView.count(
+                crossAxisCount: isCompact ? 1 : 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: isCompact ? 2.4 : 1.2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  CustomStatCard(
+                    title: "LEÍDOS",
+                    subtitle: totalBooksRead,
+                    widget: Text(
+                      "Libros totales leídos",
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                  CustomStatCard(
+                    title: "PÁGINAS",
+                    subtitle: totalPagesRead,
+                    widget: Text(
+                      "Páginas totales leídas",
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                  CustomStatCard(
+                    title: "RACHA",
+                    subtitle: streak,
+                    widget: Text("Días de racha", style: textTheme.bodySmall),
+                  ),
+                  CustomStatCard(
+                    title: "PROMEDIO",
+                    subtitle: average,
+                    widget: Text(
+                      "Estrellas en promedio",
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

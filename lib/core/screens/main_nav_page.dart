@@ -65,7 +65,7 @@ class _StatsPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('Explora métricas y hábitos de lectura')),
+      body: Center(child: Text('Pronto podrás monitorear tus métricas aquí')),
     );
   }
 }

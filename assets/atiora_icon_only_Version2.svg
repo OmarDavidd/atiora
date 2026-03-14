@@ -1,0 +1,14 @@
+<!-- Atiora - Solo icono (sin texto), vector limpio
+     Colores: bg #121F20, icon #19B399, cuts/lines #121F20
+     Uso: Android launcher icon base (puedes exportar PNG y/o usar para adaptive icon foreground) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Atiora icon">
+  <rect width="1024" height="1024" rx="224" fill="#121F20"/>
+
+  <rect x="272" y="232" width="480" height="560" rx="140" fill="#19B399"/>
+
+  <path d="M512 644L406 740c-18 16-46 4-46-20V404c0-26 22-48 48-48h208c26 0 48 22 48 48v316c0 24-28 36-46 20L512 644z"
+        fill="#121F20"/>
+
+  <rect x="418" y="414" width="188" height="56" rx="28" fill="#121F20"/>
+  <rect x="418" y="508" width="188" height="56" rx="28" fill="#121F20"/>
+</svg>

@@ -1,5 +1,6 @@
 import 'package:atiora/core/utils/helpers.dart';
 import 'package:atiora/data/models/book_model.dart';
+import 'package:atiora/features/books/presentation/widgets/custom_state_widget.dart';
 import 'package:flutter/material.dart';
 
 class LibraryBookCard extends StatelessWidget {
@@ -41,7 +42,7 @@ class LibraryBookCard extends StatelessWidget {
                 _Cover(coverUrl: book.coverUrl),
                 const SizedBox(width: 16),
                 Expanded(child: _BookInfo(book: book)),
-                _StatusBadge(status: book.status),
+                _StatusState(status: book.status),
               ],
             ),
             const SizedBox(height: 16),
@@ -70,12 +71,6 @@ class _Cover extends StatelessWidget {
               ? NetworkImage(coverUrl!)
               : const AssetImage('assets/missingbook.webp') as ImageProvider,
           fit: BoxFit.cover,
-          colorFilter: coverUrl == null
-              ? ColorFilter.mode(
-                  Theme.of(context).colorScheme.outlineVariant,
-                  BlendMode.modulate,
-                )
-              : null,
         ),
       ),
     );
@@ -111,28 +106,15 @@ class _BookInfo extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
+class _StatusState extends StatelessWidget {
   final String status;
 
-  const _StatusBadge({required this.status});
+  const _StatusState({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final color = AppHelpers.getStatusColor(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: color.withValues(alpha: 0.15),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    );
+    return CustomStateWidget(color: color, text: status);
   }
 }
 

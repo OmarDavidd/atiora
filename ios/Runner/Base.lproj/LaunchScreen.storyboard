@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
@@ -16,13 +16,29 @@
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
-                            </imageView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BgView">
+                                <subviews>
+                                    <imageView opaque="NO" clipsSubviews="YES" contentMode="scaleAspectFill" image="LaunchGradient" translatesAutoresizingMaskIntoConstraints="NO" id="Gradient"/>
+                                    <imageView opaque="NO" clipsSubviews="YES" contentMode="scaleAspectFit" image="LaunchLogo" translatesAutoresizingMaskIntoConstraints="NO" id="Logo"/>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="Gradient" firstAttribute="leading" secondItem="BgView" secondAttribute="leading" id="q1"/>
+                                    <constraint firstAttribute="trailing" secondItem="Gradient" secondAttribute="trailing" id="q2"/>
+                                    <constraint firstAttribute="bottom" secondItem="Gradient" secondAttribute="bottom" id="q3"/>
+                                    <constraint firstItem="Gradient" firstAttribute="top" secondItem="BgView" secondAttribute="top" id="q4"/>
+                                    <constraint firstItem="Logo" firstAttribute="centerX" secondItem="BgView" secondAttribute="centerX" id="q5"/>
+                                    <constraint firstItem="Logo" firstAttribute="centerY" secondItem="BgView" secondAttribute="centerY" id="q6"/>
+                                    <constraint firstItem="Logo" firstAttribute="width" secondItem="BgView" secondAttribute="width" multiplier="0.42" id="q7"/>
+                                    <constraint firstItem="Logo" firstAttribute="height" secondItem="Logo" secondAttribute="width" multiplier="1" id="q8"/>
+                                </constraints>
+                            </view>
                         </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.07058823529" green="0.1215686275" blue="0.1254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="1a2-6s-vTC"/>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="4X2-HB-R7a"/>
+                            <constraint firstItem="BgView" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="c1"/>
+                            <constraint firstItem="BgView" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="c2"/>
+                            <constraint firstAttribute="trailing" secondItem="BgView" secondAttribute="trailing" id="c3"/>
+                            <constraint firstAttribute="bottom" secondItem="BgView" secondAttribute="bottom" id="c4"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -32,6 +48,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="LaunchImage" width="168" height="185"/>
+        <image name="LaunchGradient" width="1000" height="2000"/>
+        <image name="LaunchLogo" width="600" height="600"/>
     </resources>
 </document>
