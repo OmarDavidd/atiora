@@ -7,6 +7,7 @@ abstract class BooksRepository {
   Future<void> updateBook(BookModel book);
   Future<void> deleteBook(String id);
   Future<Map<String, dynamic>> loadHomeStats();
+  Future<void> processPendingOperations();
   Future<void> updateBookState(
     String bookId,
     String newState, {

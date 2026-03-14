@@ -9,20 +9,26 @@ class BooksLoading extends BooksState {}
 
 class BooksLoaded extends BooksState {
   final List<BookModel> books;
-  BooksLoaded(this.books);
+  final bool hasPendingOperations;
+  BooksLoaded(this.books, {this.hasPendingOperations = false});
 
-  BooksLoaded copyWith({List<BookModel>? books}) {
-    return BooksLoaded(books ?? this.books);
+  BooksLoaded copyWith({List<BookModel>? books, bool? hasPendingOperations}) {
+    return BooksLoaded(
+      books ?? this.books,
+      hasPendingOperations: hasPendingOperations ?? this.hasPendingOperations,
+    );
   }
 
   @override
-  bool operator ==(Object other) => identical(this, other) ||
-    other is BooksLoaded && listEquals(other.books, books);
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BooksLoaded &&
+          listEquals(other.books, books) &&
+          other.hasPendingOperations == hasPendingOperations;
 
   @override
-  int get hashCode => books.hashCode;
+  int get hashCode => Object.hash(books, hasPendingOperations);
 }
-
 
 class BooksError extends BooksState {
   final String message;

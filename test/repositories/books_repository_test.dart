@@ -1,3 +1,4 @@
+import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
@@ -10,11 +11,14 @@ class MockBooksLocalDataSource extends Mock implements BooksLocalDataSource {}
 
 class MockBooksRemoteDataSource extends Mock implements BooksRemoteDataSource {}
 
+class MockHiveService extends Mock implements HiveService {}
+
 void main() {
   late MockBooksLocalDataSource mockLocalDataSource;
   late MockBooksRemoteDataSource mockRemoteDataSource;
   late BooksRepositoryImpl repository;
   late _StubConnectivity connectivity;
+  late MockHiveService mockHiveService;
 
   setUpAll(() {
     registerFallbackValue(
@@ -36,11 +40,37 @@ void main() {
   setUp(() {
     mockLocalDataSource = MockBooksLocalDataSource();
     mockRemoteDataSource = MockBooksRemoteDataSource();
+    mockHiveService = MockHiveService();
     connectivity = _StubConnectivity(isOnline: true);
+    when(() => mockHiveService.getPendingOperations()).thenReturn([]);
+    when(
+      () => mockHiveService.enqueuePendingOperation(any()),
+    ).thenAnswer((_) async => 'pending');
+    when(
+      () => mockHiveService.removePendingOperation(any()),
+    ).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.addBook(any())).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.updateBook(any())).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.deleteBook(any())).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.addBooks(any())).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.clearAll()).thenAnswer((_) async {});
+    when(() => mockRemoteDataSource.addBook(any())).thenAnswer((_) async {});
+    when(() => mockRemoteDataSource.updateBook(any())).thenAnswer((_) async {});
+    when(() => mockRemoteDataSource.deleteBook(any())).thenAnswer((_) async {});
+    when(
+      () => mockRemoteDataSource.updateBookState(
+        any(),
+        any(),
+        currentPage: any(named: 'currentPage'),
+        rating: any(named: 'rating'),
+        finishedAt: any(named: 'finishedAt'),
+      ),
+    ).thenAnswer((_) async {});
     repository = BooksRepositoryImpl(
       mockLocalDataSource,
       mockRemoteDataSource,
       connectivity: connectivity,
+      hive: mockHiveService,
     );
   });
 
@@ -106,59 +136,51 @@ void main() {
     group('addBook', () {
       test('always writes to local', () async {
         connectivity.isOnline = false;
-        when(
-          () => mockLocalDataSource.addBook(testBook),
-        ).thenAnswer((_) async {});
+        when(() => mockLocalDataSource.addBook(any())).thenAnswer((_) async {});
 
         await repository.addBook(testBook);
 
-        verify(() => mockLocalDataSource.addBook(testBook)).called(1);
+        verify(() => mockLocalDataSource.addBook(any())).called(1);
         verifyNever(() => mockRemoteDataSource.addBook(any()));
       });
 
       test('syncs remote when online', () async {
         connectivity.isOnline = true;
+
+        await repository.addBook(testBook);
+
+        verify(() => mockRemoteDataSource.addBook(any())).called(1);
+      });
+
+      test('queues pending operation when offline', () async {
+        connectivity.isOnline = false;
+        when(() => mockLocalDataSource.addBook(any())).thenAnswer((_) async {});
         when(
-          () => mockLocalDataSource.addBook(testBook),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockRemoteDataSource.addBook(testBook),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockRemoteDataSource.addBook(testBook),
+          () => mockLocalDataSource.updateBook(any()),
         ).thenAnswer((_) async {});
 
         await repository.addBook(testBook);
 
-        verify(() => mockRemoteDataSource.addBook(testBook)).called(1);
+        verify(() => mockHiveService.enqueuePendingOperation(any())).called(1);
       });
     });
 
     group('updateBook', () {
       test('updates local copy', () async {
         connectivity.isOnline = false;
-        when(
-          () => mockLocalDataSource.updateBook(testBook),
-        ).thenAnswer((_) async {});
 
         await repository.updateBook(testBook);
 
-        verify(() => mockLocalDataSource.updateBook(testBook)).called(1);
+        verify(() => mockLocalDataSource.updateBook(any())).called(1);
         verifyNever(() => mockRemoteDataSource.updateBook(any()));
       });
 
       test('propagates to remote when online', () async {
         connectivity.isOnline = true;
-        when(
-          () => mockLocalDataSource.updateBook(testBook),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockRemoteDataSource.updateBook(testBook),
-        ).thenAnswer((_) async {});
 
         await repository.updateBook(testBook);
 
-        verify(() => mockRemoteDataSource.updateBook(testBook)).called(1);
+        verify(() => mockRemoteDataSource.updateBook(any())).called(1);
       });
     });
 
@@ -220,6 +242,50 @@ void main() {
       verify(
         () => mockRemoteDataSource.updateBookState('book-1', 'terminado'),
       ).called(1);
+    });
+
+    group('processPendingOperations', () {
+      test('does nothing when offline', () async {
+        connectivity.isOnline = false;
+        when(() => mockHiveService.getPendingOperations()).thenReturn([
+          MapEntry('1', {'type': 'add'}),
+        ]);
+
+        await repository.processPendingOperations();
+
+        verifyNever(() => mockRemoteDataSource.addBook(any()));
+      });
+
+      test('replays queued add operations when online', () async {
+        connectivity.isOnline = true;
+        final pendingBook = testBook.copyWith(pendingSync: true);
+        when(() => mockHiveService.getPendingOperations()).thenReturn([
+          MapEntry('op-1', {'type': 'add', 'payload': pendingBook.toJson()}),
+        ]);
+        when(
+          () => mockRemoteDataSource.addBook(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockLocalDataSource.getBook(pendingBook.id),
+        ).thenAnswer((_) async => pendingBook);
+        when(
+          () => mockLocalDataSource.updateBook(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockHiveService.removePendingOperation('op-1'),
+        ).thenAnswer((_) async {});
+
+        await repository.processPendingOperations();
+
+        verify(() => mockRemoteDataSource.addBook(any())).called(1);
+        verify(() => mockHiveService.removePendingOperation('op-1')).called(1);
+        final captured = verify(
+          () => mockLocalDataSource.updateBook(captureAny()),
+        ).captured;
+        expect(captured, isNotEmpty);
+        final saved = captured.first as BookModel;
+        expect(saved.pendingSync, isFalse);
+      });
     });
   });
 }

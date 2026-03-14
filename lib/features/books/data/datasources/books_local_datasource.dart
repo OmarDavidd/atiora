@@ -6,31 +6,18 @@ class BooksLocalDataSource {
 
   BooksLocalDataSource(this._hive);
 
-  Future<List<BookModel>> getBooks() async {
-    return _hive.getAllBooks();
-  }
+  Future<List<BookModel>> getBooks() async => _hive.getAllBooks();
 
-  Future<BookModel?> getBook(String id) async {
-    return _hive.getBook(id);
-  }
+  Future<BookModel?> getBook(String id) async => _hive.getBook(id);
 
-  Future<void> addBook(BookModel book) async {
-    await _hive.saveBook(book);
-  }
+  Future<void> addBook(BookModel book) async => _hive.saveBook(book);
 
-  Future<void> updateBook(BookModel book) async {
-    await _hive.saveBook(book);
-  }
+  Future<void> updateBook(BookModel book) async => _hive.saveBook(book);
 
-  Future<void> deleteBook(String id) async {
-    await _hive.deleteBook(id);
-  }
+  Future<void> deleteBook(String id) async => _hive.deleteBook(id);
 
-  Future<void> clearAll() async {
-    await _hive.clearAllBooks();
-  }
+  Future<void> clearAll() async => _hive.clearAllBooks();
 
-  Future<void> addBooks(List<BookModel> books) async {
-    await _hive.saveAllBooks(books);
-  }
+  Future<void> addBooks(List<BookModel> books) async =>
+      _hive.saveAllBooks(books);
 }

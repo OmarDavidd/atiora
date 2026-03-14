@@ -1,4 +1,11 @@
+import 'dart:async';
+
+import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:atiora/core/di/injection_container.dart';
+import 'package:atiora/core/theme/theme_cubit.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
@@ -8,9 +15,6 @@ import 'package:atiora/features/dashboards/presentation/bloc/home_stats_event.da
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_state.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/books_carousel.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/home_stats_section.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:atiora/core/theme/theme_cubit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,10 +26,23 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final BooksBloc _booksBloc = sl<BooksBloc>();
   final HomeStatsBloc _homeStatsBloc = sl<HomeStatsBloc>();
+  late final Stream<List<ConnectivityResult>> _connectivityStream;
+  late final ConnectivityPlatform _connectivity;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    _connectivity = sl<ConnectivityPlatform>();
+    _connectivityStream = _connectivity.onConnectivityChanged;
+    _connectivitySubscription = _connectivityStream.listen((results) {
+      final hasConnection = results.any(
+        (result) => result != ConnectivityResult.none,
+      );
+      if (hasConnection) {
+        _booksBloc.add(SyncPendingOperations());
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _booksBloc.add(LoadBooks());
       _homeStatsBloc.add(LoadHomeStats());
@@ -105,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _booksBloc.close();
+    _connectivitySubscription?.cancel();
     super.dispose();
   }
 

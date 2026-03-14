@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
@@ -9,11 +10,16 @@ import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 
 class MockBooksRepository extends Mock implements BooksRepository {}
 
+class MockHiveService extends Mock implements HiveService {}
+
 void main() {
   late MockBooksRepository mockRepository;
+  late MockHiveService mockHiveService;
 
   setUp(() {
     mockRepository = MockBooksRepository();
+    mockHiveService = MockHiveService();
+    when(() => mockHiveService.getPendingOperations()).thenReturn([]);
   });
 
   setUpAll(() {
@@ -64,7 +70,7 @@ void main() {
     ];
 
     test('initial state should be BooksInitial', () {
-      final bloc = BooksBloc(mockRepository);
+      final bloc = BooksBloc(mockRepository, hive: mockHiveService);
       expect(bloc.state, isA<BooksInitial>());
     });
 
@@ -83,7 +89,8 @@ void main() {
             finishedAt: any(named: 'finishedAt'),
           ),
         ).thenAnswer((_) async {});
-        return BooksBloc(mockRepository);
+        when(() => mockHiveService.getPendingOperations()).thenReturn([]);
+        return BooksBloc(mockRepository, hive: mockHiveService);
       },
       act: (bloc) => bloc.add(LoadBooks()),
       expect: () => [isA<BooksLoading>(), isA<BooksLoaded>()],
@@ -98,10 +105,32 @@ void main() {
         when(
           () => mockRepository.getBooks(),
         ).thenThrow(Exception('Network error'));
-        return BooksBloc(mockRepository);
+        return BooksBloc(mockRepository, hive: mockHiveService);
       },
       act: (bloc) => bloc.add(LoadBooks()),
       expect: () => [isA<BooksLoading>(), isA<BooksError>()],
+    );
+
+    blocTest<BooksBloc, BooksState>(
+      'marks hasPendingOperations when Hive queue is not empty',
+      build: () {
+        when(
+          () => mockRepository.getBooks(),
+        ).thenAnswer((_) async => testBooks);
+        when(() => mockHiveService.getPendingOperations()).thenReturn([
+          const MapEntry('op-1', {'type': 'add'}),
+        ]);
+        return BooksBloc(mockRepository, hive: mockHiveService);
+      },
+      act: (bloc) => bloc.add(LoadBooks()),
+      expect: () => [
+        isA<BooksLoading>(),
+        isA<BooksLoaded>().having(
+          (state) => state.hasPendingOperations,
+          'hasPendingOperations',
+          isTrue,
+        ),
+      ],
     );
 
     blocTest<BooksBloc, BooksState>(
@@ -119,7 +148,7 @@ void main() {
         when(
           () => mockRepository.getBooks(),
         ).thenAnswer((_) async => testBooks);
-        return BooksBloc(mockRepository);
+        return BooksBloc(mockRepository, hive: mockHiveService);
       },
       seed: () => BooksLoaded(testBooks),
       act: (bloc) =>
@@ -157,7 +186,7 @@ void main() {
         when(
           () => mockRepository.getBooks(),
         ).thenAnswer((_) async => testBooks);
-        return BooksBloc(mockRepository);
+        return BooksBloc(mockRepository, hive: mockHiveService);
       },
       seed: () => BooksLoaded(testBooks),
       act: (bloc) =>
@@ -168,6 +197,25 @@ void main() {
         isA<BooksLoading>(),
         isA<BooksLoaded>(),
       ],
+    );
+
+    blocTest<BooksBloc, BooksState>(
+      'processes pending queue and reloads on SyncPendingOperations',
+      build: () {
+        when(
+          () => mockRepository.processPendingOperations(),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepository.getBooks(),
+        ).thenAnswer((_) async => testBooks);
+        when(() => mockHiveService.getPendingOperations()).thenReturn([]);
+        return BooksBloc(mockRepository, hive: mockHiveService);
+      },
+      act: (bloc) => bloc.add(SyncPendingOperations()),
+      expect: () => [isA<BooksLoading>(), isA<BooksLoaded>()],
+      verify: (_) {
+        verify(() => mockRepository.processPendingOperations()).called(1);
+      },
     );
   });
 }

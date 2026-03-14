@@ -23,6 +23,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
   late String _currentStatus;
   BooksState? _lastSyncedState;
   BookModel? _bookSnapshot;
+  bool _hasPendingSync = false;
 
   @override
   void initState() {
@@ -76,6 +77,14 @@ class _InfoBookSectionState extends State<InfoBookSection> {
       for (final book in state.books) {
         if (book.id == widget.book.id) {
           _bookSnapshot = book;
+          final pending = book.pendingSync;
+          if (_hasPendingSync != pending) {
+            if (mounted) {
+              setState(() => _hasPendingSync = pending);
+            } else {
+              _hasPendingSync = pending;
+            }
+          }
           if (book.status != _currentStatus) {
             if (mounted) {
               setState(() => _currentStatus = book.status);
@@ -111,18 +120,32 @@ class _InfoBookSectionState extends State<InfoBookSection> {
             color: Theme.of(modalContext).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: StateModal(
-            estados: AppConstants.bookStates,
-            seleccionado: safeIndex,
-            onSeleccionar: (nuevoIndex) async {
-              final newState = AppConstants.bookStates[nuevoIndex];
-              final handled = await _handleStateChange(
-                bloc,
-                referenceBook,
-                newState,
-              );
-              return handled;
-            },
+          child: Column(
+            children: [
+              if (_hasPendingSync)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  child: Text(
+                    'Este libro tiene cambios pendientes por sincronizar',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              Expanded(
+                child: StateModal(
+                  estados: AppConstants.bookStates,
+                  seleccionado: safeIndex,
+                  onSeleccionar: (nuevoIndex) async {
+                    final newState = AppConstants.bookStates[nuevoIndex];
+                    final handled = await _handleStateChange(
+                      bloc,
+                      referenceBook,
+                      newState,
+                    );
+                    return handled;
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),

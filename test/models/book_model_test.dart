@@ -95,6 +95,7 @@ void main() {
       expect(json['current_page'], 150);
       expect(json['status'], 'leyendo');
       expect(json['rating'], 4.5);
+      expect(json['pending_sync'], isFalse);
     });
 
     test('toRemoteJson should exclude id and user_id', () {
@@ -112,6 +113,7 @@ void main() {
         title: 'Clean Architecture',
         currentPage: 200,
         rating: 5.0,
+        pendingSync: true,
       );
 
       expect(updatedBook.title, 'Clean Architecture');
@@ -119,6 +121,7 @@ void main() {
       expect(updatedBook.rating, 5.0);
       expect(updatedBook.author, book.author);
       expect(updatedBook.id, book.id);
+      expect(updatedBook.pendingSync, isTrue);
     });
 
     test('copyWith with no changes should return equal copy', () {
@@ -133,7 +136,7 @@ void main() {
       final book2 = BookModel.fromJson(testJson);
 
       expect(book1, equals(book2));
-      expect(book1.props.length, 14);
+      expect(book1.props.length, 15);
     });
 
     test('books with different fields should not be equal', () {

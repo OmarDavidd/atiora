@@ -72,6 +72,7 @@ Future<void> init() async {
       sl<BooksLocalDataSource>(),
       sl<BooksRemoteDataSource>(),
       connectivity: sl<ConnectivityPlatform>(),
+      hive: sl<HiveService>(),
     ),
   );
 

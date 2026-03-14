@@ -11,11 +11,10 @@ class DarkTheme {
           seedColor: AppColors.primary,
           brightness: Brightness.dark,
         ).copyWith(
-          background: AppColors.backgroundPrimary,
           surface: AppColors.surfacePrimary,
-          onBackground: AppColors.neutral0,
           onSurface: AppColors.neutral0,
           outline: AppColors.neutral500,
+          surfaceContainerHighest: AppColors.surfacePrimary,
         ),
     scaffoldBackgroundColor: AppColors.backgroundPrimary,
     appBarTheme: const AppBarTheme(

@@ -41,10 +41,10 @@ class StateModal extends StatelessWidget {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: estados.length,
-                  separatorBuilder: (_, __) => Divider(
+                  separatorBuilder: (context, _) => Divider(
                     height: 1,
                     thickness: 0.6,
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                   itemBuilder: (context, index) {
                     final statusColor = AppHelpers.getStatusColor(
@@ -140,11 +140,11 @@ class _StatusDot extends StatelessWidget {
       width: 28,
       height: 28,
       decoration: BoxDecoration(
-        color: color.withOpacity(
-          theme.brightness == Brightness.dark ? 0.25 : 0.12,
+        color: color.withValues(
+          alpha: theme.brightness == Brightness.dark ? 0.25 : 0.12,
         ),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withOpacity(0.5), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Icon(Icons.circle, color: color, size: 12),
     );

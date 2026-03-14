@@ -12,12 +12,14 @@ class HiveService {
   late Box<dynamic> booksBox;
   late Box<dynamic> notesBox;
   late Box<dynamic> profileBox;
+  late Box<dynamic> pendingOpsBox;
 
   Future<void> init() async {
     await Hive.initFlutter();
     booksBox = await Hive.openBox('books');
     notesBox = await Hive.openBox('notes');
     profileBox = await Hive.openBox('profiles');
+    pendingOpsBox = await Hive.openBox('pending_ops');
   }
 
   Future<void> saveBook(BookModel book) async {
@@ -65,6 +67,28 @@ class HiveService {
   Future<void> saveNote(NoteModel note) => notesBox.put(note.id, note.toJson());
   Future<void> saveProfile(ProfileModel profile) =>
       profileBox.put(profile.userId, profile.toJson());
+
+  Future<String> enqueuePendingOperation(Map<String, dynamic> operation) async {
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    await pendingOpsBox.put(id, operation);
+    return id;
+  }
+
+  List<MapEntry<String, Map<String, dynamic>>> getPendingOperations() {
+    final ops = <MapEntry<String, Map<String, dynamic>>>[];
+    for (final key in pendingOpsBox.keys) {
+      final value = pendingOpsBox.get(key);
+      if (value is Map) {
+        final Map<String, dynamic> normalized = {};
+        value.forEach((key, val) => normalized[key.toString()] = val);
+        ops.add(MapEntry(key.toString(), normalized));
+      }
+    }
+    return ops;
+  }
+
+  Future<void> removePendingOperation(String key) async =>
+      pendingOpsBox.delete(key);
 
   Future<void> close() async => await Hive.close();
 }

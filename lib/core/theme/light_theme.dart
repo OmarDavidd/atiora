@@ -11,10 +11,9 @@ class LightTheme {
           brightness: Brightness.light,
         ).copyWith(
           surface: AppColors.neutral0,
-          background: AppColors.neutral0,
-          onBackground: AppColors.neutral900,
+          onSurface: AppColors.neutral900,
           outline: AppColors.neutral500,
-          surfaceVariant: const Color(0xFFE2E8F0),
+          surfaceContainerHighest: const Color(0xFFE2E8F0),
         ),
     scaffoldBackgroundColor: AppColors.neutral0,
     appBarTheme: const AppBarTheme(

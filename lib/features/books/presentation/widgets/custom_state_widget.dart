@@ -23,7 +23,7 @@ class CustomStateWidget extends StatelessWidget {
           width: 140,
           height: 30,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(color: color, width: 2),
           ),
@@ -41,11 +41,7 @@ class CustomStateWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 16,
-                color: color,
-              ),
+              Icon(Icons.keyboard_arrow_down, size: 16, color: color),
             ],
           ),
         ),

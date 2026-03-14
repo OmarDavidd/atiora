@@ -19,7 +19,7 @@ class HomeStatsSection extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -31,11 +31,11 @@ class HomeStatsSection extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             childAspectRatio: 0.85,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,

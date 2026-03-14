@@ -15,6 +15,7 @@ class BookModel extends Equatable {
   final DateTime updatedAt;
   final DateTime? startedAt;
   final DateTime? finishedAt;
+  final bool pendingSync;
 
   const BookModel({
     required this.id,
@@ -31,6 +32,7 @@ class BookModel extends Equatable {
     required this.updatedAt,
     this.startedAt,
     this.finishedAt,
+    this.pendingSync = false,
   });
 
   Map<String, dynamic> toRemoteJson() => {
@@ -61,6 +63,7 @@ class BookModel extends Equatable {
     'updated_at': updatedAt.toIso8601String(),
     if (startedAt != null) 'started_at': startedAt!.toIso8601String(),
     if (finishedAt != null) 'finished_at': finishedAt!.toIso8601String(),
+    'pending_sync': pendingSync,
   };
 
   factory BookModel.fromJson(Map<String, dynamic> json) => BookModel(
@@ -82,6 +85,7 @@ class BookModel extends Equatable {
     finishedAt: json['finished_at'] != null
         ? DateTime.parse(json['finished_at'])
         : null,
+    pendingSync: json['pending_sync'] as bool? ?? false,
   );
 
   @override
@@ -100,6 +104,7 @@ class BookModel extends Equatable {
     updatedAt,
     startedAt,
     finishedAt,
+    pendingSync,
   ];
 
   BookModel copyWith({
@@ -117,6 +122,7 @@ class BookModel extends Equatable {
     DateTime? updatedAt,
     DateTime? startedAt,
     DateTime? finishedAt,
+    bool? pendingSync,
   }) {
     return BookModel(
       id: id ?? this.id,
@@ -133,6 +139,7 @@ class BookModel extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
       startedAt: startedAt ?? this.startedAt,
       finishedAt: finishedAt ?? this.finishedAt,
+      pendingSync: pendingSync ?? this.pendingSync,
     );
   }
 }

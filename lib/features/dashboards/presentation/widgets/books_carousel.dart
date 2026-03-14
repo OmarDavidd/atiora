@@ -1,4 +1,5 @@
 import 'package:atiora/core/navigation/app_router.dart';
+import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
@@ -44,7 +45,7 @@ class _BooksCarouselState extends State<BooksCarousel> {
               return const Center(child: CircularProgressIndicator());
             }
             if (state is BooksLoaded) {
-              final books = state.books;
+              final books = _recentBooks(state.books);
 
               if (books.isEmpty) {
                 return Center(
@@ -57,7 +58,7 @@ class _BooksCarouselState extends State<BooksCarousel> {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        "No tienes libros aún",
+                        "No tienes lecturas recientes",
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
@@ -67,6 +68,16 @@ class _BooksCarouselState extends State<BooksCarousel> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (state.hasPendingOperations)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, bottom: 12),
+                      child: Text(
+                        'Sin conexión: sincronizaremos tus cambios al volver la red',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   CarouselSlider.builder(
                     itemCount: books.length,
                     itemBuilder: (context, index, realIndex) {
@@ -85,6 +96,7 @@ class _BooksCarouselState extends State<BooksCarousel> {
                           title: book.title,
                           author: book.author ?? "",
                           coverPath: 'assets/missingbook.webp',
+                          isPendingSync: book.pendingSync,
                         ),
                       );
                     },
@@ -109,5 +121,11 @@ class _BooksCarouselState extends State<BooksCarousel> {
         ),
       ],
     );
+  }
+
+  List<BookModel> _recentBooks(List<BookModel> books) {
+    final sorted = List<BookModel>.from(books)
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return sorted.take(5).toList();
   }
 }

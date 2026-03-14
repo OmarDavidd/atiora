@@ -2,6 +2,8 @@ abstract class BooksEvent {}
 
 class LoadBooks extends BooksEvent {}
 
+class SyncPendingOperations extends BooksEvent {}
+
 class UpdateBookState extends BooksEvent {
   final String bookId;
   final String newState;

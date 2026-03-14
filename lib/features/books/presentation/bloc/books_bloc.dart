@@ -1,4 +1,5 @@
 import 'package:atiora/core/errors/app_exception.dart';
+import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/error_handler.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
@@ -10,8 +11,11 @@ import 'books_state.dart';
 
 class BooksBloc extends Bloc<BooksEvent, BooksState> {
   final BooksRepository _repository;
+  final HiveService _hive;
 
-  BooksBloc(this._repository) : super(BooksInitial()) {
+  BooksBloc(this._repository, {HiveService? hive})
+    : _hive = hive ?? HiveService.instance,
+      super(BooksInitial()) {
     on<LoadBooks>((event, emit) async {
       final currentState = state;
       if (currentState is BooksLoaded) {
@@ -22,7 +26,8 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
 
       try {
         final books = await _repository.getBooks();
-        emit(BooksLoaded(books));
+        final pendingOps = _hive.getPendingOperations().isNotEmpty;
+        emit(BooksLoaded(books, hasPendingOperations: pendingOps));
       } catch (e) {
         debugPrint('BooksBloc.getBooks failed: $e');
         final message = e is AppException
@@ -31,6 +36,15 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         emit(BooksError(message));
       }
     }, transformer: restartable());
+
+    on<SyncPendingOperations>((event, emit) async {
+      try {
+        await _repository.processPendingOperations();
+      } catch (e) {
+        debugPrint('BooksBloc.sync error: $e');
+      }
+      add(LoadBooks());
+    });
 
     on<UpdateBookState>((event, emit) async {
       final normalizedState = event.newState.toLowerCase();
@@ -68,7 +82,12 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
           books[idx] = nextBook;
           updatedBook = nextBook;
         }
-        emit(BooksLoaded(books));
+        emit(
+          BooksLoaded(
+            books,
+            hasPendingOperations: (state as BooksLoaded).hasPendingOperations,
+          ),
+        );
       }
 
       final repoCurrentPage =
