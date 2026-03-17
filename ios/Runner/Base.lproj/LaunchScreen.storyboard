@@ -19,17 +19,12 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BgView">
                                 <subviews>
                                     <imageView opaque="NO" clipsSubviews="YES" contentMode="scaleAspectFill" image="LaunchGradient" translatesAutoresizingMaskIntoConstraints="NO" id="Gradient"/>
-                                    <imageView opaque="NO" clipsSubviews="YES" contentMode="scaleAspectFit" image="LaunchLogo" translatesAutoresizingMaskIntoConstraints="NO" id="Logo"/>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="Gradient" firstAttribute="leading" secondItem="BgView" secondAttribute="leading" id="q1"/>
                                     <constraint firstAttribute="trailing" secondItem="Gradient" secondAttribute="trailing" id="q2"/>
                                     <constraint firstAttribute="bottom" secondItem="Gradient" secondAttribute="bottom" id="q3"/>
                                     <constraint firstItem="Gradient" firstAttribute="top" secondItem="BgView" secondAttribute="top" id="q4"/>
-                                    <constraint firstItem="Logo" firstAttribute="centerX" secondItem="BgView" secondAttribute="centerX" id="q5"/>
-                                    <constraint firstItem="Logo" firstAttribute="centerY" secondItem="BgView" secondAttribute="centerY" id="q6"/>
-                                    <constraint firstItem="Logo" firstAttribute="width" secondItem="BgView" secondAttribute="width" multiplier="0.42" id="q7"/>
-                                    <constraint firstItem="Logo" firstAttribute="height" secondItem="Logo" secondAttribute="width" multiplier="1" id="q8"/>
                                 </constraints>
                             </view>
                         </subviews>
@@ -49,6 +44,5 @@
     </scenes>
     <resources>
         <image name="LaunchGradient" width="1000" height="2000"/>
-        <image name="LaunchLogo" width="600" height="600"/>
     </resources>
 </document>
