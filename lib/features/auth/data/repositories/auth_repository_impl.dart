@@ -12,7 +12,10 @@ class AuthRepositoryImpl implements AuthRepository {
   UserModel? get currentUser => _provider.currentUser != null
       ? UserModel(
           id: _provider.currentUser!.id,
-          email: _provider.currentUser!.email!,
+          email: _provider.currentUser!.email ?? '',
+          joinedAt: _provider.currentUser!.createdAt != null
+              ? DateTime.tryParse(_provider.currentUser!.createdAt!)
+              : null,
         )
       : null;
 
@@ -27,17 +30,26 @@ class AuthRepositoryImpl implements AuthRepository {
       if (response.user != null) {
         final user = UserModel(
           id: response.user!.id,
-          email: response.user!.email!,
+          email: response.user!.email ?? '',
+          joinedAt: response.user!.createdAt != null
+              ? DateTime.tryParse(response.user!.createdAt!)
+              : null,
         );
         return user;
       }
       return null;
-    } catch (e, stackTrace) {
-      throw AppException.auth(
-        'No pudimos iniciar sesión',
-        cause: e,
-        stackTrace: stackTrace,
-      );
+    } catch (e) {
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('invalid_credentials') ||
+          errorMessage.contains('invalid login') ||
+          errorMessage.contains('wrong password')) {
+        throw AppException.auth('Credenciales inválidas');
+      }
+      if (errorMessage.contains('network') ||
+          errorMessage.contains('connection')) {
+        throw AppException.auth('Sin conexión a internet');
+      }
+      throw AppException.auth('Error al iniciar sesión');
     }
   }
 
@@ -49,17 +61,26 @@ class AuthRepositoryImpl implements AuthRepository {
       if (response.user != null) {
         final user = UserModel(
           id: response.user!.id,
-          email: response.user!.email!,
+          email: response.user!.email ?? '',
+          joinedAt: response.user!.createdAt != null
+              ? DateTime.tryParse(response.user!.createdAt!)
+              : null,
         );
         return user;
       }
       return null;
-    } catch (e, stackTrace) {
-      throw AppException.auth(
-        'No pudimos completar el registro',
-        cause: e,
-        stackTrace: stackTrace,
-      );
+    } catch (e) {
+      if (e is AppException) rethrow;
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('user_already_exists') ||
+          errorMessage.contains('already registered')) {
+        throw AppException.auth('Este correo ya está registrado');
+      }
+      if (errorMessage.contains('network') ||
+          errorMessage.contains('connection')) {
+        throw AppException.auth('Sin conexión a internet');
+      }
+      throw AppException.auth('Error al registrar usuario');
     }
   }
 
