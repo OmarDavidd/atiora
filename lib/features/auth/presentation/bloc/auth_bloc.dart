@@ -3,8 +3,10 @@ import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/utils/error_handler.dart';
 import 'package:atiora/data/models/user_model.dart';
+import 'package:atiora/features/auth/domain/usecases/clear_local_data_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
+import 'package:atiora/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 abstract class AuthEvent {}
@@ -20,6 +22,8 @@ class SignUpEvent extends AuthEvent {
 }
 
 class CheckAuthEvent extends AuthEvent {}
+
+class SignOutEvent extends AuthEvent {}
 
 abstract class AuthState {}
 
@@ -40,14 +44,21 @@ class AuthError extends AuthState {
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInUseCase signInUseCase;
   final SignUpUseCase signUpUseCase;
+  final SignoutUseCase signoutUseCase;
   final AuthProvider authProvider;
+  final ClearLocalDataUseCase clearLocalDataUseCase;
 
-  AuthBloc(this.signInUseCase, this.signUpUseCase, {AuthProvider? authProvider})
-    : authProvider = authProvider ?? sl<AuthProvider>(),
-      super(AuthInitial()) {
+  AuthBloc(
+    this.signInUseCase,
+    this.signUpUseCase,
+    this.signoutUseCase, {
+    required AuthProvider this.authProvider,
+    required ClearLocalDataUseCase this.clearLocalDataUseCase,
+  }) : super(AuthInitial()) {
     on<SignInEvent>(_onSignIn);
     on<SignUpEvent>(_onSignUp);
     on<CheckAuthEvent>(_onCheckAuth);
+    on<SignOutEvent>(_onSignOut);
   }
 
   Future<void> _onSignIn(SignInEvent event, Emitter<AuthState> emit) async {
@@ -91,9 +102,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final user = authProvider.currentUser;
 
     if (user != null) {
-      emit(AuthAuthenticated(UserModel(id: user.id, email: user.email ?? '')));
+      emit(
+        AuthAuthenticated(
+          UserModel(
+            id: user.id,
+            email: user.email ?? '',
+            joinedAt: user.createdAt != null
+                ? DateTime.tryParse(user.createdAt!)
+                : null,
+          ),
+        ),
+      );
     } else {
       emit(AuthInitial());
+    }
+  }
+
+  Future<void> _onSignOut(SignOutEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      await signoutUseCase.execute();
+      await clearLocalDataUseCase.execute();
+      emit(AuthInitial());
+    } catch (e) {
+      final message = e is AppException
+          ? ErrorHandler.map(e)
+          : 'No pudimos cerrar sesión';
+      emit(AuthError(message));
     }
   }
 }
