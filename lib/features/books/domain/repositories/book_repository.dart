@@ -9,6 +9,7 @@ abstract class BooksRepository {
   Future<void> deleteBook(String id);
   Future<Map<String, dynamic>> loadHomeStats();
   Future<void> processPendingOperations();
+  void resetSync();
   Future<void> updateBookState(
     String bookId,
     String newState, {

@@ -21,6 +21,11 @@ class BooksRepositoryImpl implements BooksRepository {
 
   DateTime? _lastSync;
 
+  @override
+  void resetSync() {
+    _lastSync = null;
+  }
+
   BooksRepositoryImpl(
     this._local,
     this._remote, {
