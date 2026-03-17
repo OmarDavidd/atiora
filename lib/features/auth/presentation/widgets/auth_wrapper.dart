@@ -9,18 +9,35 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthAuthenticated) {
-          return const MainNavPage();
-        } else if (state is AuthLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           );
         }
-        // AuthInitial, AuthError → Login
-        return const LoginScreen();
       },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) {
+            return const MainNavPage();
+          } else if (state is AuthLoading) {
+            return Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: const Center(child: CircularProgressIndicator()),
+            );
+          }
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }

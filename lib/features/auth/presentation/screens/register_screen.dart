@@ -1,4 +1,3 @@
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:flutter/material.dart';
@@ -38,18 +37,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          // Solo maneja errores localmente
           if (state is AuthError) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 4),
+                backgroundColor: colors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             );
+          } else if (state is AuthAuthenticated) {
+            Navigator.of(context).pushReplacementNamed('/');
           }
         },
         child: BlocBuilder<AuthBloc, AuthState>(
@@ -71,7 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: GoogleFonts.jaini(
                             fontSize: 56,
                             fontWeight: FontWeight.w300,
-                            color: AppColors.neutral0,
+                            color: colors.primary,
                             letterSpacing: 6,
                             height: 1.0,
                           ),
