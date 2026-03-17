@@ -1,5 +1,6 @@
 import 'package:atiora/features/dashboards/presentation/screens/home_screen.dart';
 import 'package:atiora/features/library/presentation/screens/library_screen.dart';
+import 'package:atiora/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainNavPage extends StatefulWidget {
@@ -20,7 +21,7 @@ class MainNavPageState extends State<MainNavPage> {
       HomeScreen(),
       LibraryScreen(),
       _StatsPlaceholder(),
-      _ProfilePlaceholder(),
+      ProfileScreen(),
     ];
   }
 
@@ -66,17 +67,6 @@ class _StatsPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(child: Text('Pronto podrás monitorear tus métricas aquí')),
-    );
-  }
-}
-
-class _ProfilePlaceholder extends StatelessWidget {
-  const _ProfilePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Configura tu perfil y preferencias')),
     );
   }
 }

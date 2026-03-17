@@ -22,7 +22,7 @@ void main() {
     test('props should return all fields', () {
       const user = UserModel(id: 'user-123', email: 'test@example.com');
 
-      expect(user.props, ['user-123', 'test@example.com']);
+      expect(user.props, ['user-123', 'test@example.com', null]);
     });
 
     test('two users with same data should be equal', () {

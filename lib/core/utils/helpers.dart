@@ -11,6 +11,30 @@ class AppHelpers {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
+  static String formatMonthYear(DateTime date) {
+    const months = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    final monthName = months[date.month - 1];
+    return '${_capitalized(monthName)} de ${date.year}';
+  }
+
+  static String _capitalized(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   static Color getBookStateColor(String state) {
     switch (state.toLowerCase()) {
       case 'leyendo':
