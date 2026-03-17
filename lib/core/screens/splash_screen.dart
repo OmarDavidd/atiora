@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:atiora/core/utils/app_colors.dart';
@@ -55,19 +54,6 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
     duration: const Duration(milliseconds: 2200),
   );
 
-  late final Animation<double> _iconScale = Tween<double>(begin: 0.4, end: 1)
-      .animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0, 0.5, curve: Curves.easeOutBack),
-        ),
-      );
-
-  late final Animation<double> _ringOpacity = CurvedAnimation(
-    parent: _controller,
-    curve: const Interval(0.15, 0.65, curve: Curves.easeOut),
-  );
-
   late final Animation<double> _textOpacity = CurvedAnimation(
     parent: _controller,
     curve: const Interval(0.45, 0.9, curve: Curves.easeOut),
@@ -80,11 +66,6 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
           curve: const Interval(0.45, 0.9, curve: Curves.easeOutCubic),
         ),
       );
-
-  late final Animation<double> _sparkProgress = CurvedAnimation(
-    parent: _controller,
-    curve: const Interval(0.55, 1, curve: Curves.easeInOutCubic),
-  );
 
   @override
   void initState() {
@@ -105,7 +86,6 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       body: AnimatedBuilder(
@@ -114,18 +94,7 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
           return Stack(
             children: [
               Positioned.fill(child: _buildBackdrop()),
-              Align(
-                alignment: const Alignment(0, -0.05),
-                child: _buildLogo(size),
-              ),
-              Align(
-                alignment: const Alignment(0, 0.55),
-                child: _buildWordmark(),
-              ),
-              Align(
-                alignment: const Alignment(0, 0.8),
-                child: _buildProgressBeam(size.width * 0.5),
-              ),
+              Center(child: _buildWordmark()),
             ],
           );
         },
@@ -155,56 +124,6 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
         ),
       ),
       child: CustomPaint(painter: _HaloPainter(blend: blend)),
-    );
-  }
-
-  Widget _buildLogo(Size size) {
-    final dimension = size.width * 0.45;
-    final double haloScale = (lerpDouble(0.9, 1.15, _controller.value) ?? 1)
-        .toDouble();
-
-    return SizedBox(
-      height: dimension,
-      width: dimension,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Opacity(
-            opacity: _ringOpacity.value,
-            child: Transform.scale(
-              scale: haloScale,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.35),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Transform.scale(
-            scale: _iconScale.value,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.38),
-                    blurRadius: 40,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset('assets/icon.png', fit: BoxFit.cover),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -251,59 +170,6 @@ class _BrandSplashScreenState extends State<BrandSplashScreen>
             ),
           ),
           const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressBeam(double width) {
-    final progress = _sparkProgress.value;
-    final indicatorWidth = width * 0.85;
-    final sparkPosition = progress * indicatorWidth;
-
-    return SizedBox(
-      width: indicatorWidth,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.surfacePrimary,
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 4,
-            width: indicatorWidth * progress,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              gradient: LinearGradient(
-                colors: [AppColors.primaryDark, AppColors.primary],
-              ),
-            ),
-          ),
-          Positioned(
-            left: math.max(0, sparkPosition - 8),
-            child: Opacity(
-              opacity: progress,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.6),
-                      blurRadius: 12,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
