@@ -3,6 +3,7 @@ import 'package:atiora/core/di/providers/supabase_provider.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:atiora/features/auth/domain/repositories/auth_repository.dart';
+import 'package:atiora/features/auth/domain/usecases/clear_local_data_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
@@ -51,7 +52,13 @@ Future<void> init() async {
 
   // Auth Bloc
   sl.registerFactory<AuthBloc>(
-    () => AuthBloc(sl<SignInUseCase>(), sl<SignUpUseCase>()),
+    () => AuthBloc(
+      sl<SignInUseCase>(),
+      sl<SignUpUseCase>(),
+      sl<SignoutUseCase>(),
+      authProvider: sl<AuthProvider>(),
+      clearLocalDataUseCase: sl<ClearLocalDataUseCase>(),
+    ),
   );
 
   sl.registerLazySingleton<ConnectivityPlatform>(MethodChannelConnectivity.new);
@@ -74,6 +81,11 @@ Future<void> init() async {
       connectivity: sl<ConnectivityPlatform>(),
       hive: sl<HiveService>(),
     ),
+  );
+
+  // Clear local data use case (depends on BooksRepository)
+  sl.registerLazySingleton<ClearLocalDataUseCase>(
+    () => ClearLocalDataUseCase(sl<HiveService>(), sl<BooksRepository>()),
   );
 
   // Home stats Bloc

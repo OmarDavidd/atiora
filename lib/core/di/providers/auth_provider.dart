@@ -44,5 +44,15 @@ class AuthProvider {
     }
   }
 
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await client.auth.updateUser(UserAttributes(password: newPassword));
+    } catch (e, stackTrace) {
+      debugPrint('AuthProvider.updatePassword failed: $e');
+      debugPrint('$stackTrace');
+      rethrow;
+    }
+  }
+
   User? get currentUser => client.auth.currentUser;
 }
