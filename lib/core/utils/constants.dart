@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class AppConstants {
   static const String appName = 'Atiora';
   static const String appVersion = '1.0.0';
-  static const String googleBooksApiKey = 'TU_API_KEY_AQUI';
 
   // Database
   static const String dbName = 'notium.db';
@@ -33,4 +32,12 @@ class AppConstants {
   // Storage Keys
   static const String themeModeKey = 'theme_mode';
   static const String lastSyncKey = 'last_sync';
+}
+
+class PendingOperationType {
+  static const String add = 'add';
+  static const String update = 'update';
+  static const String delete = 'delete';
+  static const String state = 'state';
+  static const String readingSession = 'reading_session';
 }
