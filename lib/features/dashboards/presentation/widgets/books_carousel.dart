@@ -1,4 +1,5 @@
 import 'package:atiora/core/navigation/app_router.dart';
+import 'package:atiora/core/widgets/skeleton_loader.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
@@ -29,8 +30,8 @@ class BooksCarousel extends StatelessWidget {
         const SizedBox(height: 20),
         BlocBuilder<BooksBloc, BooksState>(
           builder: (context, state) {
-            if (state is BooksLoading) {
-              return const Center(child: CircularProgressIndicator());
+            if (state is BooksLoading || state is BooksInitial) {
+              return const BooksCarouselSkeleton();
             }
             if (state is BooksLoaded) {
               final books = _recentBooks(state.books);
