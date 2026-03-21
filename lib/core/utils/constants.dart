@@ -23,11 +23,16 @@ class AppConstants {
 
   // Book States
   static const List<String> bookStates = [
-    'Leyendo',
-    'Completado',
-    'Pausado',
-    'Pendiente',
+    statusLeyendo,
+    statusCompletado,
+    statusPausado,
+    statusPendiente,
   ];
+
+  static const String statusLeyendo = 'Leyendo';
+  static const String statusCompletado = 'Completado';
+  static const String statusPausado = 'Pausado';
+  static const String statusPendiente = 'Pendiente';
 
   // Storage Keys
   static const String themeModeKey = 'theme_mode';

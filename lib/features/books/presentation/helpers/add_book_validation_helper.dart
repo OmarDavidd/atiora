@@ -1,3 +1,4 @@
+import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_validation_tips.dart';
 import 'package:flutter/foundation.dart';
 
@@ -55,7 +56,7 @@ class AddBookValidationHelper {
           onTap: onStatusTap,
         ),
       );
-    } else if (status == 'Completado' && rating == 0) {
+    } else if (status == AppConstants.statusCompletado && rating == 0) {
       tips.add(
         AddBookValidationTip(
           id: 'rating',
