@@ -276,6 +276,10 @@ class _AddBookModalState extends State<AddBookModal> {
     );
 
     if (confirm == true) {
+      _draftDebounce?.cancel();
+      if (_hasUnsavedChanges) {
+        await _clearDraft();
+      }
       if (shouldPop) {
         return true;
       }
@@ -336,9 +340,11 @@ class _AddBookModalState extends State<AddBookModal> {
 
   @override
   void dispose() {
+    _draftDebounce?.cancel();
+    if (_hasUnsavedChanges && _currentUserId != null) {
+      _clearDraft();
+    }
     _titleController.dispose();
-    _authorController.dispose();
-    _titleFocusNode.dispose();
     _authorFocusNode.dispose();
     _scrollController.dispose();
     _connectivitySubscription?.cancel();
