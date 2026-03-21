@@ -3,7 +3,6 @@ import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/error_handler.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'books_event.dart';
@@ -26,10 +25,9 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
 
       try {
         final books = await _repository.getBooks();
-        final pendingOps = _hive.getPendingOperations().isNotEmpty;
+        final pendingOps = (await _hive.getPendingOperations()).isNotEmpty;
         emit(BooksLoaded(books, hasPendingOperations: pendingOps));
       } catch (e) {
-        debugPrint('BooksBloc.getBooks failed: $e');
         final message = e is AppException
             ? ErrorHandler.map(e)
             : 'Error al cargar los libros';
@@ -40,9 +38,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
     on<SyncPendingOperations>((event, emit) async {
       try {
         await _repository.processPendingOperations();
-      } catch (e) {
-        debugPrint('BooksBloc.sync error: $e');
-      }
+      } catch (_) {}
       add(LoadBooks());
     });
 
@@ -111,9 +107,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
           rating: event.rating,
           finishedAt: repoFinishedAt,
         );
-        debugPrint('BooksBloc.updateBookState persisted: ${event.newState}');
       } catch (e) {
-        debugPrint('BooksBloc.updateBookState failed: $e');
         final message = e is AppException
             ? ErrorHandler.map(e)
             : 'No pudimos actualizar el estado del libro';
@@ -134,8 +128,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
           event.pagesDelta,
           sessionDate: event.sessionDate,
         );
-      } catch (e) {
-        debugPrint('BooksBloc.logReadingSession failed: $e');
+      } catch (_) {
         emit(BookStateUpdateError('No pudimos registrar tu sesión de lectura'));
       }
     });

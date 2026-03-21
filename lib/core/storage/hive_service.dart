@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/note_model.dart';
@@ -38,31 +38,31 @@ class HiveService {
     await booksBox.putAll(map);
   }
 
-  List<BookModel> getAllBooks() {
-    final List<BookModel> books = [];
-    for (int i = 0; i < booksBox.length; i++) {
-      final dynamic raw = booksBox.getAt(i);
-      if (raw != null) {
-        try {
-          final Map<String, dynamic> json = <String, dynamic>{};
-          final map = raw as Map<dynamic, dynamic>;
-          map.forEach((dynamic k, dynamic v) => json[k.toString()] = v);
-          final book = BookModel.fromJson(json);
-          books.add(book);
-        } catch (e) {
-          debugPrint('HiveService.getAllBooks skipping invalid entry: $e');
-        }
+  Future<List<BookModel>> getAllBooks() async {
+    final keys = booksBox.keys.toList();
+    final rawBooks = <Map<dynamic, dynamic>>[];
+
+    for (final key in keys) {
+      final raw = booksBox.get(key);
+      if (raw != null && raw is Map) {
+        rawBooks.add(Map<dynamic, dynamic>.from(raw));
       }
     }
-    return books;
+
+    if (rawBooks.isEmpty) return [];
+
+    return compute(_parseBooks, rawBooks);
   }
 
-  BookModel? getBook(String id) {
+  Future<BookModel?> getBook(String id) async {
     final raw = booksBox.get(id);
     if (raw == null) return null;
-    final Map<String, dynamic> json = {};
-    (raw as Map).forEach((k, v) => json[k.toString()] = v);
-    return BookModel.fromJson(json);
+    if (raw is! Map) return null;
+
+    final json = <String, dynamic>{};
+    (raw as Map<dynamic, dynamic>).forEach((k, v) => json[k.toString()] = v);
+
+    return compute(_parseBook, json);
   }
 
   Future<void> deleteBook(String id) => booksBox.delete(id);
@@ -93,16 +93,19 @@ class HiveService {
     return id;
   }
 
-  List<MapEntry<String, Map<String, dynamic>>> getPendingOperations() {
+  Future<List<MapEntry<String, Map<String, dynamic>>>>
+  getPendingOperations() async {
     final ops = <MapEntry<String, Map<String, dynamic>>>[];
+
     for (final key in pendingOpsBox.keys) {
       final value = pendingOpsBox.get(key);
       if (value is Map) {
-        final Map<String, dynamic> normalized = {};
-        value.forEach((key, val) => normalized[key.toString()] = val);
+        final normalized = <String, dynamic>{};
+        value.forEach((k, v) => normalized[k.toString()] = v);
         ops.add(MapEntry(key.toString(), normalized));
       }
     }
+
     return ops;
   }
 
@@ -112,4 +115,20 @@ class HiveService {
   Future<void> close() async => await Hive.close();
 
   String _addBookDraftKey(String userId) => 'add_book_$userId';
+}
+
+List<BookModel> _parseBooks(List<Map<dynamic, dynamic>> rawBooks) {
+  final books = <BookModel>[];
+  for (final raw in rawBooks) {
+    try {
+      final json = <String, dynamic>{};
+      raw.forEach((k, v) => json[k.toString()] = v);
+      books.add(BookModel.fromJson(json));
+    } catch (_) {}
+  }
+  return books;
+}
+
+BookModel _parseBook(Map<String, dynamic> json) {
+  return BookModel.fromJson(json);
 }

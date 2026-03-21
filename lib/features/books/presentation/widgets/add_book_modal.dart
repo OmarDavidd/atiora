@@ -386,8 +386,8 @@ class _AddBookModalState extends State<AddBookModal> {
     }
   }
 
-  void _refreshPendingQueue() {
-    final hasPending = _hive.getPendingOperations().isNotEmpty;
+  Future<void> _refreshPendingQueue() async {
+    final hasPending = (await _hive.getPendingOperations()).isNotEmpty;
     if (mounted && hasPending != _hasPendingQueue) {
       setState(() {
         _hasPendingQueue = hasPending;

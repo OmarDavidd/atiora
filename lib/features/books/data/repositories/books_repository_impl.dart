@@ -3,13 +3,13 @@ import 'dart:math' as math;
 
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/storage/hive_service.dart';
+import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
 import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
-import 'package:flutter/foundation.dart';
 
 class BooksRepositoryImpl implements BooksRepository {
   final BooksLocalDataSource _local;
@@ -26,6 +26,11 @@ class BooksRepositoryImpl implements BooksRepository {
     _lastSync = null;
   }
 
+  @override
+  void dispose() {
+    _statsController.close();
+  }
+
   BooksRepositoryImpl(
     this._local,
     this._remote, {
@@ -35,22 +40,28 @@ class BooksRepositoryImpl implements BooksRepository {
        _hive = hive ?? HiveService.instance;
 
   @override
-  Future<List<BookModel>> getBooks() async {
-    final now = DateTime.now();
-    final shouldSync =
-        _lastSync == null ||
-        now.difference(_lastSync!) > const Duration(minutes: 5);
-
-    if (shouldSync && await _isOnline()) {
+  Future<List<BookModel>> getBooks({int? page, int pageSize = 20}) async {
+    if (_lastSync == null && await _isOnline()) {
       final synced = await _syncBooks();
       if (synced) {
-        _lastSync = now;
+        _lastSync = DateTime.now();
       }
     }
     await processPendingOperations();
 
     try {
-      return await _local.getBooks();
+      final allBooks = await _local.getBooks();
+
+      if (page == null) {
+        return allBooks;
+      }
+
+      final start = page * pageSize;
+      if (start >= allBooks.length) {
+        return [];
+      }
+      final end = (start + pageSize).clamp(0, allBooks.length);
+      return allBooks.sublist(start, end);
     } catch (e, stackTrace) {
       throw AppException.cache(
         'No pudimos leer tus libros',
@@ -82,13 +93,15 @@ class BooksRepositoryImpl implements BooksRepository {
       try {
         await _remote.addBook(book);
       } catch (e, stackTrace) {
-        debugPrint('BooksRepositoryImpl.addBook remote sync failed: $e');
         final pendingVersion = localBook.copyWith(
           pendingSync: true,
           updatedAt: DateTime.now(),
         );
         await _local.updateBook(pendingVersion);
-        await _queueOperation('add', payload: pendingVersion.toJson());
+        await _queueOperation(
+          PendingOperationType.add,
+          payload: pendingVersion.toJson(),
+        );
         throw AppException.network(
           'Error al sincronizar el libro; guardado offline',
           cause: e,
@@ -98,7 +111,7 @@ class BooksRepositoryImpl implements BooksRepository {
       final syncedVersion = localBook.copyWith(pendingSync: false);
       await _local.updateBook(syncedVersion);
     } else {
-      await _queueOperation('add', payload: serialized);
+      await _queueOperation(PendingOperationType.add, payload: serialized);
       await _local.updateBook(
         localBook.copyWith(pendingSync: true, updatedAt: DateTime.now()),
       );
@@ -120,8 +133,7 @@ class BooksRepositoryImpl implements BooksRepository {
       try {
         await _remote.deleteBook(id);
       } catch (e, stackTrace) {
-        debugPrint('BooksRepositoryImpl.deleteBook remote sync failed: $e');
-        await _queueOperation('delete', bookId: id);
+        await _queueOperation(PendingOperationType.delete, bookId: id);
         throw AppException.network(
           'No se pudo eliminar el libro en la nube; se reintentará',
           cause: e,
@@ -129,7 +141,7 @@ class BooksRepositoryImpl implements BooksRepository {
         );
       }
     } else {
-      await _queueOperation('delete', bookId: id);
+      await _queueOperation(PendingOperationType.delete, bookId: id);
     }
   }
 
@@ -158,13 +170,15 @@ class BooksRepositoryImpl implements BooksRepository {
       try {
         await _remote.updateBook(book);
       } catch (e, stackTrace) {
-        debugPrint('BooksRepositoryImpl.updateBook remote sync failed: $e');
         final pendingVersion = book.copyWith(
           pendingSync: true,
           updatedAt: DateTime.now(),
         );
         await _local.updateBook(pendingVersion);
-        await _queueOperation('update', payload: pendingVersion.toJson());
+        await _queueOperation(
+          PendingOperationType.update,
+          payload: pendingVersion.toJson(),
+        );
         throw AppException.network(
           'No se pudo actualizar el libro en la nube; reintentaremos',
           cause: e,
@@ -177,7 +191,7 @@ class BooksRepositoryImpl implements BooksRepository {
       );
       await _local.updateBook(synced);
     } else {
-      await _queueOperation('update', payload: serialized);
+      await _queueOperation(PendingOperationType.update, payload: serialized);
     }
   }
 
@@ -194,7 +208,7 @@ class BooksRepositoryImpl implements BooksRepository {
   @override
   Future<void> processPendingOperations() async {
     if (!await _isOnline()) return;
-    final pending = _hive.getPendingOperations();
+    final pending = await _hive.getPendingOperations();
     var statsChanged = false;
     for (final entry in pending) {
       final key = entry.key;
@@ -202,22 +216,22 @@ class BooksRepositoryImpl implements BooksRepository {
       final type = op['type'] as String?;
       try {
         switch (type) {
-          case 'add':
+          case PendingOperationType.add:
             final payload = Map<String, dynamic>.from(op['payload'] as Map);
             final book = BookModel.fromJson(payload);
             await _remote.addBook(book);
             await _clearPendingFlag(book.id);
             break;
-          case 'update':
+          case PendingOperationType.update:
             final payload = Map<String, dynamic>.from(op['payload'] as Map);
             final book = BookModel.fromJson(payload);
             await _remote.updateBook(book);
             await _clearPendingFlag(book.id);
             break;
-          case 'delete':
+          case PendingOperationType.delete:
             await _remote.deleteBook(op['bookId'] as String);
             break;
-          case 'state':
+          case PendingOperationType.state:
             await _remote.updateBookState(
               op['bookId'] as String,
               op['newState'] as String,
@@ -228,7 +242,7 @@ class BooksRepositoryImpl implements BooksRepository {
                   : null,
             );
             break;
-          case 'reading_session':
+          case PendingOperationType.readingSession:
             final rawDelta = op['pagesDelta'] ?? op['pagesRead'];
             if (rawDelta is! int) {
               throw StateError('Pending reading session missing delta');
@@ -242,19 +256,17 @@ class BooksRepositoryImpl implements BooksRepository {
             );
             break;
           default:
-            debugPrint('Unknown pending op type: $type');
+            break;
         }
         await _hive.removePendingOperation(key);
-        if (type == 'reading_session' ||
-            type == 'state' ||
-            type == 'add' ||
-            type == 'update' ||
-            type == 'delete') {
+        if (type == PendingOperationType.readingSession ||
+            type == PendingOperationType.state ||
+            type == PendingOperationType.add ||
+            type == PendingOperationType.update ||
+            type == PendingOperationType.delete) {
           statsChanged = true;
         }
-      } catch (e) {
-        debugPrint('Failed to process pending op $type: $e');
-      }
+      } catch (_) {}
     }
     if (statsChanged) {
       _statsController.add(null);
@@ -272,12 +284,11 @@ class BooksRepositoryImpl implements BooksRepository {
 
   Future<bool> _syncBooks() async {
     try {
-      final remoteBooks = await _remote.getBooks();
+      final result = await _remote.getBooks(page: 0, pageSize: 1000);
       await _local.clearAll();
-      await _local.addBooks(remoteBooks);
+      await _local.addBooks(result.books);
       return true;
-    } catch (e) {
-      debugPrint('BooksRepositoryImpl._syncBooks failed: $e');
+    } catch (_) {
       return false;
     }
   }
@@ -302,7 +313,6 @@ class BooksRepositoryImpl implements BooksRepository {
       if (rating != null) 'rating': rating,
       if (finishedAt != null) 'finishedAt': finishedAt.toIso8601String(),
       if (pagesDelta != null) 'pagesDelta': pagesDelta,
-      if (pagesDelta != null) 'pagesRead': pagesDelta,
       if (sessionDate != null) 'sessionDate': sessionDate.toIso8601String(),
     });
   }
@@ -363,9 +373,7 @@ class BooksRepositoryImpl implements BooksRepository {
         'averageRating':
             remoteStats['averageRating'] ?? fallback['averageRating'],
       };
-    } catch (e, stackTrace) {
-      debugPrint('BooksRepositoryImpl.loadHomeStats failed: $e');
-      debugPrint('$stackTrace');
+    } catch (_) {
       return fallback;
     }
   }
@@ -401,9 +409,8 @@ class BooksRepositoryImpl implements BooksRepository {
       }
       _statsController.add(null);
     } catch (e) {
-      debugPrint('BooksRepositoryImpl.updateBookState local update failed: $e');
       await _queueOperation(
-        'state',
+        PendingOperationType.state,
         bookId: bookId,
         newState: newState,
         currentPage: currentPage,
@@ -437,16 +444,15 @@ class BooksRepositoryImpl implements BooksRepository {
         );
       } else {
         await _queueOperation(
-          'reading_session',
+          PendingOperationType.readingSession,
           bookId: bookId,
           pagesDelta: pagesDelta,
           sessionDate: normalizedDate,
         );
       }
-    } catch (e) {
-      debugPrint('BooksRepositoryImpl.logReadingSession failed: $e');
+    } catch (_) {
       await _queueOperation(
-        'reading_session',
+        PendingOperationType.readingSession,
         bookId: bookId,
         pagesDelta: pagesDelta,
         sessionDate: normalizedDate,
