@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:atiora/core/utils/app_colors.dart';
+import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SplashGate extends StatefulWidget {
@@ -15,6 +17,7 @@ class SplashGate extends StatefulWidget {
 
 class _SplashGateState extends State<SplashGate> {
   bool _showSplash = true;
+  bool _authChecked = false;
 
   void _handleFinished() {
     if (!mounted) return;
@@ -23,17 +26,27 @@ class _SplashGateState extends State<SplashGate> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 600),
-      child: _showSplash
-          ? BrandSplashScreen(
-              key: const ValueKey('brand-splash'),
-              onFinished: _handleFinished,
-            )
-          : KeyedSubtree(
-              key: const ValueKey('atiora-app'),
-              child: widget.child,
-            ),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated || state is AuthInitial) {
+          if (!_authChecked) {
+            _authChecked = true;
+            Future.delayed(const Duration(milliseconds: 300), _handleFinished);
+          }
+        }
+      },
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 600),
+        child: _showSplash
+            ? BrandSplashScreen(
+                key: const ValueKey('brand-splash'),
+                onFinished: _handleFinished,
+              )
+            : KeyedSubtree(
+                key: const ValueKey('atiora-app'),
+                child: widget.child,
+              ),
+      ),
     );
   }
 }
