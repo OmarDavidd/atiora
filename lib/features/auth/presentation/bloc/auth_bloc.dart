@@ -1,4 +1,3 @@
-import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/utils/error_handler.dart';
@@ -52,8 +51,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this.signInUseCase,
     this.signUpUseCase,
     this.signoutUseCase, {
-    required AuthProvider this.authProvider,
-    required ClearLocalDataUseCase this.clearLocalDataUseCase,
+    required this.authProvider,
+    required this.clearLocalDataUseCase,
   }) : super(AuthInitial()) {
     on<SignInEvent>(_onSignIn);
     on<SignUpEvent>(_onSignUp);
@@ -107,9 +106,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           UserModel(
             id: user.id,
             email: user.email ?? '',
-            joinedAt: user.createdAt != null
-                ? DateTime.tryParse(user.createdAt!)
-                : null,
+            joinedAt: DateTime.tryParse(user.createdAt),
           ),
         ),
       );

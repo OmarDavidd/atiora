@@ -74,7 +74,7 @@ Future<void> init() async {
   );
 
   // Books Repository
-  sl.registerLazySingleton<BooksRepository>(
+  sl.registerFactory<BooksRepository>(
     () => BooksRepositoryImpl(
       sl<BooksLocalDataSource>(),
       sl<BooksRemoteDataSource>(),
