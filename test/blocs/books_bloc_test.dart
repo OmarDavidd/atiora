@@ -23,7 +23,9 @@ void main() {
   setUp(() {
     mockRepository = MockBooksRepository();
     mockHiveService = MockHiveService();
-    when(() => mockHiveService.getPendingOperations()).thenReturn([]);
+    when(
+      () => mockHiveService.getPendingOperations(),
+    ).thenAnswer((_) async => <MapEntry<String, Map<String, dynamic>>>[]);
   });
 
   setUpAll(() {
@@ -94,7 +96,9 @@ void main() {
             finishedAt: any(named: 'finishedAt'),
           ),
         ).thenAnswer((_) async {});
-        when(() => mockHiveService.getPendingOperations()).thenReturn([]);
+        when(
+          () => mockHiveService.getPendingOperations(),
+        ).thenAnswer((_) async => <MapEntry<String, Map<String, dynamic>>>[]);
         return BooksBloc(mockRepository, hive: mockHiveService);
       },
       act: (bloc) => bloc.add(LoadBooks()),
@@ -122,9 +126,11 @@ void main() {
         when(
           () => mockRepository.getBooks(),
         ).thenAnswer((_) async => testBooks);
-        when(() => mockHiveService.getPendingOperations()).thenReturn([
-          const MapEntry('op-1', {'type': 'add'}),
-        ]);
+        when(() => mockHiveService.getPendingOperations()).thenAnswer(
+          (_) async => [
+            const MapEntry('op-1', <String, dynamic>{'type': 'add'}),
+          ],
+        );
         return BooksBloc(mockRepository, hive: mockHiveService);
       },
       act: (bloc) => bloc.add(LoadBooks()),
@@ -213,7 +219,9 @@ void main() {
         when(
           () => mockRepository.getBooks(),
         ).thenAnswer((_) async => testBooks);
-        when(() => mockHiveService.getPendingOperations()).thenReturn([]);
+        when(
+          () => mockHiveService.getPendingOperations(),
+        ).thenAnswer((_) async => <MapEntry<String, Map<String, dynamic>>>[]);
         return BooksBloc(mockRepository, hive: mockHiveService);
       },
       act: (bloc) => bloc.add(SyncPendingOperations()),
