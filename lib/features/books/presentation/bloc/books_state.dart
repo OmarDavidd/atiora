@@ -1,4 +1,5 @@
 import 'package:atiora/data/models/book_model.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class BooksState {}
@@ -30,15 +31,21 @@ class BooksLoaded extends BooksState {
   int get hashCode => Object.hash(books, hasPendingOperations);
 }
 
-class BooksError extends BooksState {
+class BooksError extends BooksState with EquatableMixin {
   final String message;
 
   BooksError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class BookStateUpdateSuccess extends BooksState {}
 
-class BookStateUpdateError extends BooksState {
+class BookStateUpdateError extends BooksState with EquatableMixin {
   final String message;
   BookStateUpdateError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
