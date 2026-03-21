@@ -84,31 +84,40 @@ class _HomeScreenState extends State<HomeScreen> {
               ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  BooksCarousel(),
-                  SizedBox(height: 30),
-                  BlocBuilder<HomeStatsBloc, HomeStatsState>(
-                    builder: (context, state) {
-                      final stats = state is HomeStatsLoaded
-                          ? state.stats
-                          : null;
+          child: RefreshIndicator(
+            onRefresh: () async {
+              _booksBloc.add(LoadBooks());
+              _homeStatsBloc.add(LoadHomeStats());
+            },
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 24,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    BooksCarousel(),
+                    const SizedBox(height: 30),
+                    BlocBuilder<HomeStatsBloc, HomeStatsState>(
+                      builder: (context, state) {
+                        final stats = state is HomeStatsLoaded
+                            ? state.stats
+                            : null;
 
-                      return HomeStatsSection(
-                        totalBooksRead: stats?.booksMonth.toString() ?? '0',
-                        pagesThisMonth: stats?.pagesMonth.toString() ?? '0',
-                        streakDays: stats?.streak.toString() ?? '0',
-                        averageRating:
-                            stats?.averageRating.toStringAsFixed(1) ?? '0.0',
-                        isLoading: state is HomeStatsLoading,
-                      );
-                    },
-                  ),
-                ],
+                        return HomeStatsSection(
+                          totalBooksRead: stats?.booksMonth.toString() ?? '0',
+                          pagesThisMonth: stats?.pagesMonth.toString() ?? '0',
+                          streakDays: stats?.streak.toString() ?? '0',
+                          averageRating:
+                              stats?.averageRating.toStringAsFixed(1) ?? '0.0',
+                          isLoading: state is HomeStatsLoading,
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -116,8 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'home-add-book-fab',
           onPressed: () => _showAddBookModal(context),
-          icon: Icon(Icons.add),
-          label: Text("Añadir libro"),
+          icon: const Icon(Icons.add),
+          label: const Text("Añadir libro"),
         ),
       ),
     );
