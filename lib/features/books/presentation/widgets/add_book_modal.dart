@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/core/storage/hive_service.dart';
+import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
@@ -16,13 +17,18 @@ import 'package:atiora/features/books/presentation/widgets/add_book_validation_t
 
 class AddBookModal extends StatefulWidget {
   final BooksRepository repository;
-  const AddBookModal({super.key, required this.repository});
+  final HiveService hiveService;
+
+  AddBookModal({super.key, required this.repository, HiveService? hiveService})
+    : hiveService = hiveService ?? HiveService.instance;
 
   @override
   State<AddBookModal> createState() => _AddBookModalState();
 }
 
 class _AddBookModalState extends State<AddBookModal> {
+  static const _uuid = Uuid();
+
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
@@ -33,6 +39,7 @@ class _AddBookModalState extends State<AddBookModal> {
   final _genresKey = GlobalKey();
   final _pagesKey = GlobalKey();
   final _statusKey = GlobalKey();
+  Timer? _draftDebounce;
   List<String> selectedGenres = [];
   int _totalPages = 1;
   int _currentPage = 1;
@@ -46,19 +53,23 @@ class _AddBookModalState extends State<AddBookModal> {
   bool _hasPendingQueue = false;
   List<AddBookValidationTip> _validationTips = [];
   bool _showGenresError = false;
-  late final ConnectivityPlatform _connectivity;
-  final HiveService _hive = sl<HiveService>();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   bool get _hasUnsavedChanges {
-    return _currentDraft.hasContent;
+    return _titleController.text.trim().isNotEmpty ||
+        _authorController.text.trim().isNotEmpty ||
+        selectedGenres.isNotEmpty ||
+        _totalPages != 1 ||
+        _currentPage != 1 ||
+        (_status?.isNotEmpty ?? false) ||
+        _rating != 0;
   }
 
-  AddBookDraft get _currentDraft {
+  AddBookDraft _buildDraft() {
     return AddBookDraft(
       title: _titleController.text,
       author: _authorController.text,
-      genres: selectedGenres,
+      genres: List<String>.from(selectedGenres),
       totalPages: _totalPages,
       currentPage: _currentPage,
       status: _status,
@@ -70,7 +81,6 @@ class _AddBookModalState extends State<AddBookModal> {
   void initState() {
     super.initState();
     _hydrateDraft();
-    _connectivity = sl<ConnectivityPlatform>();
     _listenToConnectivity();
     _refreshPendingQueue();
   }
@@ -145,7 +155,7 @@ class _AddBookModalState extends State<AddBookModal> {
           onStatusChanged: (val) {
             setState(() {
               _status = val;
-              if (_status != 'Completado') {
+              if (_status != AppConstants.statusCompletado) {
                 _rating = 0;
               }
               _removeTipSync('status');
@@ -204,11 +214,10 @@ class _AddBookModalState extends State<AddBookModal> {
         return;
       }
 
-      final uuid = const Uuid().v4();
       final now = DateTime.now();
 
       final book = BookModel(
-        id: uuid,
+        id: _uuid.v4(),
         userId: currentUser.id,
         title: _titleController.text.trim(),
         author: _authorController.text.trim(),
@@ -308,7 +317,6 @@ class _AddBookModalState extends State<AddBookModal> {
       return;
     }
 
-    final currentContext = context;
     setState(() {
       _titleController.clear();
       _authorController.clear();
@@ -321,9 +329,8 @@ class _AddBookModalState extends State<AddBookModal> {
       _validationTips = [];
       _showGenresError = false;
     });
-    if (mounted && currentContext.mounted) {
-      FocusScope.of(currentContext).unfocus();
-    }
+    if (!mounted) return;
+    FocusScope.of(context).unfocus();
     await _clearDraft();
   }
 
@@ -359,8 +366,11 @@ class _AddBookModalState extends State<AddBookModal> {
   }
 
   Future<void> _persistDraft() async {
-    if (_currentUserId == null) return;
-    await widget.repository.saveAddBookDraft(_currentUserId!, _currentDraft);
+    _draftDebounce?.cancel();
+    _draftDebounce = Timer(const Duration(milliseconds: 500), () async {
+      if (_currentUserId == null) return;
+      await widget.repository.saveAddBookDraft(_currentUserId!, _buildDraft());
+    });
   }
 
   Future<void> _clearDraft() async {
@@ -369,10 +379,11 @@ class _AddBookModalState extends State<AddBookModal> {
   }
 
   void _listenToConnectivity() {
-    _connectivity.checkConnectivity().then(_updateOfflineState);
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
-      _updateOfflineState,
-    );
+    ConnectivityPlatform.instance.checkConnectivity().then(_updateOfflineState);
+    _connectivitySubscription = ConnectivityPlatform
+        .instance
+        .onConnectivityChanged
+        .listen(_updateOfflineState);
   }
 
   void _updateOfflineState(List<ConnectivityResult> results) {
@@ -387,7 +398,8 @@ class _AddBookModalState extends State<AddBookModal> {
   }
 
   Future<void> _refreshPendingQueue() async {
-    final hasPending = (await _hive.getPendingOperations()).isNotEmpty;
+    final hasPending =
+        (await widget.hiveService.getPendingOperations()).isNotEmpty;
     if (mounted && hasPending != _hasPendingQueue) {
       setState(() {
         _hasPendingQueue = hasPending;
