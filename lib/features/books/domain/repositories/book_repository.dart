@@ -2,7 +2,7 @@ import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 
 abstract class BooksRepository {
-  Future<List<BookModel>> getBooks();
+  Future<List<BookModel>> getBooks({int? page, int pageSize = 20});
   Future<BookModel?> getBook(String id);
   Future<void> addBook(BookModel book);
   Future<void> updateBook(BookModel book);
@@ -10,6 +10,7 @@ abstract class BooksRepository {
   Future<Map<String, dynamic>> loadHomeStats();
   Future<void> processPendingOperations();
   void resetSync();
+  void dispose();
   Future<void> updateBookState(
     String bookId,
     String newState, {
