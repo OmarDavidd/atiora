@@ -49,3 +49,23 @@ class BookStateUpdateError extends BooksState with EquatableMixin {
   @override
   List<Object?> get props => [message];
 }
+
+class BookUpdateSuccess extends BooksState {}
+
+class BookUpdateError extends BooksState with EquatableMixin {
+  final String message;
+  BookUpdateError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class BookDeleteSuccess extends BooksState {}
+
+class BookDeleteError extends BooksState with EquatableMixin {
+  final String message;
+  BookDeleteError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

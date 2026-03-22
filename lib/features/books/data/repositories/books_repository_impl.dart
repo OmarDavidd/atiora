@@ -47,7 +47,10 @@ class BooksRepositoryImpl implements BooksRepository {
         _lastSync = DateTime.now();
       }
     }
-    await processPendingOperations();
+
+    try {
+      await processPendingOperations();
+    } catch (_) {}
 
     try {
       final allBooks = await _local.getBooks();
@@ -256,7 +259,8 @@ class BooksRepositoryImpl implements BooksRepository {
             );
             break;
           default:
-            break;
+            await _hive.removePendingOperation(key);
+            continue;
         }
         await _hive.removePendingOperation(key);
         if (type == PendingOperationType.readingSession ||
@@ -266,7 +270,9 @@ class BooksRepositoryImpl implements BooksRepository {
             type == PendingOperationType.delete) {
           statsChanged = true;
         }
-      } catch (_) {}
+      } catch (_) {
+        await _hive.removePendingOperation(key);
+      }
     }
     if (statsChanged) {
       _statsController.add(null);

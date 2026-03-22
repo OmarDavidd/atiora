@@ -10,9 +10,14 @@ import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
+import 'package:atiora/features/books/data/datasources/notes_local_datasource.dart';
+import 'package:atiora/features/books/data/datasources/notes_remote_datasource.dart';
 import 'package:atiora/features/books/data/repositories/books_repository_impl.dart';
+import 'package:atiora/features/books/data/repositories/notes_repository_impl.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/books/domain/repositories/notes_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/notes_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/method_channel_connectivity.dart';
@@ -93,4 +98,27 @@ Future<void> init() async {
 
   // Books Bloc
   sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));
+
+  // Notes Local
+  sl.registerLazySingleton<NotesLocalDataSource>(
+    () => NotesLocalDataSource(sl<HiveService>()),
+  );
+
+  // Notes Remote
+  sl.registerLazySingleton<NotesRemoteDataSource>(
+    () => NotesRemoteDataSource(sl<SupabaseClient>()),
+  );
+
+  // Notes Repository
+  sl.registerLazySingleton<NotesRepository>(
+    () => NotesRepositoryImpl(
+      sl<NotesLocalDataSource>(),
+      sl<NotesRemoteDataSource>(),
+      connectivity: sl<ConnectivityPlatform>(),
+      hive: sl<HiveService>(),
+    ),
+  );
+
+  // Notes Bloc
+  sl.registerFactory<NotesBloc>(() => NotesBloc(sl<NotesRepository>()));
 }

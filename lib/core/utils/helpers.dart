@@ -87,6 +87,31 @@ class AppHelpers {
     'Autoayuda',
   ];
 
+  static const List<String> noteTypes = [
+    'resumen',
+    'análisis',
+    'cita',
+    'reflexión',
+    'pregunta',
+  ];
+
+  static Color getNoteTypeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'resumen':
+        return AppColors.primary; // azul
+      case 'análisis':
+        return AppColors.secondary; // morado
+      case 'cita':
+        return AppColors.warning; // amarillo/naranja
+      case 'reflexión':
+        return AppColors.success; // verde
+      case 'pregunta':
+        return AppColors.error; // rojo/coral
+      default:
+        return AppColors.neutral500;
+    }
+  }
+
   // Calcular porcentaje
   static String calcPercentage(int totalPages, int currentPage) {
     if (totalPages == 0) return "0%";

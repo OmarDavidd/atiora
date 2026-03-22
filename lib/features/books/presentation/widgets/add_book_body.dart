@@ -33,6 +33,7 @@ class AddBookBody extends StatelessWidget {
   final bool isOffline;
   final bool hasPendingQueue;
   final bool canReset;
+  final bool isEditing;
   final VoidCallback onTitleChanged;
   final VoidCallback onAuthorChanged;
   final ValueChanged<String> onGenreChanged;
@@ -68,6 +69,7 @@ class AddBookBody extends StatelessWidget {
     required this.isOffline,
     required this.hasPendingQueue,
     required this.canReset,
+    this.isEditing = false,
     required this.onTitleChanged,
     required this.onAuthorChanged,
     required this.onGenreChanged,
@@ -145,6 +147,7 @@ class AddBookBody extends StatelessWidget {
             AddBookActionsSection(
               isLoading: isLoading,
               canReset: canReset,
+              isEditing: isEditing,
               onSave: onSave,
               onReset: onReset,
               onExit: onExit,

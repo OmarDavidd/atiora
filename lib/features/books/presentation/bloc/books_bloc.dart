@@ -132,5 +132,31 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         emit(BookStateUpdateError('No pudimos registrar tu sesión de lectura'));
       }
     });
+
+    on<UpdateBookEvent>((event, emit) async {
+      try {
+        await _repository.updateBook(event.book);
+        emit(BookUpdateSuccess());
+        add(LoadBooks());
+      } catch (e) {
+        final message = e is AppException
+            ? ErrorHandler.map(e)
+            : 'No pudimos actualizar el libro';
+        emit(BookUpdateError(message));
+      }
+    }, transformer: restartable());
+
+    on<DeleteBookEvent>((event, emit) async {
+      try {
+        await _repository.deleteBook(event.bookId);
+        emit(BookDeleteSuccess());
+        add(LoadBooks());
+      } catch (e) {
+        final message = e is AppException
+            ? ErrorHandler.map(e)
+            : 'No pudimos eliminar el libro';
+        emit(BookDeleteError(message));
+      }
+    }, transformer: droppable());
   }
 }

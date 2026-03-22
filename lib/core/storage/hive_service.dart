@@ -68,6 +68,36 @@ class HiveService {
   Future<void> deleteBook(String id) => booksBox.delete(id);
 
   Future<void> saveNote(NoteModel note) => notesBox.put(note.id, note.toJson());
+
+  Future<List<NoteModel>> getAllNotes() async {
+    final keys = notesBox.keys.toList();
+    final rawNotes = <Map<dynamic, dynamic>>[];
+
+    for (final key in keys) {
+      final raw = notesBox.get(key);
+      if (raw != null && raw is Map) {
+        rawNotes.add(Map<dynamic, dynamic>.from(raw));
+      }
+    }
+
+    if (rawNotes.isEmpty) return [];
+
+    return compute(_parseNotes, rawNotes);
+  }
+
+  Future<NoteModel?> getNote(String id) async {
+    final raw = notesBox.get(id);
+    if (raw == null) return null;
+    if (raw is! Map) return null;
+
+    final json = <String, dynamic>{};
+    (raw as Map<dynamic, dynamic>).forEach((k, v) => json[k.toString()] = v);
+
+    return NoteModel.fromJson(json);
+  }
+
+  Future<void> deleteNote(String id) => notesBox.delete(id);
+
   Future<void> saveProfile(ProfileModel profile) =>
       profileBox.put(profile.userId, profile.toJson());
 
@@ -112,6 +142,10 @@ class HiveService {
   Future<void> removePendingOperation(String key) async =>
       pendingOpsBox.delete(key);
 
+  Future<void> clearAllPendingOperations() async {
+    await pendingOpsBox.clear();
+  }
+
   Future<void> close() async => await Hive.close();
 
   String _addBookDraftKey(String userId) => 'add_book_$userId';
@@ -131,4 +165,16 @@ List<BookModel> _parseBooks(List<Map<dynamic, dynamic>> rawBooks) {
 
 BookModel _parseBook(Map<String, dynamic> json) {
   return BookModel.fromJson(json);
+}
+
+List<NoteModel> _parseNotes(List<Map<dynamic, dynamic>> rawNotes) {
+  final notes = <NoteModel>[];
+  for (final raw in rawNotes) {
+    try {
+      final json = <String, dynamic>{};
+      raw.forEach((k, v) => json[k.toString()] = v);
+      notes.add(NoteModel.fromJson(json));
+    } catch (_) {}
+  }
+  return notes;
 }

@@ -53,12 +53,12 @@ class BooksRemoteDataSource {
   }
 
   Future<void> addBook(BookModel book) async {
-    final data = book.toJson()..remove('id');
+    final data = book.toRemoteJson();
     await _supabase.from('books').insert(data);
   }
 
   Future<void> updateBook(BookModel book) async {
-    final data = {...book.toJson()..remove('user_id'), 'id': book.id};
+    final data = book.toRemoteJson();
     await _supabase.from('books').upsert(data);
   }
 

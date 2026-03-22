@@ -6,21 +6,34 @@ import 'package:uuid/uuid.dart';
 
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/di/providers/auth_provider.dart';
+import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/books_event.dart';
+import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 import 'package:atiora/features/books/presentation/helpers/add_book_validation_helper.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_body.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_validation_tips.dart';
 
 class AddBookModal extends StatefulWidget {
   final BooksRepository repository;
+  final BooksBloc booksBloc;
   final HiveService hiveService;
+  final BookModel? bookToEdit;
 
-  AddBookModal({super.key, required this.repository, HiveService? hiveService})
-    : hiveService = hiveService ?? HiveService.instance;
+  AddBookModal({
+    super.key,
+    required this.repository,
+    required this.booksBloc,
+    HiveService? hiveService,
+    this.bookToEdit,
+  }) : hiveService = hiveService ?? HiveService.instance;
+
+  bool get isEditing => bookToEdit != null;
 
   @override
   State<AddBookModal> createState() => _AddBookModalState();
@@ -56,6 +69,16 @@ class _AddBookModalState extends State<AddBookModal> {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   bool get _hasUnsavedChanges {
+    if (widget.isEditing) {
+      final original = widget.bookToEdit!;
+      return _titleController.text.trim() != original.title ||
+          _authorController.text.trim() != (original.author ?? '') ||
+          !_listEquals(selectedGenres, original.genre) ||
+          _totalPages != original.totalPages ||
+          _currentPage != original.currentPage ||
+          _status != original.status ||
+          _rating != original.rating.toInt();
+    }
     return _titleController.text.trim().isNotEmpty ||
         _authorController.text.trim().isNotEmpty ||
         selectedGenres.isNotEmpty ||
@@ -63,6 +86,14 @@ class _AddBookModalState extends State<AddBookModal> {
         _currentPage != 1 ||
         (_status?.isNotEmpty ?? false) ||
         _rating != 0;
+  }
+
+  bool _listEquals(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   AddBookDraft _buildDraft() {
@@ -80,9 +111,26 @@ class _AddBookModalState extends State<AddBookModal> {
   @override
   void initState() {
     super.initState();
-    _hydrateDraft();
+    if (widget.isEditing) {
+      _loadBookData(widget.bookToEdit!);
+    } else {
+      _hydrateDraft();
+    }
     _listenToConnectivity();
     _refreshPendingQueue();
+  }
+
+  void _loadBookData(BookModel book) {
+    setState(() {
+      _titleController.text = book.title;
+      _authorController.text = book.author ?? '';
+      selectedGenres = List<String>.from(book.genre);
+      _totalPages = book.totalPages;
+      _currentPage = book.currentPage;
+      _status = book.status;
+      _rating = book.rating.toInt();
+      _hasLoadedDraft = true;
+    });
   }
 
   @override
@@ -121,6 +169,7 @@ class _AddBookModalState extends State<AddBookModal> {
           hasPendingQueue: _hasPendingQueue,
           showGenresError: _showGenresError,
           canReset: _hasUnsavedChanges,
+          isEditing: widget.isEditing,
           onTitleChanged: () {
             setState(() => _removeTipSync('title'));
             _persistDraft();
@@ -204,38 +253,86 @@ class _AddBookModalState extends State<AddBookModal> {
     setState(() => isLoading = true);
     try {
       FocusScope.of(context).unfocus();
-      final authProvider = sl<AuthProvider>();
-      final currentUser = authProvider.currentUser;
 
-      if (currentUser == null) {
-        setState(
-          () => _errorMessage = 'Debes iniciar sesión para añadir libros',
+      if (widget.isEditing) {
+        final updatedBook = widget.bookToEdit!.copyWith(
+          title: _titleController.text.trim(),
+          author: _authorController.text.trim(),
+          genre: selectedGenres,
+          totalPages: _totalPages,
+          currentPage: _currentPage,
+          status: _status!,
+          rating: _rating.toDouble(),
+          updatedAt: DateTime.now(),
         );
-        return;
+
+        try {
+          await widget.repository.updateBook(updatedBook);
+        } on AppException catch (e) {
+          if (e.type == AppExceptionType.network) {
+            await _closeWithSuccess();
+            return;
+          } else {
+            setState(() => _errorMessage = e.message);
+            return;
+          }
+        }
+
+        widget.booksBloc.add(LoadBooks());
+
+        await for (final state in widget.booksBloc.stream) {
+          if (state is BooksLoaded) {
+            break;
+          }
+          if (state is BooksError) {
+            setState(() => _errorMessage = state.message);
+            return;
+          }
+        }
+      } else {
+        final authProvider = sl<AuthProvider>();
+        final currentUser = authProvider.currentUser;
+
+        if (currentUser == null) {
+          setState(
+            () => _errorMessage = 'Debes iniciar sesión para añadir libros',
+          );
+          return;
+        }
+
+        final now = DateTime.now();
+
+        final book = BookModel(
+          id: _uuid.v4(),
+          userId: currentUser.id,
+          title: _titleController.text.trim(),
+          author: _authorController.text.trim(),
+          genre: selectedGenres,
+          totalPages: _totalPages,
+          currentPage: _currentPage,
+          status: _status!,
+          rating: _rating.toDouble(),
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        try {
+          await widget.repository.addBook(book);
+        } on AppException catch (e) {
+          if (e.type == AppExceptionType.network) {
+            await _closeWithSuccess();
+            return;
+          } else {
+            setState(() => _errorMessage = e.message);
+            return;
+          }
+        }
+        _refreshPendingQueue();
+        await _clearDraft();
       }
 
-      final now = DateTime.now();
-
-      final book = BookModel(
-        id: _uuid.v4(),
-        userId: currentUser.id,
-        title: _titleController.text.trim(),
-        author: _authorController.text.trim(),
-        genre: selectedGenres,
-        totalPages: _totalPages,
-        currentPage: _currentPage,
-        status: _status!,
-        rating: _rating.toDouble(),
-        createdAt: now,
-        updatedAt: now,
-      );
-
-      await widget.repository.addBook(book);
-      _refreshPendingQueue();
-      await _clearDraft();
-
       if (mounted) {
-        Navigator.pop(context, book);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       setState(() => _errorMessage = 'Error al guardar el libro');
@@ -275,20 +372,20 @@ class _AddBookModalState extends State<AddBookModal> {
       ),
     );
 
-    if (confirm == true) {
-      _draftDebounce?.cancel();
-      if (_hasUnsavedChanges) {
-        await _clearDraft();
-      }
-      if (shouldPop) {
-        return true;
-      }
-      if (mounted) {
-        Navigator.pop(context);
-      }
+    if (confirm != true) {
       return false;
     }
 
+    _draftDebounce?.cancel();
+    if (_hasUnsavedChanges && _currentUserId != null) {
+      await _clearDraft();
+    }
+    if (shouldPop) {
+      return true;
+    }
+    if (mounted) {
+      Navigator.pop(context);
+    }
     return false;
   }
 
@@ -468,5 +565,12 @@ class _AddBookModalState extends State<AddBookModal> {
     _currentPage = draft.currentPage;
     _status = draft.status;
     _rating = draft.rating;
+  }
+
+  Future<void> _closeWithSuccess() async {
+    await _clearDraft();
+    if (mounted) {
+      Navigator.pop(context, true);
+    }
   }
 }
