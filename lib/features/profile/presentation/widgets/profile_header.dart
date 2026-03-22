@@ -12,6 +12,7 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final joinedDate = user.joinedAt != null
         ? DateExtensions.monthYear(user.joinedAt!)
         : 'Sin fecha';
@@ -21,8 +22,9 @@ class ProfileHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
+        color: isDark ? colors.surfaceContainerHighest : Colors.white,
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

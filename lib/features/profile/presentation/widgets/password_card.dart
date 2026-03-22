@@ -8,10 +8,14 @@ class PasswordCard extends StatelessWidget {
   const PasswordCard({super.key});
 
   void _openSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: isDark
+          ? Theme.of(context).colorScheme.surface
+          : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -115,6 +119,7 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -137,6 +142,33 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
             obscureText: _obscure,
             decoration: InputDecoration(
               labelText: 'Contraseña segura',
+              filled: true,
+              fillColor: isDark
+                  ? Theme.of(context).colorScheme.surfaceContainerHighest
+                  : Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+              ),
               suffixIcon: IconButton(
                 icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                 onPressed: () => setState(() => _obscure = !_obscure),

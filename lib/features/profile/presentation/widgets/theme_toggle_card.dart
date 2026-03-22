@@ -10,14 +10,16 @@ class ThemeToggleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, mode) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           decoration: BoxDecoration(
-            color: colors.surfaceContainerLowest,
+            color: isDark ? colors.surfaceContainerLowest : Colors.white,
             borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
           ),
           child: Row(
             children: [
