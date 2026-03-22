@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
             final colors = Theme.of(context).colorScheme;
             return Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35),
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: SingleChildScrollView(
                   child: Form(
                     key: _formKey,

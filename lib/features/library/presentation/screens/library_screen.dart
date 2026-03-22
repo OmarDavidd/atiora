@@ -49,7 +49,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         appBar: _buildAppBar(context),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
                 _buildTabs(context),

@@ -61,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           builder: (context, state) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35),
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: SingleChildScrollView(
                   child: Form(
                     key: _formKey,

@@ -46,19 +46,24 @@ class _ProfileSignedOut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.symmetric(horizontal: 30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Icon(Icons.lock_outline, size: 48),
+            Icon(
+              Icons.lock_outline,
+              size: 48,
+              color: theme.colorScheme.outline,
+            ),
             const SizedBox(height: 16),
             Text(
               'Inicia sesión para ver tu perfil',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: theme.textTheme.bodyLarge,
             ),
           ],
         ),
@@ -75,9 +80,10 @@ class _ProfileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
+      padding: const EdgeInsets.fromLTRB(30, 32, 30, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
