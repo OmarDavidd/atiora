@@ -7,12 +7,14 @@ class RecentNotesSection extends StatelessWidget {
   final List<NoteModel> notes;
   final bool isLoading;
   final VoidCallback? onViewAll;
+  final Function(NoteModel)? onNoteTap;
 
   const RecentNotesSection({
     super.key,
     required this.notes,
     this.isLoading = false,
     this.onViewAll,
+    this.onNoteTap,
   });
 
   @override
@@ -100,7 +102,10 @@ class RecentNotesSection extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final note = notes[index];
-        return _RecentNoteCard(note: note, isDark: isDark);
+        return GestureDetector(
+          onTap: onNoteTap != null ? () => onNoteTap!(note) : null,
+          child: _RecentNoteCard(note: note, isDark: isDark),
+        );
       },
     );
   }

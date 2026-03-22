@@ -116,9 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 24,
+                padding: const EdgeInsets.only(
+                  left: 30,
+                  right: 30,
+                  top: 24,
+                  bottom: 100,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -145,6 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     RecentNotesSection(
                       notes: _recentNotes,
                       isLoading: _notesLoading,
+                      onNoteTap: (note) {
+                        Navigator.of(context).pushNamed(
+                          '/book-detail',
+                          arguments: {
+                            'bookId': note.bookId,
+                            'booksBloc': _booksBloc,
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),
