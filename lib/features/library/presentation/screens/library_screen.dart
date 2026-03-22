@@ -196,7 +196,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       context: context,
       builder: (_) => Dialog(
         insetPadding: const EdgeInsets.all(20),
-        child: AddBookModal(repository: repository),
+        child: AddBookModal(repository: repository, booksBloc: _booksBloc),
       ),
     );
     if (result != null) {

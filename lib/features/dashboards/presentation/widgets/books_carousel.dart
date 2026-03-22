@@ -2,6 +2,7 @@ import 'package:atiora/core/navigation/app_router.dart';
 import 'package:atiora/core/widgets/skeleton_loader.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/book_card.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -103,7 +104,30 @@ class BooksCarousel extends StatelessWidget {
               );
             }
             if (state is BooksError) {
-              return Text("Error");
+              return Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.message,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        context.read<BooksBloc>().add(LoadBooks());
+                      },
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              );
             }
             return const SizedBox.shrink();
           },

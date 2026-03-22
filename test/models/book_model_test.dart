@@ -98,11 +98,11 @@ void main() {
       expect(json['pending_sync'], isFalse);
     });
 
-    test('toRemoteJson should exclude id and user_id', () {
+    test('toRemoteJson should exclude user_id but include id', () {
       final book = BookModel.fromJson(testJson);
       final remoteJson = book.toRemoteJson();
 
-      expect(remoteJson.containsKey('id'), isFalse);
+      expect(remoteJson.containsKey('id'), isTrue);
       expect(remoteJson.containsKey('user_id'), isFalse);
       expect(remoteJson['title'], 'Clean Code');
     });
