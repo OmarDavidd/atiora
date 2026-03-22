@@ -34,6 +34,21 @@ class AppConstants {
   static const String statusPausado = 'Pausado';
   static const String statusPendiente = 'Pendiente';
 
+  // Note Types
+  static const List<String> noteTypes = [
+    noteTypeResumen,
+    noteTypeAnalisis,
+    noteTypeCita,
+    noteTypeReflexion,
+    noteTypePregunta,
+  ];
+
+  static const String noteTypeResumen = 'resumen';
+  static const String noteTypeAnalisis = 'análisis';
+  static const String noteTypeCita = 'cita';
+  static const String noteTypeReflexion = 'reflexión';
+  static const String noteTypePregunta = 'pregunta';
+
   // Storage Keys
   static const String themeModeKey = 'theme_mode';
   static const String lastSyncKey = 'last_sync';
@@ -45,4 +60,7 @@ class PendingOperationType {
   static const String delete = 'delete';
   static const String state = 'state';
   static const String readingSession = 'reading_session';
+  static const String noteAdd = 'note_add';
+  static const String noteUpdate = 'note_update';
+  static const String noteDelete = 'note_delete';
 }
