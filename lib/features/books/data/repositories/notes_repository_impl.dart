@@ -37,6 +37,23 @@ class NotesRepositoryImpl implements NotesRepository {
     }
   }
 
+  @override
+  Future<List<NoteModel>> getRecentNotes({int limit = 5}) async {
+    try {
+      await processPendingNotesOperations();
+    } catch (_) {}
+
+    try {
+      final allNotes = await _remote.getAllNotes();
+      allNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return allNotes.take(limit).toList();
+    } catch (e) {
+      final allNotes = await _hive.getAllNotes();
+      allNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return allNotes.take(limit).toList();
+    }
+  }
+
   Future<void> _syncLocalNotes(
     List<NoteModel> remoteNotes,
     String bookId,

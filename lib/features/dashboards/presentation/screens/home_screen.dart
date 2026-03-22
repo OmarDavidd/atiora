@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/theme/theme_cubit.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/books/domain/repositories/notes_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_modal.dart';
@@ -15,6 +16,8 @@ import 'package:atiora/features/dashboards/presentation/bloc/home_stats_event.da
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_state.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/books_carousel.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/home_stats_section.dart';
+import 'package:atiora/features/dashboards/presentation/widgets/recent_notes_section.dart';
+import 'package:atiora/data/models/note_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late final Stream<List<ConnectivityResult>> _connectivityStream;
   late final ConnectivityPlatform _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  List<NoteModel> _recentNotes = [];
+  bool _notesLoading = true;
 
   @override
   void initState() {
@@ -42,12 +47,32 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (hasConnection) {
         _booksBloc.add(SyncPendingOperations());
+        _loadRecentNotes();
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _booksBloc.add(LoadBooks());
       _homeStatsBloc.add(LoadHomeStats());
+      _loadRecentNotes();
     });
+  }
+
+  Future<void> _loadRecentNotes() async {
+    setState(() => _notesLoading = true);
+    try {
+      final repository = sl<NotesRepository>();
+      final notes = await repository.getRecentNotes(limit: 5);
+      if (mounted) {
+        setState(() {
+          _recentNotes = notes;
+          _notesLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _notesLoading = false);
+      }
+    }
   }
 
   @override
@@ -115,6 +140,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           isLoading: state is HomeStatsLoading,
                         );
                       },
+                    ),
+                    const SizedBox(height: 30),
+                    RecentNotesSection(
+                      notes: _recentNotes,
+                      isLoading: _notesLoading,
                     ),
                   ],
                 ),

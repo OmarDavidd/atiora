@@ -18,6 +18,17 @@ class NotesRemoteDataSource {
     return response.map((json) => NoteModel.fromJson(json)).toList();
   }
 
+  Future<List<NoteModel>> getAllNotes() async {
+    final userId = _requireUser();
+    final response = await _supabase
+        .from('book_notes')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    return response.map((json) => NoteModel.fromJson(json)).toList();
+  }
+
   Future<NoteModel?> getNote(String id) async {
     final userId = _requireUser();
     final response = await _supabase
