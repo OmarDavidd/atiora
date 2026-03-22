@@ -17,7 +17,6 @@ class SplashGate extends StatefulWidget {
 
 class _SplashGateState extends State<SplashGate> {
   bool _showSplash = true;
-  bool _authChecked = false;
 
   void _handleFinished() {
     if (!mounted) return;
@@ -29,10 +28,7 @@ class _SplashGateState extends State<SplashGate> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated || state is AuthInitial) {
-          if (!_authChecked) {
-            _authChecked = true;
-            Future.delayed(const Duration(milliseconds: 300), _handleFinished);
-          }
+          Future.delayed(const Duration(milliseconds: 300), _handleFinished);
         }
       },
       child: AnimatedSwitcher(
