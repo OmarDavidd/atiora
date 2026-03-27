@@ -44,18 +44,4 @@ flutter run
 - `lib/features`: dividido por dominio (`auth`, `books`, `dashboards`), cada uno con data/domain/presentation.
 - `test/`: espeja la estructura de `lib/`.
 
-## Flujo de desarrollo
-1. Correr `flutter doctor` si es la primera vez o tras actualizar Flutter.
-2. Trabajar en ramas descriptivas (`feat/`, `fix/`, `chore/`).
-3. Mantener `git status` limpio (no mezclar cambios no relacionados).
-4. Antes de abrir PR/merge: `flutter analyze && flutter test`.
-5. Describir cambios y motivación en commits (modo imperativo, <72 caracteres).
-
-## Testing
-- Preferir `bloc_test` + `mocktail` para blocs y repositorios.
-- Cubrir datasources (`books_remote_datasource_test.dart`, etc.) y helpers críticos.
-- Tests de widgets: usar `pumpWidget` y `WidgetTester` para flujos clave.
-- Para depurar o filtrar: `flutter test path/to/file.dart --plain-name "nombre exacto"`.
-- Los commits usan formato `<tipo>(opcional): mensaje imperativo` con `feat|fix|chore|refactor|docs|test`, máximo ~72 caracteres.
-
 ---
