@@ -67,4 +67,3 @@ flutter run
 - Los commits usan formato `<tipo>(opcional): mensaje imperativo` con `feat|fix|chore|refactor|docs|test`, máximo ~72 caracteres.
 
 ---
-Si necesitas más detalles operativos, revisa `AGENTS.md`.
