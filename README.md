@@ -44,14 +44,6 @@ flutter run
 - `lib/features`: dividido por dominio (`auth`, `books`, `dashboards`), cada uno con data/domain/presentation.
 - `test/`: espeja la estructura de `lib/`.
 
-## Convenciones principales
-- Imports: SDK, paquetes externos, `package:atiora/...`, relativos.
-- UI: textos en español; tipografías configuradas en los temas (no cargar fuentes directamente en widgets).
-- Manejo de estado con Bloc/Cubit; usa `bloc_concurrency` (`restartable` para libros, `droppable` para stats).
-- Manejo de errores centralizado en `ErrorHandler` y mensajes amigables para la UI.
-- Logs con `debugPrint`; evita emojis y mensajes temporales.
-- Nunca compartas ni commitees `.env` u otros secretos.
-
 ## Flujo de desarrollo
 1. Correr `flutter doctor` si es la primera vez o tras actualizar Flutter.
 2. Trabajar en ramas descriptivas (`feat/`, `fix/`, `chore/`).
