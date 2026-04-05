@@ -282,7 +282,6 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
   void _onRatingTap(BuildContext context, BookModel book) {
     final bloc = context.read<BooksBloc>();
-    final currentIndex = book.rating > 0 ? book.rating.toInt() - 1 : -1;
     showDialog<double>(
       context: context,
       barrierDismissible: false,

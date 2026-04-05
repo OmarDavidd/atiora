@@ -95,18 +95,17 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
     if (!confirmed) return;
 
     setState(() => _isLoading = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
 
     try {
       await sl<AuthProvider>().updatePassword(_passwordController.text);
       if (!mounted) return;
-      navigator.pop();
-      messenger.showSnackBar(
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Contraseña actualizada con éxito')),
       );
     } catch (_) {
-      messenger.showSnackBar(
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No pudimos actualizar la contraseña')),
       );
     } finally {

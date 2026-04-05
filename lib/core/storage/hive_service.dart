@@ -60,7 +60,7 @@ class HiveService {
     if (raw is! Map) return null;
 
     final json = <String, dynamic>{};
-    (raw as Map<dynamic, dynamic>).forEach((k, v) => json[k.toString()] = v);
+    raw.forEach((k, v) => json[k.toString()] = v);
 
     return compute(_parseBook, json);
   }
@@ -91,7 +91,7 @@ class HiveService {
     if (raw is! Map) return null;
 
     final json = <String, dynamic>{};
-    (raw as Map<dynamic, dynamic>).forEach((k, v) => json[k.toString()] = v);
+    raw.forEach((k, v) => json[k.toString()] = v);
 
     return NoteModel.fromJson(json);
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:atiora/core/utils/app_colors.dart';
 import 'package:atiora/core/utils/helpers.dart';
 import 'package:atiora/data/models/note_model.dart';
 
@@ -99,7 +98,7 @@ class RecentNotesSection extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: notes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final note = notes[index];
         return GestureDetector(
