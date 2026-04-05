@@ -1,7 +1,11 @@
+import 'package:atiora/core/di/injection_container.dart';
+import 'package:atiora/features/dashboards/presentation/bloc/stats_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/screens/home_screen.dart';
+import 'package:atiora/features/dashboards/presentation/screens/stats_screen.dart';
 import 'package:atiora/features/library/presentation/screens/library_screen.dart';
 import 'package:atiora/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MainNavPage extends StatefulWidget {
   const MainNavPage({super.key});
@@ -12,17 +16,25 @@ class MainNavPage extends StatefulWidget {
 
 class MainNavPageState extends State<MainNavPage> {
   int _currentIndex = 0;
+  late final StatsBloc _statsBloc;
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    _screens = const [
-      HomeScreen(),
-      LibraryScreen(),
-      _StatsPlaceholder(),
-      ProfileScreen(),
+    _statsBloc = sl<StatsBloc>();
+    _screens = [
+      const HomeScreen(),
+      const LibraryScreen(),
+      BlocProvider.value(value: _statsBloc, child: const StatsScreen()),
+      const ProfileScreen(),
     ];
+  }
+
+  @override
+  void dispose() {
+    _statsBloc.close();
+    super.dispose();
   }
 
   @override
@@ -56,17 +68,6 @@ class MainNavPageState extends State<MainNavPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatsPlaceholder extends StatelessWidget {
-  const _StatsPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Pronto podrás monitorear tus métricas aquí')),
     );
   }
 }

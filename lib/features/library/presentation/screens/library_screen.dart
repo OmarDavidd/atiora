@@ -71,13 +71,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      titleSpacing: 24,
+      titleSpacing: 30,
       centerTitle: false,
       title: Text(
         'Biblioteca',
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.headlineLarge,
       ),
       actions: [
         IconButton(

@@ -50,7 +50,11 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       value: _notesBloc,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Detalles del libro"),
+          titleSpacing: 30,
+          title: Text(
+            "Detalles",
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.edit),

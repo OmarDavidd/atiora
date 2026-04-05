@@ -87,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
+          titleSpacing: 30,
           title: Text(
             "Atiora",
             style: Theme.of(context).textTheme.headlineLarge,

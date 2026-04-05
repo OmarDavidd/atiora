@@ -19,6 +19,7 @@ import 'package:atiora/features/books/domain/repositories/notes_repository.dart'
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/notes_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
+import 'package:atiora/features/dashboards/presentation/bloc/stats_bloc.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/method_channel_connectivity.dart';
 import 'package:get_it/get_it.dart';
@@ -95,6 +96,9 @@ Future<void> init() async {
 
   // Home stats Bloc
   sl.registerFactory<HomeStatsBloc>(() => HomeStatsBloc(sl<BooksRepository>()));
+
+  // Stats Bloc
+  sl.registerFactory<StatsBloc>(() => StatsBloc(sl<BooksRepository>()));
 
   // Books Bloc
   sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));

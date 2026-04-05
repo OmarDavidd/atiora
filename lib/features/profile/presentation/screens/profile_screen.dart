@@ -18,13 +18,8 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        titleSpacing: 24,
-        title: Text(
-          'Perfil',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        titleSpacing: 30,
+        title: Text('Perfil', style: Theme.of(context).textTheme.headlineLarge),
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {

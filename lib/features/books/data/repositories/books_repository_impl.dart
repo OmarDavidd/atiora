@@ -9,6 +9,7 @@ import 'package:atiora/features/books/data/datasources/books_local_datasource.da
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
 import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/dashboards/presentation/bloc/stats_state.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 
 class BooksRepositoryImpl implements BooksRepository {
@@ -382,6 +383,90 @@ class BooksRepositoryImpl implements BooksRepository {
     } catch (_) {
       return fallback;
     }
+  }
+
+  @override
+  Future<StatsData> loadStats() async {
+    final books = await getBooks();
+
+    final booksByState = <String, int>{};
+    final genreCount = <String, int>{};
+
+    for (final book in books) {
+      final status = book.status;
+      booksByState[status] = (booksByState[status] ?? 0) + 1;
+
+      for (final genre in book.genre) {
+        genreCount[genre] = (genreCount[genre] ?? 0) + 1;
+      }
+    }
+
+    final topGenres = genreCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final monthlyBooks = _calculateMonthlyBooks(books);
+
+    final homeStats = await loadHomeStats();
+    final avgRating =
+        books
+            .where((b) => b.rating > 0)
+            .fold<double>(0, (sum, b) => sum + b.rating) /
+        (books.where((b) => b.rating > 0).length).clamp(1, books.length);
+
+    return StatsData(
+      totalBooks: books.length,
+      booksReading: booksByState['Leyendo'] ?? 0,
+      booksCompleted: booksByState['Completado'] ?? 0,
+      booksPaused: booksByState['Pausado'] ?? 0,
+      booksPending: booksByState['Pendiente'] ?? 0,
+      totalNotes: 0,
+      averageRating: avgRating,
+      pagesThisMonth: homeStats['pagesThisMonth'] ?? 0,
+      currentStreak: homeStats['streak'] ?? 0,
+      booksByState: booksByState,
+      booksByMonth: {},
+      topGenres: Map.fromEntries(topGenres.take(5)),
+      monthlyBooks: monthlyBooks,
+    );
+  }
+
+  List<MonthlyBooks> _calculateMonthlyBooks(List<BookModel> books) {
+    final now = DateTime.now();
+    final monthNames = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+
+    final monthly = <String, int>{};
+    for (int i = 5; i >= 0; i--) {
+      final date = DateTime(now.year, now.month - i);
+      final key =
+          '${monthNames[date.month - 1]} ${date.year.toString().substring(2)}';
+      monthly[key] = 0;
+    }
+
+    for (final book in books) {
+      final created = book.createdAt;
+      final key =
+          '${monthNames[created.month - 1]} ${created.year.toString().substring(2)}';
+      if (monthly.containsKey(key)) {
+        monthly[key] = (monthly[key] ?? 0) + 1;
+      }
+    }
+
+    return monthly.entries
+        .map((e) => MonthlyBooks(month: e.key, count: e.value))
+        .toList();
   }
 
   @override
