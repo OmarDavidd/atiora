@@ -19,6 +19,10 @@ class MainNavPageState extends State<MainNavPage> {
   late final StatsBloc _statsBloc;
   late final List<Widget> _screens;
 
+  void setTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   @override
   void initState() {
     super.initState();

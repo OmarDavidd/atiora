@@ -6,6 +6,7 @@ class HomeStatsSection extends StatelessWidget {
   final String streakDays;
   final String averageRating;
   final bool isLoading;
+  final VoidCallback? onStatsTap;
 
   const HomeStatsSection({
     super.key,
@@ -14,6 +15,7 @@ class HomeStatsSection extends StatelessWidget {
     required this.streakDays,
     required this.averageRating,
     this.isLoading = false,
+    this.onStatsTap,
   });
 
   @override
@@ -132,16 +134,20 @@ class HomeStatsSection extends StatelessWidget {
   }
 
   void _handleStatsTap(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text(
-            'La pantalla detallada de estadísticas estará disponible pronto.',
+    if (onStatsTap != null) {
+      onStatsTap!();
+    } else {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'La pantalla detallada de estadísticas estará disponible pronto.',
+            ),
+            duration: Duration(seconds: 2),
           ),
-          duration: Duration(seconds: 2),
-        ),
-      );
+        );
+    }
   }
 }
 

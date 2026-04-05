@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/theme/theme_cubit.dart';
+import 'package:atiora/core/screens/main_nav_page.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/domain/repositories/notes_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
@@ -141,6 +142,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           averageRating:
                               stats?.averageRating.toStringAsFixed(1) ?? '0.0',
                           isLoading: state is HomeStatsLoading,
+                          onStatsTap: () {
+                            context
+                                .findAncestorStateOfType<MainNavPageState>()
+                                ?.setTab(2);
+                          },
                         );
                       },
                     ),
