@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Necesitamos cámara para tomar fotos de portadas de libros</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a tu galería para seleccionar portadas de libros</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Necesitamos guardar las fotos de portadas en tu galería</string>
 </dict>
 </plist>

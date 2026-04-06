@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'add_book_actions_section.dart';
+import 'add_book_cover_selector.dart';
 import 'add_book_genres_field.dart';
 import 'add_book_inline_error_banner.dart';
 import 'add_book_metadata_fields.dart';
@@ -34,6 +37,9 @@ class AddBookBody extends StatelessWidget {
   final bool hasPendingQueue;
   final bool canReset;
   final bool isEditing;
+  final String? currentCoverUrl;
+  final File? selectedCoverImage;
+  final ValueChanged<File?> onCoverImageSelected;
   final VoidCallback onTitleChanged;
   final VoidCallback onAuthorChanged;
   final ValueChanged<String> onGenreChanged;
@@ -70,6 +76,9 @@ class AddBookBody extends StatelessWidget {
     required this.hasPendingQueue,
     required this.canReset,
     this.isEditing = false,
+    this.currentCoverUrl,
+    this.selectedCoverImage,
+    required this.onCoverImageSelected,
     required this.onTitleChanged,
     required this.onAuthorChanged,
     required this.onGenreChanged,
@@ -94,6 +103,12 @@ class AddBookBody extends StatelessWidget {
           children: [
             AddBookModalHeader(onClose: onExit),
             const SizedBox(height: 24),
+            AddBookCoverSelector(
+              currentCoverUrl: currentCoverUrl,
+              selectedImage: selectedCoverImage,
+              onImageSelected: onCoverImageSelected,
+            ),
+            const SizedBox(height: 20),
             AddBookMetadataFields(
               titleFieldKey: titleFieldKey,
               titleController: titleController,
