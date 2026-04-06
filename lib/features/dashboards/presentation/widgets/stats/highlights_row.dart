@@ -3,36 +3,53 @@ import 'package:atiora/features/dashboards/presentation/bloc/stats_state.dart';
 
 class HighlightsRow extends StatelessWidget {
   final StatsData stats;
+  final bool isGlobal;
 
-  const HighlightsRow({super.key, required this.stats});
+  const HighlightsRow({super.key, required this.stats, required this.isGlobal});
 
   @override
   Widget build(BuildContext context) {
+    final pagesValue = isGlobal
+        ? stats.totalPagesRead.toString()
+        : stats.pagesThisMonth.toString();
+
+    final ratingValue = isGlobal
+        ? stats.globalAverageRating.toStringAsFixed(1)
+        : stats.averageRating.toStringAsFixed(1);
+
+    final notesValue = isGlobal
+        ? stats.totalNotes.toString()
+        : stats.notesThisMonth.toString();
+
+    final streakValue = isGlobal
+        ? stats.globalStreak.toString()
+        : stats.currentStreak.toString();
+
     final highlights = [
       _HighlightData(
         title: 'Rating',
-        value: stats.averageRating.toStringAsFixed(1),
+        value: ratingValue,
         icon: Icons.star_rounded,
         accent: const Color(0xFFFFC947),
         background: const Color(0x33FFC947),
       ),
       _HighlightData(
         title: 'Notas',
-        value: stats.totalNotes.toString(),
+        value: notesValue,
         icon: Icons.description_rounded,
         accent: Colors.purple,
         background: Colors.purple.withValues(alpha: 0.12),
       ),
       _HighlightData(
-        title: 'Páginas',
-        value: stats.pagesThisMonth.toString(),
+        title: isGlobal ? 'Total Pág' : 'Páginas',
+        value: pagesValue,
         icon: Icons.auto_stories_rounded,
         accent: Colors.teal,
         background: Colors.teal.withValues(alpha: 0.12),
       ),
       _HighlightData(
         title: 'Racha',
-        value: '${stats.currentStreak}d',
+        value: '${streakValue}d',
         icon: Icons.local_fire_department_rounded,
         accent: Colors.deepOrangeAccent,
         background: const Color(0x33FFAB76),

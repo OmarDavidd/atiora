@@ -3,13 +3,22 @@ import 'package:atiora/features/dashboards/presentation/bloc/stats_state.dart';
 
 class QuickStatsSection extends StatelessWidget {
   final StatsData stats;
+  final bool isGlobal;
 
-  const QuickStatsSection({super.key, required this.stats});
+  const QuickStatsSection({
+    super.key,
+    required this.stats,
+    required this.isGlobal,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final completedValue = isGlobal
+        ? stats.totalBooksRead.toString()
+        : stats.booksCompletedThisMonth.toString();
 
     final resolvedStats = [
       _StatData(
@@ -21,9 +30,9 @@ class QuickStatsSection extends StatelessWidget {
         accentBackground: colorScheme.primary.withValues(alpha: 0.12),
       ),
       _StatData(
-        title: 'Completados',
-        value: stats.booksCompleted.toString(),
-        helper: 'Terminados',
+        title: isGlobal ? 'Leídos' : 'Completados',
+        value: completedValue,
+        helper: isGlobal ? 'En total' : 'Este mes',
         icon: Icons.check_circle_rounded,
         accent: Colors.green,
         accentBackground: Colors.green.withValues(alpha: 0.12),

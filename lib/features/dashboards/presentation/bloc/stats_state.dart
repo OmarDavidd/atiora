@@ -13,11 +13,12 @@ class StatsLoading extends StatsState {}
 
 class StatsLoaded extends StatsState {
   final StatsData stats;
+  final bool isGlobal;
 
-  const StatsLoaded(this.stats);
+  const StatsLoaded(this.stats, {this.isGlobal = false});
 
   @override
-  List<Object?> get props => [stats];
+  List<Object?> get props => [stats, isGlobal];
 }
 
 class StatsError extends StatsState {
@@ -33,31 +34,43 @@ class StatsData extends Equatable {
   final int totalBooks;
   final int booksReading;
   final int booksCompleted;
+  final int booksCompletedThisMonth;
   final int booksPaused;
   final int booksPending;
   final int totalNotes;
+  final int notesThisMonth;
   final double averageRating;
   final int pagesThisMonth;
   final int currentStreak;
+  final int globalStreak;
   final Map<String, int> booksByState;
   final Map<String, int> booksByMonth;
   final Map<String, int> topGenres;
   final List<MonthlyBooks> monthlyBooks;
+  final int totalPagesRead;
+  final int totalBooksRead;
+  final double globalAverageRating;
 
   const StatsData({
     required this.totalBooks,
     required this.booksReading,
     required this.booksCompleted,
+    required this.booksCompletedThisMonth,
     required this.booksPaused,
     required this.booksPending,
     required this.totalNotes,
+    required this.notesThisMonth,
     required this.averageRating,
     required this.pagesThisMonth,
     required this.currentStreak,
+    required this.globalStreak,
     required this.booksByState,
     required this.booksByMonth,
     required this.topGenres,
     required this.monthlyBooks,
+    required this.totalPagesRead,
+    required this.totalBooksRead,
+    required this.globalAverageRating,
   });
 
   @override
@@ -65,16 +78,22 @@ class StatsData extends Equatable {
     totalBooks,
     booksReading,
     booksCompleted,
+    booksCompletedThisMonth,
     booksPaused,
     booksPending,
     totalNotes,
+    notesThisMonth,
     averageRating,
     pagesThisMonth,
     currentStreak,
+    globalStreak,
     booksByState,
     booksByMonth,
     topGenres,
     monthlyBooks,
+    totalPagesRead,
+    totalBooksRead,
+    globalAverageRating,
   ];
 }
 

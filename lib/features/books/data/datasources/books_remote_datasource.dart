@@ -70,26 +70,142 @@ class BooksRemoteDataSource {
   Future<Map<String, dynamic>> loadHomeStats() async {
     final userId = _requireUser();
 
-    final statsResponse = await _supabase
-        .from('current_month_stats')
-        .select()
+    final allSessions = await _supabase
+        .from('reading_sessions')
+        .select('pages_read, session_date')
         .eq('user_id', userId)
-        .maybeSingle();
+        .order('session_date', ascending: false);
 
-    dynamic streakResponse = 0;
-    try {
-      streakResponse = await _supabase.rpc(
-        'get_current_streak',
-        params: {'p_user_id': userId},
-      );
-    } catch (_) {}
+    int totalPagesRead = 0;
+    for (final session in allSessions) {
+      totalPagesRead += (session['pages_read'] as int?) ?? 0;
+    }
+
+    int globalStreak = _calculateStreak(allSessions);
+
+    final allNotes = await _supabase
+        .from('book_notes')
+        .select('id')
+        .eq('user_id', userId);
+    int totalNotes = allNotes.length;
+
+    final completedBooks = await _supabase
+        .from('books')
+        .select('id, rating')
+        .eq('user_id', userId)
+        .eq('status', 'Completado');
+
+    int booksRead = completedBooks.length;
+
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
+    final endOfMonth = DateTime(now.year, now.month + 1, 0).toIso8601String();
+
+    final monthSessions = await _supabase
+        .from('reading_sessions')
+        .select('pages_read, session_date')
+        .eq('user_id', userId)
+        .gte('session_date', startOfMonth)
+        .lte('session_date', endOfMonth)
+        .order('session_date', ascending: false);
+
+    int pagesThisMonthCalc = 0;
+    for (final session in monthSessions) {
+      pagesThisMonthCalc += (session['pages_read'] as int?) ?? 0;
+    }
+
+    int currentStreak = _calculateStreak(monthSessions);
+
+    final monthNotes = await _supabase
+        .from('book_notes')
+        .select('id')
+        .eq('user_id', userId)
+        .gte('created_at', startOfMonth)
+        .lte('created_at', endOfMonth);
+    int notesThisMonth = monthNotes.length;
+
+    final monthBooks = await _supabase
+        .from('books')
+        .select('id, rating')
+        .eq('user_id', userId)
+        .eq('status', 'Completado')
+        .gte('finished_at', startOfMonth)
+        .lte('finished_at', endOfMonth);
+
+    int booksThisMonthCalc = monthBooks.length;
+    double avgRatingMonth = 0;
+    if (monthBooks.isNotEmpty) {
+      double sumRating = 0;
+      int ratedCount = 0;
+      for (final book in monthBooks) {
+        final rating = book['rating'];
+        if (rating != null && rating > 0) {
+          sumRating += rating.toDouble();
+          ratedCount++;
+        }
+      }
+      if (ratedCount > 0) {
+        avgRatingMonth = sumRating / ratedCount;
+      }
+    }
 
     return {
-      'pagesThisMonth': statsResponse?['total_pages_mes'] ?? 0,
-      'booksTouched': statsResponse?['libros_tocados_mes'] ?? 0,
-      'booksFinished': statsResponse?['libros_terminados_mes'] ?? 0,
-      'streak': _extractStreak(streakResponse),
+      'pagesThisMonth': pagesThisMonthCalc,
+      'booksTouched': monthBooks.length,
+      'booksFinished': booksThisMonthCalc,
+      'streak': currentStreak,
+      'globalStreak': globalStreak,
+      'totalPagesRead': totalPagesRead,
+      'booksRead': booksRead,
+      'averageRating': avgRatingMonth,
+      'totalNotes': totalNotes,
+      'notesThisMonth': notesThisMonth,
     };
+  }
+
+  int _calculateStreak(List<dynamic> sessions) {
+    if (sessions.isEmpty) return 0;
+
+    final Set<String> uniqueDates = {};
+    for (final session in sessions) {
+      final date = session['session_date'];
+      if (date != null) {
+        String dateStr;
+        if (date is String) {
+          dateStr = date.split('T').first;
+        } else {
+          dateStr = date.toString().split('T').first;
+        }
+        uniqueDates.add(dateStr);
+      }
+    }
+
+    if (uniqueDates.isEmpty) return 0;
+
+    final sortedDates = uniqueDates.toList()..sort((a, b) => b.compareTo(a));
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final yesterday = DateTime.now()
+        .subtract(const Duration(days: 1))
+        .toIso8601String()
+        .split('T')
+        .first;
+
+    if (sortedDates.first != today && sortedDates.first != yesterday) {
+      return 0;
+    }
+
+    int streak = 1;
+    for (int i = 0; i < sortedDates.length - 1; i++) {
+      final current = DateTime.parse(sortedDates[i]);
+      final next = DateTime.parse(sortedDates[i + 1]);
+      if (current.difference(next).inDays == 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
   }
 
   Future<void> updateBookState(
@@ -126,18 +242,6 @@ class BooksRemoteDataSource {
       'pages_read': pagesDelta,
       'session_date': (sessionDate ?? DateTime.now()).toIso8601String(),
     });
-  }
-
-  int _extractStreak(dynamic response) {
-    if (response == null) return 0;
-    if (response is int) return response;
-    if (response is List) {
-      return response.isNotEmpty ? (response.first as int? ?? 0) : 0;
-    }
-    if (response is Map && response.containsKey('streak')) {
-      return response['streak'] as int? ?? 0;
-    }
-    return 0;
   }
 
   String _requireUser() {

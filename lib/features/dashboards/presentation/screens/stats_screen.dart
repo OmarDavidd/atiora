@@ -21,7 +21,9 @@ class _StatsScreenState extends State<StatsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StatsBloc>().add(LoadStats());
+      context.read<StatsBloc>()
+        ..add(LoadStats())
+        ..add(RefreshStats());
     });
   }
 
@@ -94,10 +96,23 @@ class _StatsContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          QuickStatsSection(stats: stats),
+
+          // ESTE MES
+          _SectionHeader(title: 'Este mes'),
+          const SizedBox(height: 16),
+          QuickStatsSection(stats: stats, isGlobal: false),
+          const SizedBox(height: 16),
+          HighlightsRow(stats: stats, isGlobal: false),
           const SizedBox(height: 32),
-          HighlightsRow(stats: stats),
+
+          // GLOBAL
+          _SectionHeader(title: 'Global'),
+          const SizedBox(height: 16),
+          QuickStatsSection(stats: stats, isGlobal: true),
+          const SizedBox(height: 16),
+          HighlightsRow(stats: stats, isGlobal: true),
           const SizedBox(height: 32),
+
           StateDistributionChart(booksByState: stats.booksByState),
           const SizedBox(height: 32),
           MonthlyBooksChart(monthlyBooks: stats.monthlyBooks),
@@ -106,6 +121,35 @@ class _StatsContent extends StatelessWidget {
           const SizedBox(height: 48),
         ],
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }

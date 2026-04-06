@@ -407,26 +407,41 @@ class BooksRepositoryImpl implements BooksRepository {
     final monthlyBooks = _calculateMonthlyBooks(books);
 
     final homeStats = await loadHomeStats();
-    final avgRating =
-        books
-            .where((b) => b.rating > 0)
-            .fold<double>(0, (sum, b) => sum + b.rating) /
-        (books.where((b) => b.rating > 0).length).clamp(1, books.length);
+
+    final completedBooks = books
+        .where((b) => b.status == 'Completado')
+        .toList();
+    double avgRating = 0;
+    if (completedBooks.isNotEmpty) {
+      final rated = completedBooks.where((b) => b.rating > 0).toList();
+      if (rated.isNotEmpty) {
+        avgRating =
+            rated.fold<double>(0, (sum, b) => sum + b.rating) / rated.length;
+      }
+    }
 
     return StatsData(
       totalBooks: books.length,
       booksReading: booksByState['Leyendo'] ?? 0,
       booksCompleted: booksByState['Completado'] ?? 0,
+      booksCompletedThisMonth: homeStats['booksFinished'] ?? 0,
       booksPaused: booksByState['Pausado'] ?? 0,
       booksPending: booksByState['Pendiente'] ?? 0,
-      totalNotes: 0,
+      totalNotes: homeStats['totalNotes'] ?? 0,
+      notesThisMonth: homeStats['notesThisMonth'] ?? 0,
       averageRating: avgRating,
       pagesThisMonth: homeStats['pagesThisMonth'] ?? 0,
       currentStreak: homeStats['streak'] ?? 0,
+      globalStreak: homeStats['globalStreak'] ?? 0,
       booksByState: booksByState,
       booksByMonth: {},
       topGenres: Map.fromEntries(topGenres.take(5)),
       monthlyBooks: monthlyBooks,
+      totalPagesRead: homeStats['totalPagesRead'] ?? 0,
+      totalBooksRead: homeStats['booksRead'] ?? 0,
+      globalAverageRating: homeStats['averageRating'] > 0
+          ? (homeStats['averageRating'] as num).toDouble()
+          : avgRating,
     );
   }
 
