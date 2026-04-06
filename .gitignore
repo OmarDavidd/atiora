@@ -48,3 +48,9 @@ app.*.map.json
 .env
 .env.*
 .zed
+
+# Documentation (for portfolio, not needed in repo)
+README.md
+DOCUMENTATION.md
+AGENTS.md
+CHANGELOG.md

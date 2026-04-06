@@ -119,6 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           hint: '••••••••',
                           icon: Icons.lock_outline,
                           obscureText: true,
+                          showToggle: true,
                           validator: (value) => (value?.isEmpty ?? true)
                               ? 'Contraseña requerida'
                               : (value!.length < 6)
@@ -132,6 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           hint: '••••••••',
                           icon: Icons.lock_outline,
                           obscureText: true,
+                          showToggle: true,
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Confirmación requerida';

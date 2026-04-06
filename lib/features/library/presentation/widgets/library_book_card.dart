@@ -61,15 +61,49 @@ class _Cover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (coverUrl != null && coverUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: 90,
+          height: 135,
+          child: Image.network(
+            coverUrl!,
+            fit: BoxFit.cover,
+            cacheWidth: 180,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) =>
+                _buildPlaceholder(context),
+          ),
+        ),
+      );
+    }
+    return _buildPlaceholder(context);
+  }
+
+  Widget _buildPlaceholder(BuildContext context) {
     return Container(
-      height: 120,
       width: 90,
+      height: 135,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        image: DecorationImage(
-          image: coverUrl != null
-              ? NetworkImage(coverUrl!)
-              : const AssetImage('assets/missingbook.webp') as ImageProvider,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        image: const DecorationImage(
+          image: AssetImage('assets/missingbook.webp'),
           fit: BoxFit.cover,
         ),
       ),

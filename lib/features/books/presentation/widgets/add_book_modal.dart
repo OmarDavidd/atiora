@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
@@ -67,6 +68,7 @@ class _AddBookModalState extends State<AddBookModal> {
   List<AddBookValidationTip> _validationTips = [];
   bool _showGenresError = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  File? _selectedCoverImage;
 
   bool get _hasUnsavedChanges {
     if (widget.isEditing) {
@@ -170,6 +172,11 @@ class _AddBookModalState extends State<AddBookModal> {
           showGenresError: _showGenresError,
           canReset: _hasUnsavedChanges,
           isEditing: widget.isEditing,
+          currentCoverUrl: widget.bookToEdit?.coverUrl,
+          selectedCoverImage: _selectedCoverImage,
+          onCoverImageSelected: (file) {
+            setState(() => _selectedCoverImage = file);
+          },
           onTitleChanged: () {
             setState(() => _removeTipSync('title'));
             _persistDraft();

@@ -85,6 +85,7 @@ class BooksCarousel extends StatelessWidget {
                         child: BookCard(
                           title: book.title,
                           author: book.author ?? "",
+                          coverUrl: book.coverUrl,
                           coverPath: 'assets/missingbook.webp',
                           isPendingSync: book.pendingSync,
                         ),

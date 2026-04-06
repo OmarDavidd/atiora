@@ -60,7 +60,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 40),
-          InfoBookCover(),
+          InfoBookCover(coverUrl: widget.book.coverUrl),
           const SizedBox(height: 30),
           InfoBookHeader(
             currentStatus: _currentStatus,

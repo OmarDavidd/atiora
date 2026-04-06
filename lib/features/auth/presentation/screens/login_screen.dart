@@ -95,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           hint: '••••••••',
                           icon: Icons.lock_outline,
                           obscureText: true,
+                          showToggle: true,
                           validator: (value) => (value?.isEmpty ?? true)
                               ? 'Contraseña requerida'
                               : (value!.length < 6)
