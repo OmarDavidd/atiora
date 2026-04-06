@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:atiora/core/errors/app_exception.dart';
@@ -585,10 +584,5 @@ class BooksRepositoryImpl implements BooksRepository {
   @override
   Future<void> clearAddBookDraft(String userId) async {
     await _hive.clearAddBookDraft(userId);
-  }
-
-  @override
-  Future<String?> uploadCoverImage(File imageFile, String bookId) async {
-    return await _remote.uploadCoverImage(imageFile, bookId);
   }
 }

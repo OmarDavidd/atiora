@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:atiora/data/models/book_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -244,31 +242,6 @@ class BooksRemoteDataSource {
       'pages_read': pagesDelta,
       'session_date': (sessionDate ?? DateTime.now()).toIso8601String(),
     });
-  }
-
-  Future<String?> uploadCoverImage(File imageFile, String bookId) async {
-    try {
-      final bytes = await imageFile.readAsBytes();
-      final extension = imageFile.path.split('.').last.toLowerCase();
-      final validExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-      final ext = validExtensions.contains(extension) ? extension : 'jpg';
-
-      final path = '$bookId.$ext';
-
-      final response = await _supabase.storage
-          .from('book-covers')
-          .uploadBinary(path, bytes);
-
-      if (response.isNotEmpty) {
-        final publicUrl = _supabase.storage
-            .from('book-covers')
-            .getPublicUrl(path);
-        return publicUrl;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
   }
 
   String _requireUser() {

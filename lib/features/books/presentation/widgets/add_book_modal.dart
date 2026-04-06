@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
@@ -68,25 +67,17 @@ class _AddBookModalState extends State<AddBookModal> {
   List<AddBookValidationTip> _validationTips = [];
   bool _showGenresError = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
-  File? _selectedCoverImage;
 
   bool get _hasUnsavedChanges {
     if (widget.isEditing) {
       final original = widget.bookToEdit!;
-      final hasNewCover = _selectedCoverImage != null;
-      final hasExistingCover =
-          original.coverUrl != null && original.coverUrl!.isNotEmpty;
-      final coverChanged =
-          hasNewCover || (hasExistingCover && _selectedCoverImage == null);
-
       return _titleController.text.trim() != original.title ||
           _authorController.text.trim() != (original.author ?? '') ||
           !_listEquals(selectedGenres, original.genre) ||
           _totalPages != original.totalPages ||
           _currentPage != original.currentPage ||
           _status != original.status ||
-          _rating != original.rating.toInt() ||
-          coverChanged;
+          _rating != original.rating.toInt();
     }
     return _titleController.text.trim().isNotEmpty ||
         _authorController.text.trim().isNotEmpty ||
@@ -94,8 +85,7 @@ class _AddBookModalState extends State<AddBookModal> {
         _totalPages != 1 ||
         _currentPage != 1 ||
         (_status?.isNotEmpty ?? false) ||
-        _rating != 0 ||
-        _selectedCoverImage != null;
+        _rating != 0;
   }
 
   bool _listEquals(List<String> a, List<String> b) {
@@ -180,11 +170,6 @@ class _AddBookModalState extends State<AddBookModal> {
           showGenresError: _showGenresError,
           canReset: _hasUnsavedChanges,
           isEditing: widget.isEditing,
-          currentCoverUrl: widget.bookToEdit?.coverUrl,
-          selectedCoverImage: _selectedCoverImage,
-          onCoverImageSelected: (file) {
-            setState(() => _selectedCoverImage = file);
-          },
           onTitleChanged: () {
             setState(() => _removeTipSync('title'));
             _persistDraft();
@@ -270,15 +255,6 @@ class _AddBookModalState extends State<AddBookModal> {
       FocusScope.of(context).unfocus();
 
       if (widget.isEditing) {
-        String? newCoverUrl = widget.bookToEdit!.coverUrl;
-
-        if (_selectedCoverImage != null) {
-          newCoverUrl = await widget.repository.uploadCoverImage(
-            _selectedCoverImage!,
-            widget.bookToEdit!.id,
-          );
-        }
-
         final updatedBook = widget.bookToEdit!.copyWith(
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
@@ -287,7 +263,6 @@ class _AddBookModalState extends State<AddBookModal> {
           currentPage: _currentPage,
           status: _status!,
           rating: _rating.toDouble(),
-          coverUrl: newCoverUrl,
           updatedAt: DateTime.now(),
         );
 
@@ -326,18 +301,9 @@ class _AddBookModalState extends State<AddBookModal> {
         }
 
         final now = DateTime.now();
-        final bookId = _uuid.v4();
-
-        String? coverUrl;
-        if (_selectedCoverImage != null) {
-          coverUrl = await widget.repository.uploadCoverImage(
-            _selectedCoverImage!,
-            bookId,
-          );
-        }
 
         final book = BookModel(
-          id: bookId,
+          id: _uuid.v4(),
           userId: currentUser.id,
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
@@ -346,7 +312,6 @@ class _AddBookModalState extends State<AddBookModal> {
           currentPage: _currentPage,
           status: _status!,
           rating: _rating.toDouble(),
-          coverUrl: coverUrl,
           createdAt: now,
           updatedAt: now,
         );
@@ -464,7 +429,6 @@ class _AddBookModalState extends State<AddBookModal> {
       _errorMessage = null;
       _validationTips = [];
       _showGenresError = false;
-      _selectedCoverImage = null;
     });
     if (!mounted) return;
     FocusScope.of(context).unfocus();
