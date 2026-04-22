@@ -204,14 +204,16 @@ class _AddBookModalState extends State<AddBookModal> {
           },
           onTotalPagesChanged: (val) {
             setState(() {
-              _totalPages = val;
+              _totalPages = val < 1 ? 1 : val;
               _removeTipSync('pages');
             });
             _persistDraft();
           },
           onCurrentPageChanged: (val) {
             setState(() {
-              _currentPage = val;
+              _currentPage = val < 1
+                  ? 1
+                  : (val > _totalPages ? _totalPages : val);
               _removeTipSync('pages');
             });
             _persistDraft();
@@ -514,6 +516,7 @@ class _AddBookModalState extends State<AddBookModal> {
         _status = null;
         _rating = 0;
       }
+      _selectedCoverImage = null;
     });
     if (!mounted) return;
     FocusScope.of(context).unfocus();
