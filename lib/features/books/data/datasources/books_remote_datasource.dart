@@ -1,4 +1,5 @@
 import 'package:atiora/data/models/book_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaginatedBooksResult {
@@ -59,7 +60,17 @@ class BooksRemoteDataSource {
 
   Future<void> updateBook(BookModel book) async {
     final data = book.toRemoteJson();
-    await _supabase.from('books').upsert(data);
+    final userId = _requireUser();
+    debugPrint('📝 updateBook - ALL DATA: $data');
+    debugPrint('📝 updateBook - userId: $userId');
+    debugPrint('📝 updateBook - cover_url en data: ${data['cover_url']}');
+
+    // Hacer UPDATE explícito en lugar de upsert
+    await _supabase
+        .from('books')
+        .update(data)
+        .eq('id', data['id'])
+        .eq('user_id', userId);
   }
 
   Future<void> deleteBook(String id) async {
@@ -76,12 +87,17 @@ class BooksRemoteDataSource {
         .eq('user_id', userId)
         .order('session_date', ascending: false);
 
+    final allBooks = await _supabase
+        .from('books')
+        .select('id, current_page')
+        .eq('user_id', userId);
+
     int totalPagesRead = 0;
-    for (final session in allSessions) {
-      totalPagesRead += (session['pages_read'] as int?) ?? 0;
+    for (final book in allBooks) {
+      totalPagesRead += (book['current_page'] as int?) ?? 0;
     }
 
-    int globalStreak = _calculateStreak(allSessions);
+    int globalStreak = allBooks.isNotEmpty ? 1 : 0;
 
     final allNotes = await _supabase
         .from('book_notes')
@@ -101,20 +117,20 @@ class BooksRemoteDataSource {
     final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
     final endOfMonth = DateTime(now.year, now.month + 1, 0).toIso8601String();
 
-    final monthSessions = await _supabase
-        .from('reading_sessions')
-        .select('pages_read, session_date')
+    // Solo usar tabla books, ignore reading_sessions
+    final monthBooks = await _supabase
+        .from('books')
+        .select('id, current_page, total_pages, rating, status, updated_at')
         .eq('user_id', userId)
-        .gte('session_date', startOfMonth)
-        .lte('session_date', endOfMonth)
-        .order('session_date', ascending: false);
+        .gte('updated_at', startOfMonth)
+        .lte('updated_at', endOfMonth);
 
     int pagesThisMonthCalc = 0;
-    for (final session in monthSessions) {
-      pagesThisMonthCalc += (session['pages_read'] as int?) ?? 0;
+    for (final book in monthBooks) {
+      pagesThisMonthCalc += (book['current_page'] as int?) ?? 0;
     }
 
-    int currentStreak = _calculateStreak(monthSessions);
+    int currentStreak = monthBooks.isNotEmpty ? 1 : 0;
 
     final monthNotes = await _supabase
         .from('book_notes')
@@ -124,7 +140,7 @@ class BooksRemoteDataSource {
         .lte('created_at', endOfMonth);
     int notesThisMonth = monthNotes.length;
 
-    final monthBooks = await _supabase
+    final finishedBooksThisMonth = await _supabase
         .from('books')
         .select('id, rating')
         .eq('user_id', userId)
@@ -132,7 +148,7 @@ class BooksRemoteDataSource {
         .gte('finished_at', startOfMonth)
         .lte('finished_at', endOfMonth);
 
-    int booksThisMonthCalc = monthBooks.length;
+    int booksThisMonthCalc = finishedBooksThisMonth.length;
     double avgRatingMonth = 0;
     if (monthBooks.isNotEmpty) {
       double sumRating = 0;
@@ -216,12 +232,14 @@ class BooksRemoteDataSource {
     DateTime? finishedAt,
   }) async {
     final userId = _requireUser();
-    final payload = <String, dynamic>{'status': newState};
+    final now = DateTime.now().toIso8601String();
+    final payload = <String, dynamic>{'status': newState, 'updated_at': now};
     if (currentPage != null) payload['current_page'] = currentPage;
     if (rating != null) payload['rating'] = rating;
     if (finishedAt != null) {
       payload['finished_at'] = finishedAt.toIso8601String();
     }
+    // debugPrint('📖 updateBookState: $payload');
 
     await _supabase
         .from('books')
@@ -242,6 +260,53 @@ class BooksRemoteDataSource {
       'pages_read': pagesDelta,
       'session_date': (sessionDate ?? DateTime.now()).toIso8601String(),
     });
+    // debugPrint('📖 logReadingSession: INSERTED');
+  }
+
+  Future<String?> uploadCoverImage(
+    String bookId,
+    Uint8List fileBytes,
+    String fileName,
+  ) async {
+    try {
+      final userId = _requireUser();
+      final filePath = '$userId/$bookId/$fileName';
+      debugPrint(
+        '🎨 Storage: Subiendo a path=$filePath, bytes=${fileBytes.length}',
+      );
+
+      await _supabase.storage
+          .from('book-covers')
+          .uploadBinary(
+            filePath,
+            fileBytes,
+            fileOptions: FileOptions(contentType: 'image/jpeg', upsert: true),
+          );
+
+      final publicUrl = _supabase.storage
+          .from('book-covers')
+          .getPublicUrl(filePath);
+      debugPrint('🎨 Storage: Upload exitoso, URL=$publicUrl');
+      return publicUrl;
+    } catch (e) {
+      debugPrint('🎨 Storage ERROR uploading cover: $e');
+      return null;
+    }
+  }
+
+  Future<void> deleteCoverImage(String coverUrl) async {
+    try {
+      final uri = Uri.parse(coverUrl);
+      final pathParts = uri.pathSegments;
+      if (pathParts.isNotEmpty) {
+        final filePath = pathParts
+            .sublist(pathParts.indexOf('book-covers') + 1)
+            .join('/');
+        await _supabase.storage.from('book-covers').remove([filePath]);
+      }
+    } catch (e) {
+      debugPrint('Error deleting cover image: $e');
+    }
   }
 
   String _requireUser() {

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:atiora/core/errors/app_exception.dart';
+import 'package:flutter/foundation.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/data/models/book_model.dart';
@@ -584,5 +586,27 @@ class BooksRepositoryImpl implements BooksRepository {
   @override
   Future<void> clearAddBookDraft(String userId) async {
     await _hive.clearAddBookDraft(userId);
+  }
+
+  @override
+  Future<String?> uploadCoverImage(String bookId, File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final coverUrl = await _remote.uploadCoverImage(bookId, bytes, fileName);
+      return coverUrl;
+    } catch (e) {
+      debugPrint('Error uploading cover: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<void> deleteCoverImage(String coverUrl) async {
+    try {
+      await _remote.deleteCoverImage(coverUrl);
+    } catch (e) {
+      debugPrint('Error deleting cover: $e');
+    }
   }
 }

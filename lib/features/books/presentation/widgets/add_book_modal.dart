@@ -113,6 +113,10 @@ class _AddBookModalState extends State<AddBookModal> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🎨 AddBookModal initState - bookToEdit: ${widget.bookToEdit}');
+    debugPrint(
+      '🎨 AddBookModal initState - isEditing (widget.isEditing): ${widget.isEditing}',
+    );
     if (widget.isEditing) {
       _loadBookData(widget.bookToEdit!);
     } else {
@@ -175,7 +179,11 @@ class _AddBookModalState extends State<AddBookModal> {
           currentCoverUrl: widget.bookToEdit?.coverUrl,
           selectedCoverImage: _selectedCoverImage,
           onCoverImageSelected: (file) {
+            debugPrint('🎨 onCoverImageSelected llamada - file: $file');
             setState(() => _selectedCoverImage = file);
+            debugPrint(
+              '🎨 _selectedCoverImage actualizado a: $_selectedCoverImage',
+            );
           },
           onTitleChanged: () {
             setState(() => _removeTipSync('title'));
@@ -261,20 +269,48 @@ class _AddBookModalState extends State<AddBookModal> {
     try {
       FocusScope.of(context).unfocus();
 
-      if (widget.isEditing) {
-        final updatedBook = widget.bookToEdit!.copyWith(
-          title: _titleController.text.trim(),
-          author: _authorController.text.trim(),
-          genre: selectedGenres,
-          totalPages: _totalPages,
-          currentPage: _currentPage,
-          status: _status!,
-          rating: _rating.toDouble(),
-          updatedAt: DateTime.now(),
-        );
+      // Siempre subir imagen primero si hay imagen nueva
+      String? coverUrl = widget.bookToEdit?.coverUrl;
+      debugPrint('🎨 GUARDAR - _selectedCoverImage: $_selectedCoverImage');
 
+      if (_selectedCoverImage != null) {
+        final bookId = widget.bookToEdit?.id ?? _uuid.v4();
+        debugPrint('🎨 Subiendo portada para libro: $bookId');
+        coverUrl = await widget.repository.uploadCoverImage(
+          bookId,
+          _selectedCoverImage!,
+        );
+        debugPrint('🎨 CoverUrl resultado: $coverUrl');
+
+        if (coverUrl == null) {
+          setState(
+            () => _errorMessage =
+                'No se pudo subir la portada. Verifica tu conexión.',
+          );
+          return;
+        }
+      }
+
+      final now = DateTime.now();
+
+      final book = BookModel(
+        id: widget.bookToEdit?.id ?? _uuid.v4(),
+        userId: (sl<AuthProvider>()).currentUser!.id,
+        title: _titleController.text.trim(),
+        author: _authorController.text.trim(),
+        genre: selectedGenres,
+        totalPages: _totalPages,
+        currentPage: _currentPage,
+        status: _status!,
+        rating: _rating.toDouble(),
+        coverUrl: coverUrl,
+        createdAt: widget.bookToEdit?.createdAt ?? now,
+        updatedAt: now,
+      );
+
+      if (widget.isEditing) {
         try {
-          await widget.repository.updateBook(updatedBook);
+          await widget.repository.updateBook(book);
         } on AppException catch (e) {
           if (e.type == AppExceptionType.network) {
             await _closeWithSuccess();
@@ -309,8 +345,35 @@ class _AddBookModalState extends State<AddBookModal> {
 
         final now = DateTime.now();
 
+        var coverUrl = widget.bookToEdit?.coverUrl;
+        debugPrint(
+          '🎨 ANTES DE GUARDAR - _selectedCoverImage: $_selectedCoverImage, current coverUrl: ${widget.bookToEdit?.coverUrl}',
+        );
+
+        if (_selectedCoverImage != null) {
+          final bookId = widget.bookToEdit?.id ?? _uuid.v4();
+          debugPrint('🎨 Subiendo portada para libro: $bookId');
+          coverUrl = await widget.repository.uploadCoverImage(
+            bookId,
+            _selectedCoverImage!,
+          );
+          debugPrint('🎨 CoverUrl resultado: $coverUrl');
+
+          if (coverUrl == null) {
+            setState(
+              () => _errorMessage =
+                  'No se pudo subir la portada. Verifica tu conexión.',
+            );
+            return;
+          }
+        } else {
+          debugPrint('🎨 No hay imagen nueva seleccionada');
+        }
+
+        debugPrint('🎨 Book final - coverUrl: $coverUrl');
+
         final book = BookModel(
-          id: _uuid.v4(),
+          id: widget.bookToEdit?.id ?? _uuid.v4(),
           userId: currentUser.id,
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
@@ -319,12 +382,19 @@ class _AddBookModalState extends State<AddBookModal> {
           currentPage: _currentPage,
           status: _status!,
           rating: _rating.toDouble(),
-          createdAt: now,
+          coverUrl: coverUrl,
+          createdAt: widget.bookToEdit?.createdAt ?? now,
           updatedAt: now,
         );
 
         try {
-          await widget.repository.addBook(book);
+          if (widget.bookToEdit != null) {
+            await widget.repository.updateBook(book);
+            // Recargar libros de Supabase después de update
+            widget.booksBloc.add(LoadBooks());
+          } else {
+            await widget.repository.addBook(book);
+          }
         } on AppException catch (e) {
           if (e.type == AppExceptionType.network) {
             await _closeWithSuccess();
