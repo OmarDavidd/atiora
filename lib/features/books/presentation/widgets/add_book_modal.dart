@@ -499,13 +499,21 @@ class _AddBookModalState extends State<AddBookModal> {
       _titleController.clear();
       _authorController.clear();
       selectedGenres.clear();
-      _totalPages = 1;
-      _currentPage = 1;
-      _status = null;
-      _rating = 0;
       _errorMessage = null;
       _validationTips = [];
       _showGenresError = false;
+
+      if (widget.bookToEdit != null) {
+        _totalPages = widget.bookToEdit!.totalPages;
+        _currentPage = widget.bookToEdit!.currentPage;
+        _status = widget.bookToEdit!.status;
+        _rating = widget.bookToEdit!.rating.toInt();
+      } else {
+        _totalPages = 1;
+        _currentPage = 1;
+        _status = null;
+        _rating = 0;
+      }
     });
     if (!mounted) return;
     FocusScope.of(context).unfocus();
