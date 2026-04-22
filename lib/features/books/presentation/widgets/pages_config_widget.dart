@@ -55,10 +55,19 @@ class PagesConfigWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       InputQty.int(
+                        key: ValueKey('totalPages_$totalPages'),
                         initVal: totalPages,
-                        onQtyChanged: (val) => onTotalPagesChanged(val as int),
+                        onQtyChanged: (val) {
+                          if (val == null || val < 0) {
+                            onTotalPagesChanged(0);
+                          } else if (val > 5000) {
+                            onTotalPagesChanged(5000);
+                          } else {
+                            onTotalPagesChanged(val as int);
+                          }
+                        },
                         maxVal: 5000,
-                        minVal: 1,
+                        minVal: 0,
                         decoration: QtyDecorationProps(
                           btnColor: Theme.of(context).primaryColor,
                           iconColor: Colors.white,
@@ -97,10 +106,19 @@ class PagesConfigWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       InputQty.int(
+                        key: ValueKey('currentPage_$currentPage'),
                         initVal: currentPage,
-                        onQtyChanged: (val) => onCurrentPageChanged(val as int),
-                        maxVal: totalPages,
-                        minVal: 1,
+                        onQtyChanged: (val) {
+                          if (val == null || val < 0) {
+                            onCurrentPageChanged(0);
+                          } else if (totalPages > 0 && val > totalPages) {
+                            onCurrentPageChanged(totalPages);
+                          } else {
+                            onCurrentPageChanged(val as int);
+                          }
+                        },
+                        maxVal: totalPages > 0 ? totalPages : 9999,
+                        minVal: 0,
                         decoration: QtyDecorationProps(
                           btnColor: Theme.of(context).primaryColor,
                           iconColor: Colors.white,

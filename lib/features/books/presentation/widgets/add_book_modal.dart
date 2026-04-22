@@ -55,7 +55,7 @@ class _AddBookModalState extends State<AddBookModal> {
   final _statusKey = GlobalKey();
   Timer? _draftDebounce;
   List<String> selectedGenres = [];
-  int _totalPages = 1;
+  int _totalPages = 0;
   int _currentPage = 1;
   bool isLoading = false;
   String? _status;
@@ -204,7 +204,7 @@ class _AddBookModalState extends State<AddBookModal> {
           },
           onTotalPagesChanged: (val) {
             setState(() {
-              _totalPages = val < 1 ? 1 : val;
+              _totalPages = val;
               _removeTipSync('pages');
             });
             _persistDraft();

@@ -37,13 +37,19 @@ class AddBookValidationHelper {
         ),
       );
     }
-    final pagesOutOfRange =
-        currentPage > totalPages || totalPages < 1 || currentPage < 1;
-    if (pagesOutOfRange) {
+    if (totalPages < 1) {
       tips.add(
         AddBookValidationTip(
           id: 'pages',
-          message: 'Revisa el total de páginas y el progreso actual',
+          message: 'Ingresa el total de páginas del libro',
+          onTap: onPagesTap,
+        ),
+      );
+    } else if (currentPage > totalPages || currentPage < 1) {
+      tips.add(
+        AddBookValidationTip(
+          id: 'pages',
+          message: 'Revisa la página actual',
           onTap: onPagesTap,
         ),
       );
