@@ -1,0 +1,7 @@
+Atiora  OMAR DAVID GARCIA VENTURA
+
+*Instalar la apk llevo micho tiempo jaja, esta pesadita
+*No deja registrarse por lo tanto no deja entrar :c Correcion aveces si a veces no
+*En el tema oscuro los botones de las paginas no se ven por que no cambian de color para conbinar con el tema oscuro
+*No guarda las imagenes 
+*Al querer borrar/limpiar el fomrulaio no limpia el apartado de cantidad de hojas y cantidad de hojas completadas 

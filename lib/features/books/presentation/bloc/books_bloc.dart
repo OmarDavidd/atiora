@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/error_handler.dart';
@@ -119,6 +121,9 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
     }, transformer: restartable());
 
     on<LogReadingSession>((event, emit) async {
+      debugPrint(
+        '📖 LogReadingSession: bookId=${event.bookId}, delta=${event.pagesDelta}',
+      );
       if (event.pagesDelta == 0) {
         return;
       }
@@ -128,7 +133,9 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
           event.pagesDelta,
           sessionDate: event.sessionDate,
         );
-      } catch (_) {
+        debugPrint('📖 LogReadingSession: SUCCESS');
+      } catch (e) {
+        debugPrint('📖 LogReadingSession ERROR: $e');
         emit(BookStateUpdateError('No pudimos registrar tu sesión de lectura'));
       }
     });

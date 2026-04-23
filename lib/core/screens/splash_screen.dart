@@ -23,6 +23,10 @@ class _SplashGateState extends State<SplashGate> {
   void initState() {
     super.initState();
     _startTime = DateTime.now();
+    _authReady = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkHide();
+    });
   }
 
   void _checkHide() {

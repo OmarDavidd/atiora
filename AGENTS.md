@@ -1,144 +1,80 @@
 # AGENTS GUIDE
-Onboarding contract for autonomous coding agents in `/home/davo/dev/notium`. Flutter/Supabase app named **Atiora**.
 
-## 1. Toolchain & Commands
-- **Flutter 3.24+ / Dart 3.4+** (SDK `^3.10.7`)
-- `flutter pub get` – install dependencies
-- `dart format lib test` – format code
-- `flutter analyze` – validate lints
-- `flutter test` – full suite
-- `flutter test path/to/file.dart` – single file
-- `flutter test path/to/file.dart --plain-name "Name"` – single test (case-sensitive)
-- `flutter test --coverage --reporter expanded` – coverage
-- **Always run `flutter analyze && flutter test`** before push/PR
+Atiora: Flutter/Supabase reading tracker app. On current branch `dev`.
 
-## 2. Repo Layout
+## Commands
+
+```bash
+flutter pub get          # Install deps
+dart format lib test    # Format code
+flutter analyze        # Lint + typecheck
+flutter test           # Full suite
+flutter test path/to/file.dart --plain-name "TestName"  # Single test
+```
+
+**Always run `flutter analyze && flutter test`** before push/PR.
+
+## Repo Layout
+
 ```
 lib/
-  main.dart              - Entry point, theme, router, BlocProviders
-  core/                  - Theme, navigation, DI, storage, utils, constants
-  data/models/           - Equatable models (BookModel, NoteModel, ProfileModel, UserModel)
-  data/datasources/      - Remote (Supabase) and local (Hive) data sources
-  data/repositories/     - Repository implementations wrapping datasources
-  features/              - auth, books, dashboards, library, profile (each with blocs/pages/widgets)
-test/
-  blocs/, repositories/, models/, utils/
+  main.dart              - Entry point (theme, router, BlocProviders)
+  core/                  - Theme, navigation, DI, storage, utils
+  data/models/           - Equatable models (BookModel, NoteModel, UserModel)
+  data/datasources/      - Remote (Supabase), local (Hive)
+  data/repositories/     - Repository implementations
+  features/              - auth, books, dashboards, library, profile
+test/                    - blocs/, repositories/, models/
 ```
 
-## 3. Dependency Injection (get_it)
-- `sl` (GetIt.instance) initialized in `init()` before `runApp`
-- Lazy singletons for datasources/repositories
-- Factories for blocs/cubits
-- UI: `BlocProvider.value(value: sl<BooksBloc>())` or `BlocProvider(create: (_) => sl<BooksBloc>()..add(LoadBooks()))`
+## Important Conventions
 
-## 4. State Management
-- **Blocs** use `bloc_concurrency`: `restartable` for book actions, `droppable` for stats
-- Pattern: `abstract class FooEvent {}` + `FooState extends Equatable`
-- Events/states in separate files
-- **Cubits**: `ThemeCubit` only; theme stored via SharedPreferences
-- Use `emit(state.copyWith(...))` for state updates; never mutate state directly
+- **Imports order**: Dart SDK → third-party → `package:atiora/...` → relative
+- **UI text**: Spanish only (localized friendly messages)
+- **Comments**: English (logic clarification)
+- **Exceptions**: Use `AppException` + `ErrorHandler.map()`, never expose raw messages
+- **State**: `emit(state.copyWith(...))`, never mutate directly
+- **Null safety**: Explicit return types, avoid `late`, use `final` for immutables
 
-## 5. Data Sources & Caching
-- Remote: Supabase RPC/table queries via `BooksRemoteDataSource`
-- Local: Hive boxes managed by `HiveService` (stores JSON maps, not adapters)
-- Strategy: update local cache first, sync remote when `_isOnline()`
-- On sync, remote replaces local cache entirely
-- Return data in consistent format from both sources
+## Data & Caching
 
-## 6. Error Handling
-- Use `AppException` as sole custom exception type
-- Map errors via `ErrorHandler.map()` before UI display
-- `ErrorHandler.handleAuthError` for auth-specific messages
-- Wrap Supabase/Hive in try/catch; rethrow when higher layers need to react
-- UI errors in **Spanish** (friendly, localized)
-- Never expose raw exception messages to users
+- Remote: Supabase via client `Supabase.instance.client`. Always scope `.eq('user_id', currentUser.id)`
+- Local: Hive with AES encryption (key in FlutterSecureStorage)
+- Strategy: update local cache first, sync remote when online
+- Return consistent format from both sources
 
-## 7. Async UI States
-- Every async-dependent UI shows: `Loading`, `Loaded`, `Error`
-- Use `CircularProgressIndicator` for blocking loads
-- Retry via bloc events (no manual `setState`)
-- `SizedBox.shrink()` as clean fallback
-- Consider ` BlocBuilder` with distinct state widgets
+## DI & State
 
-## 8. Networking & APIs
-- Supabase client: `Supabase.instance.client`
-- Always scope queries to user via `.eq('user_id', currentUser.id)`
-- RPC results vary (int/list/map) – normalize before returning
-- Handle offline scenarios gracefully with cached data
+- GetIt: `sl` for singletons (datasources/repos), factories (blocs/cubits)
+- Blocs: `bloc_concurrency` with `restartable` (actions), `droppable` (stats)
+- Cubits: ThemeCubit only; theme via SharedPreferences
 
-## 9. Testing
-- Use `bloc_test`; seed states with `seed: () => ...`
-- Repository tests: mocktail for local/remote datasources
-- Place tests adjacent to implementation
-- Assertions: `verify(() => mock.method()).called(1)`
-- Test error paths, not just success paths
+## Testing
 
-## 10. Code Style
+- Use `bloc_test`, seed with `seed: () => ...`
+- Repository tests: mocktail for datasources
+- Tests adjacent to implementation
+- Test error paths, not just success
 
-### Imports (in order, blank line between groups)
-1. Dart SDK (`dart:ui`, `dart:async`, etc.)
-2. Third-party packages (`package:flutter_bloc/...`, `package:equatable/...`)
-3. `package:atiora/...`
-4. Relative paths (`../widgets/...`, `./bloc/...`)
+## Git
 
-### Naming Conventions
-- **Classes/Widgets**: `PascalCase` (e.g., `BookCard`, `HomeScreen`)
-- **Methods/Variables**: `camelCase` (e.g., `loadBooks()`, `isLoading`)
-- **Constants**: `SCREAMING_SNAKE_CASE` (e.g., `MAX_BOOKS`, `API_BASE_URL`)
-- **Files**: `snake_case.dart` (e.g., `book_repository.dart`)
-- **BLoC classes**: `XxxBloc`, `XxxEvent`, `XxxState`
-
-### Types & Null Safety
-- No `var` for public members; explicit return types required
-- Use `?` for nullable types, `required` for mandatory params
-- Avoid `late` (only when 100% controlled by initialization flow)
-- Prefer `final` over `var` for immutable variables
-
-### Const & Dynamic
-- Prefer `const` constructors/widgets where possible
-- Only use `dynamic` for Supabase/Hive raw data; coerce immediately to concrete types
-
-### Formatting & Style
-- Use `dart format` only; never hand-align code
-- Max line length: 80 characters (soft limit)
-- Extract stateless widgets if widget exceeds ~100 lines
-
-### UI & Copy
-- UI text in **Spanish**
-- Comments in English for logic clarification
-- Use `Theme.of(context).textTheme` for typography
-
-### Widget Guidelines
-- Keep widgets under ~100 lines
-- Extract sub-widgets to separate files
-- Prefer stateless widgets where state isn't needed
-
-## 11. UI & Theming
-- `AppTheme.getTheme` with Material 3 and `AppColors` palette
-- `GoogleFonts` via theme definitions only
-- Standard padding: `EdgeInsets.symmetric(horizontal: 30)`
-- Card radius: 16
-- Typography from `Theme.of(context).textTheme`
-- Custom layouts preferred over generic Material scaffolds
-
-## 12. Git Workflow
-- Commits: `<type>(<scope>): imperative description` (feat, fix, chore, refactor, docs, test)
-- Keep messages under 72 chars
+- Branch: `dev` (main work), feature branches off `main`
+- Commits: `<type>(<scope>): imperative` (feat, fix, chore, refactor, test)
 - Never commit `.env` or secrets
-- Branch naming: `feature/xxx`, `fix/xxx`, `chore/xxx`
+- Run `flutter analyze` after merge to main
 
-## 13. General Rules
-- Keep `debugPrint` volume low; remove PII/secrets before merge
-- Avoid `part` files; prefer directory splits
-- Document Supabase schema assumptions in code comments
-- Extensions/helpers: `lib/core/utils/`
-- Immutable models via `copyWith`
-- Optimistic updates: failing remote triggers reload
+## Key Files
 
-## 14. Extending Features
-- Follow domain-driven split: data/datasources → data/repositories → features/xxx
-- New blocs need event/state files, tests, DI registration
-- Custom layouts (avoid generic Material scaffolds)
-- Update this file when conventions change
+- Config: `pubspec.yaml` (SDK `^3.10.7`, dependencies)
+- Entry: `lib/main.dart` (calls `init()` then `runApp`)
+- DI: `lib/core/di/injection_container.dart`
+- Theme: `lib/core/theme/app_theme.dart` (Material 3 + AppColors)
+- Storage: `lib/core/storage/hive_service.dart` (AES encryption)
 
-Stay deliberate, keep UX intentional, prefer clarity over cleverness.
+## Known Work
+
+- AES encryption for Hive complete (merged to dev)
+
+---
+
+Keep UX intentional; prefer clarity over cleverness. Stay deliberate.

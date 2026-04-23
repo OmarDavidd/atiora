@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/note_model.dart';
@@ -10,19 +13,56 @@ class HiveService {
   static HiveService get instance => _instance ??= HiveService._();
   HiveService._();
 
+  static const _encryptionKeyName = 'hive_encryption_key';
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
   late Box<dynamic> booksBox;
   late Box<dynamic> notesBox;
   late Box<dynamic> profileBox;
   late Box<dynamic> pendingOpsBox;
   late Box<dynamic> draftsBox;
 
+  Future<Uint8List> _getEncryptionKey() async {
+    final existingKey = await _secureStorage.read(key: _encryptionKeyName);
+
+    if (existingKey != null) {
+      return base64Decode(existingKey);
+    }
+
+    final newKey = Hive.generateSecureKey();
+    await _secureStorage.write(
+      key: _encryptionKeyName,
+      value: base64Encode(newKey),
+    );
+
+    return Uint8List.fromList(newKey);
+  }
+
   Future<void> init() async {
     await Hive.initFlutter();
-    booksBox = await Hive.openBox('books');
-    notesBox = await Hive.openBox('notes');
-    profileBox = await Hive.openBox('profiles');
-    pendingOpsBox = await Hive.openBox('pending_ops');
-    draftsBox = await Hive.openBox('drafts');
+
+    final encryptionKey = await _getEncryptionKey();
+
+    booksBox = await Hive.openBox(
+      'books',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    notesBox = await Hive.openBox(
+      'notes',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    profileBox = await Hive.openBox(
+      'profiles',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    pendingOpsBox = await Hive.openBox(
+      'pending_ops',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    draftsBox = await Hive.openBox(
+      'drafts',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
   }
 
   Future<void> saveBook(BookModel book) async {

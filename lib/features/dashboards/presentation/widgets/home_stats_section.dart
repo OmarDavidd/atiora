@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 
 class HomeStatsSection extends StatelessWidget {
   final String totalBooksRead;
@@ -137,16 +138,10 @@ class HomeStatsSection extends StatelessWidget {
     if (onStatsTap != null) {
       onStatsTap!();
     } else {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'La pantalla detallada de estadísticas estará disponible pronto.',
-            ),
-            duration: Duration(seconds: 2),
-          ),
-        );
+      NotificationHelper.showInfo(
+        context,
+        'La pantalla detallada de estadísticas estará disponible pronto.',
+      );
     }
   }
 }

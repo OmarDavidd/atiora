@@ -1,4 +1,5 @@
 import 'package:atiora/core/utils/constants.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
@@ -46,9 +47,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
       },
       listener: (context, state) {
         if (state is BookStateUpdateError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          NotificationHelper.showError(context, state.message);
           if (_lastSyncedState != null) {
             _syncStatusWithBloc(_lastSyncedState!);
           }

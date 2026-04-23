@@ -7,10 +7,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/theme/theme_cubit.dart';
 import 'package:atiora/core/screens/main_nav_page.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'package:atiora/features/books/domain/repositories/notes_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
+import 'package:atiora/features/books/presentation/bloc/books_state.dart';
+import 'package:atiora/features/books/presentation/bloc/notes_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/notes_state.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_modal.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_event.dart';
@@ -29,7 +33,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final BooksBloc _booksBloc;
-  final HomeStatsBloc _homeStatsBloc = sl<HomeStatsBloc>();
+  late final HomeStatsBloc _homeStatsBloc;
   late final Stream<List<ConnectivityResult>> _connectivityStream;
   late final ConnectivityPlatform _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
@@ -39,7 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _booksBloc = sl<BooksBloc>();
+    _booksBloc = context.read<BooksBloc>();
+    _homeStatsBloc = context.read<HomeStatsBloc>();
+    try {
+      context.read<NotesBloc>().stream.listen((state) {
+        if (state is NoteAddSuccess || state is NoteDeleteSuccess) {
+          _loadRecentNotes();
+        }
+      });
+    } catch (_) {}
     _connectivity = sl<ConnectivityPlatform>();
     _connectivityStream = _connectivity.onConnectivityChanged;
     _connectivitySubscription = _connectivityStream.listen((results) {
@@ -103,14 +115,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        body: BlocListener<HomeStatsBloc, HomeStatsState>(
-          listener: (context, state) {
-            if (state is HomeStatsError) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
-            }
-          },
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<HomeStatsBloc, HomeStatsState>(
+              listener: (context, state) {
+                if (state is HomeStatsError) {
+                  NotificationHelper.showError(context, state.message);
+                }
+              },
+            ),
+            BlocListener<BooksBloc, BooksState>(
+              listener: (context, state) {
+                if (state is BooksLoaded) {
+                  _homeStatsBloc.add(LoadHomeStats());
+                }
+              },
+            ),
+          ],
           child: RefreshIndicator(
             onRefresh: () async {
               _booksBloc.add(LoadBooks());

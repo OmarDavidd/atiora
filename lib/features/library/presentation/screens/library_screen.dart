@@ -32,13 +32,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    _booksBloc = sl<BooksBloc>()..add(LoadBooks());
-  }
-
-  @override
-  void dispose() {
-    _booksBloc.close();
-    super.dispose();
+    _booksBloc = context.read<BooksBloc>();
   }
 
   @override
@@ -138,12 +132,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
         if (state is BooksLoaded) {
           final books = _filteredBooks(state.books);
           if (books.isEmpty) {
-            return _LibraryMessage(
-              icon: Icons.menu_book_outlined,
-              message: _emptyMessage,
-              onRetry: state.books.isEmpty
-                  ? () => _openAddBookModal(context)
-                  : null,
+            return RefreshIndicator(
+              onRefresh: () async => _booksBloc.add(LoadBooks()),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: _LibraryMessage(
+                    icon: Icons.menu_book_outlined,
+                    message: _emptyMessage,
+                    onRetry: state.books.isEmpty
+                        ? () => _openAddBookModal(context)
+                        : null,
+                  ),
+                ),
+              ),
             );
           }
           return RefreshIndicator(

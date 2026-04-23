@@ -10,6 +10,7 @@ import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/constants.dart';
+import 'package:atiora/core/utils/dialog_helper.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/domain/entities/add_book_draft.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
@@ -431,24 +432,12 @@ class _AddBookModalState extends State<AddBookModal> {
       return false;
     }
 
-    final confirm = await showDialog<bool>(
+    final confirm = await DialogHelper.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Descartar cambios'),
-        content: const Text(
-          'Perderás la información ingresada. ¿Deseas salir sin guardar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Seguir editando'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Descartar'),
-          ),
-        ],
-      ),
+      title: 'Descartar cambios',
+      message: 'Perderás la información ingresada. ¿Deseas salir sin guardar?',
+      confirmText: 'Descartar',
+      cancelText: 'Seguir editando',
     );
 
     if (confirm != true) {
@@ -473,24 +462,11 @@ class _AddBookModalState extends State<AddBookModal> {
       return;
     }
 
-    final confirm = await showDialog<bool>(
+    final confirm = await DialogHelper.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Limpiar formulario'),
-        content: const Text(
-          'Se borrarán todos los campos completados. ¿Quieres continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Limpiar todo'),
-          ),
-        ],
-      ),
+      title: 'Limpiar formulario',
+      message: 'Se borrarán todos los campos completados. ¿Quieres continuar?',
+      confirmText: 'Limpiar todo',
     );
 
     if (confirm != true) {

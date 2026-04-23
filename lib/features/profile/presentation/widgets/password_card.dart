@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/di/providers/auth_provider.dart';
+import 'package:atiora/core/utils/dialog_helper.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'profile_action_card.dart';
 
 class PasswordCard extends StatelessWidget {
@@ -69,26 +71,11 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final confirmed =
-        await showDialog<bool>(
+    final confirmed = await DialogHelper.showConfirmation(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('¿Actualizar contraseña?'),
-            content: const Text(
-              'Tu contraseña será actualizada inmediatamente. '
-              '¿Deseas continuar?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('Estoy seguro'),
-              ),
-            ],
-          ),
+          title: '¿Actualizar contraseña?',
+          message: 'Tu contraseña será actualizada inmediatamente. ¿Deseas continuar?',
+          confirmText: 'Estoy seguro',
         ) ??
         false;
 
@@ -100,14 +87,10 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
       await sl<AuthProvider>().updatePassword(_passwordController.text);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Contraseña actualizada con éxito')),
-      );
+      NotificationHelper.showSuccess(context, 'Contraseña actualizada con éxito');
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No pudimos actualizar la contraseña')),
-      );
+      NotificationHelper.showError(context, 'No pudimos actualizar la contraseña');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

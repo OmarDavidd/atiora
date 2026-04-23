@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/core/screens/main_nav_page.dart';
 import 'package:atiora/features/auth/presentation/screens/login_screen.dart';
@@ -12,17 +13,7 @@ class AuthWrapper extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthError) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          NotificationHelper.showError(context, state.message);
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(

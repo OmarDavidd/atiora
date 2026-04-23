@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'home_stats_event.dart';
@@ -12,10 +13,12 @@ class HomeStatsBloc extends Bloc<HomeStatsEvent, HomeStatsState> {
 
   HomeStatsBloc(this._repository) : super(HomeStatsInitial()) {
     on<LoadHomeStats>((event, emit) async {
+      debugPrint('📊 HomeStatsBloc: LoadHomeStats received');
       if (state is HomeStatsLoading) return;
       emit(HomeStatsLoading());
       try {
         final homeStats = await _repository.loadHomeStats();
+        debugPrint('📊 HomeStatsBloc: loaded $homeStats');
         final data = HomeStatsData(
           pagesMonth: homeStats['pagesThisMonth'] ?? 0,
           booksMonth: homeStats['booksTouched'] ?? 0,

@@ -45,7 +45,16 @@ class AuthRepositoryImpl implements AuthRepository {
       if (response.user != null) {
         return _toUserModel(response.user!);
       }
-      return null;
+      if (response.session != null) {
+        return UserModel(
+          id: response.session!.user.id,
+          email: response.session!.user.email ?? '',
+          joinedAt: DateTime.now(),
+        );
+      }
+      throw AppException.auth(
+        'Registro exitoso. Confirma tu email para continuar.',
+      );
     } on AuthException catch (e) {
       throw _mapAuthException(e);
     } catch (e) {

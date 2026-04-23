@@ -1,4 +1,6 @@
 import 'package:atiora/core/di/injection_container.dart';
+import 'package:atiora/core/utils/dialog_helper.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/data/models/note_model.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
@@ -71,13 +73,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         body: BlocListener<BooksBloc, BooksState>(
           listener: (context, state) {
             if (state is BookUpdateError) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
+              NotificationHelper.showError(context, state.message);
             } else if (state is BookDeleteError) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
+              NotificationHelper.showError(context, state.message);
             }
           },
           child: BlocBuilder<BooksBloc, BooksState>(
@@ -173,22 +171,11 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     );
 
     final repository = sl<BooksRepository>();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await DialogHelper.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Editar libro'),
-        content: const Text('¿Deseas editar este libro?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Editar'),
-          ),
-        ],
-      ),
+      title: 'Editar libro',
+      message: '¿Deseas editar este libro?',
+      confirmText: 'Editar',
     );
 
     if (confirmed != true) return;
@@ -206,9 +193,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     );
 
     if (result == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Libro actualizado')));
+      NotificationHelper.showSuccess(context, 'Libro actualizado');
     }
   }
 
@@ -222,27 +207,13 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       orElse: () => throw StateError('Book not found'),
     );
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await DialogHelper.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Eliminar libro'),
-        content: Text(
-          '¿Estás seguro de eliminar "${book.title}"? Esta acción no se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      title: 'Eliminar libro',
+      message: '¿Estás seguro de eliminar "${book.title}"? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDangerous: true,
     );
 
     if (confirmed != true) return;
@@ -251,9 +222,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
     if (context.mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Libro eliminado')));
+      NotificationHelper.showSuccess(context, 'Libro eliminado');
     }
   }
 
@@ -350,25 +319,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   Future<void> _confirmDeleteNote(BuildContext context, NoteModel note) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await DialogHelper.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Eliminar nota'),
-        content: const Text('¿Estás seguro de eliminar esta nota?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      title: 'Eliminar nota',
+      message: '¿Estás seguro de eliminar esta nota?',
+      confirmText: 'Eliminar',
+      isDangerous: true,
     );
 
     if (confirmed == true) {
