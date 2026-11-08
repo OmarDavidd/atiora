@@ -17,7 +17,7 @@ class AddNoteModal extends StatefulWidget {
   final String bookId;
   final NoteModel? noteToEdit;
 
-  AddNoteModal({
+  const AddNoteModal({
     super.key,
     required this.repository,
     required this.notesBloc,

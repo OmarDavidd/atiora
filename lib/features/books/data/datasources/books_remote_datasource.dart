@@ -81,12 +81,6 @@ class BooksRemoteDataSource {
   Future<Map<String, dynamic>> loadHomeStats() async {
     final userId = _requireUser();
 
-    final allSessions = await _supabase
-        .from('reading_sessions')
-        .select('pages_read, session_date')
-        .eq('user_id', userId)
-        .order('session_date', ascending: false);
-
     final allBooks = await _supabase
         .from('books')
         .select('id, current_page')
@@ -177,51 +171,6 @@ class BooksRemoteDataSource {
       'totalNotes': totalNotes,
       'notesThisMonth': notesThisMonth,
     };
-  }
-
-  int _calculateStreak(List<dynamic> sessions) {
-    if (sessions.isEmpty) return 0;
-
-    final Set<String> uniqueDates = {};
-    for (final session in sessions) {
-      final date = session['session_date'];
-      if (date != null) {
-        String dateStr;
-        if (date is String) {
-          dateStr = date.split('T').first;
-        } else {
-          dateStr = date.toString().split('T').first;
-        }
-        uniqueDates.add(dateStr);
-      }
-    }
-
-    if (uniqueDates.isEmpty) return 0;
-
-    final sortedDates = uniqueDates.toList()..sort((a, b) => b.compareTo(a));
-    final today = DateTime.now().toIso8601String().split('T').first;
-    final yesterday = DateTime.now()
-        .subtract(const Duration(days: 1))
-        .toIso8601String()
-        .split('T')
-        .first;
-
-    if (sortedDates.first != today && sortedDates.first != yesterday) {
-      return 0;
-    }
-
-    int streak = 1;
-    for (int i = 0; i < sortedDates.length - 1; i++) {
-      final current = DateTime.parse(sortedDates[i]);
-      final next = DateTime.parse(sortedDates[i + 1]);
-      if (current.difference(next).inDays == 1) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-
-    return streak;
   }
 
   Future<void> updateBookState(

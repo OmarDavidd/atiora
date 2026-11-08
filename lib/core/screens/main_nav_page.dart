@@ -2,7 +2,6 @@ import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
 import 'package:atiora/features/books/presentation/bloc/notes_bloc.dart';
-import 'package:atiora/features/books/presentation/bloc/notes_event.dart';
 import 'package:atiora/features/books/presentation/bloc/notes_state.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_event.dart';
@@ -12,7 +11,6 @@ import 'package:atiora/features/dashboards/presentation/screens/home_screen.dart
 import 'package:atiora/features/dashboards/presentation/screens/stats_screen.dart';
 import 'package:atiora/features/library/presentation/screens/library_screen.dart';
 import 'package:atiora/features/profile/presentation/screens/profile_screen.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

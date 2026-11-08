@@ -178,7 +178,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       confirmText: 'Editar',
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !context.mounted) return;
 
     final result = await showDialog<bool>(
       context: context,
@@ -210,7 +210,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     final confirmed = await DialogHelper.showConfirmation(
       context: context,
       title: 'Eliminar libro',
-      message: '¿Estás seguro de eliminar "${book.title}"? Esta acción no se puede deshacer.',
+      message:
+          '¿Estás seguro de eliminar "${book.title}"? Esta acción no se puede deshacer.',
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       isDangerous: true,
