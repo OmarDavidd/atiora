@@ -1,3 +1,5 @@
+import 'package:atiora/data/models/book_model.dart';
+
 abstract class BooksEvent {}
 
 class LoadBooks extends BooksEvent {}
@@ -20,4 +22,26 @@ class UpdateBookState extends BooksEvent {
     this.finishedAt,
     this.clearFinishedAt = false,
   });
+}
+
+class LogReadingSession extends BooksEvent {
+  final String bookId;
+  final int pagesDelta;
+  final DateTime sessionDate;
+
+  LogReadingSession({
+    required this.bookId,
+    required this.pagesDelta,
+    DateTime? sessionDate,
+  }) : sessionDate = sessionDate ?? DateTime.now();
+}
+
+class UpdateBookEvent extends BooksEvent {
+  final BookModel book;
+  UpdateBookEvent(this.book);
+}
+
+class DeleteBookEvent extends BooksEvent {
+  final String bookId;
+  DeleteBookEvent(this.bookId);
 }

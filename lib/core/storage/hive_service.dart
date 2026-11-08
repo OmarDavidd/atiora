@@ -1,4 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/note_model.dart';
@@ -10,19 +13,56 @@ class HiveService {
   static HiveService get instance => _instance ??= HiveService._();
   HiveService._();
 
+  static const _encryptionKeyName = 'hive_encryption_key';
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
   late Box<dynamic> booksBox;
   late Box<dynamic> notesBox;
   late Box<dynamic> profileBox;
   late Box<dynamic> pendingOpsBox;
   late Box<dynamic> draftsBox;
 
+  Future<Uint8List> _getEncryptionKey() async {
+    final existingKey = await _secureStorage.read(key: _encryptionKeyName);
+
+    if (existingKey != null) {
+      return base64Decode(existingKey);
+    }
+
+    final newKey = Hive.generateSecureKey();
+    await _secureStorage.write(
+      key: _encryptionKeyName,
+      value: base64Encode(newKey),
+    );
+
+    return Uint8List.fromList(newKey);
+  }
+
   Future<void> init() async {
     await Hive.initFlutter();
-    booksBox = await Hive.openBox('books');
-    notesBox = await Hive.openBox('notes');
-    profileBox = await Hive.openBox('profiles');
-    pendingOpsBox = await Hive.openBox('pending_ops');
-    draftsBox = await Hive.openBox('drafts');
+
+    final encryptionKey = await _getEncryptionKey();
+
+    booksBox = await Hive.openBox(
+      'books',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    notesBox = await Hive.openBox(
+      'notes',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    profileBox = await Hive.openBox(
+      'profiles',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    pendingOpsBox = await Hive.openBox(
+      'pending_ops',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    draftsBox = await Hive.openBox(
+      'drafts',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
   }
 
   Future<void> saveBook(BookModel book) async {
@@ -38,36 +78,66 @@ class HiveService {
     await booksBox.putAll(map);
   }
 
-  List<BookModel> getAllBooks() {
-    final List<BookModel> books = [];
-    for (int i = 0; i < booksBox.length; i++) {
-      final dynamic raw = booksBox.getAt(i);
-      if (raw != null) {
-        try {
-          final Map<String, dynamic> json = <String, dynamic>{};
-          final map = raw as Map<dynamic, dynamic>;
-          map.forEach((dynamic k, dynamic v) => json[k.toString()] = v);
-          final book = BookModel.fromJson(json);
-          books.add(book);
-        } catch (e) {
-          debugPrint('HiveService.getAllBooks skipping invalid entry: $e');
-        }
+  Future<List<BookModel>> getAllBooks() async {
+    final keys = booksBox.keys.toList();
+    final rawBooks = <Map<dynamic, dynamic>>[];
+
+    for (final key in keys) {
+      final raw = booksBox.get(key);
+      if (raw != null && raw is Map) {
+        rawBooks.add(Map<dynamic, dynamic>.from(raw));
       }
     }
-    return books;
+
+    if (rawBooks.isEmpty) return [];
+
+    return compute(_parseBooks, rawBooks);
   }
 
-  BookModel? getBook(String id) {
+  Future<BookModel?> getBook(String id) async {
     final raw = booksBox.get(id);
     if (raw == null) return null;
-    final Map<String, dynamic> json = {};
-    (raw as Map).forEach((k, v) => json[k.toString()] = v);
-    return BookModel.fromJson(json);
+    if (raw is! Map) return null;
+
+    final json = <String, dynamic>{};
+    raw.forEach((k, v) => json[k.toString()] = v);
+
+    return compute(_parseBook, json);
   }
 
   Future<void> deleteBook(String id) => booksBox.delete(id);
 
   Future<void> saveNote(NoteModel note) => notesBox.put(note.id, note.toJson());
+
+  Future<List<NoteModel>> getAllNotes() async {
+    final keys = notesBox.keys.toList();
+    final rawNotes = <Map<dynamic, dynamic>>[];
+
+    for (final key in keys) {
+      final raw = notesBox.get(key);
+      if (raw != null && raw is Map) {
+        rawNotes.add(Map<dynamic, dynamic>.from(raw));
+      }
+    }
+
+    if (rawNotes.isEmpty) return [];
+
+    return compute(_parseNotes, rawNotes);
+  }
+
+  Future<NoteModel?> getNote(String id) async {
+    final raw = notesBox.get(id);
+    if (raw == null) return null;
+    if (raw is! Map) return null;
+
+    final json = <String, dynamic>{};
+    raw.forEach((k, v) => json[k.toString()] = v);
+
+    return NoteModel.fromJson(json);
+  }
+
+  Future<void> deleteNote(String id) => notesBox.delete(id);
+
   Future<void> saveProfile(ProfileModel profile) =>
       profileBox.put(profile.userId, profile.toJson());
 
@@ -93,23 +163,58 @@ class HiveService {
     return id;
   }
 
-  List<MapEntry<String, Map<String, dynamic>>> getPendingOperations() {
+  Future<List<MapEntry<String, Map<String, dynamic>>>>
+  getPendingOperations() async {
     final ops = <MapEntry<String, Map<String, dynamic>>>[];
+
     for (final key in pendingOpsBox.keys) {
       final value = pendingOpsBox.get(key);
       if (value is Map) {
-        final Map<String, dynamic> normalized = {};
-        value.forEach((key, val) => normalized[key.toString()] = val);
+        final normalized = <String, dynamic>{};
+        value.forEach((k, v) => normalized[k.toString()] = v);
         ops.add(MapEntry(key.toString(), normalized));
       }
     }
+
     return ops;
   }
 
   Future<void> removePendingOperation(String key) async =>
       pendingOpsBox.delete(key);
 
+  Future<void> clearAllPendingOperations() async {
+    await pendingOpsBox.clear();
+  }
+
   Future<void> close() async => await Hive.close();
 
   String _addBookDraftKey(String userId) => 'add_book_$userId';
+}
+
+List<BookModel> _parseBooks(List<Map<dynamic, dynamic>> rawBooks) {
+  final books = <BookModel>[];
+  for (final raw in rawBooks) {
+    try {
+      final json = <String, dynamic>{};
+      raw.forEach((k, v) => json[k.toString()] = v);
+      books.add(BookModel.fromJson(json));
+    } catch (_) {}
+  }
+  return books;
+}
+
+BookModel _parseBook(Map<String, dynamic> json) {
+  return BookModel.fromJson(json);
+}
+
+List<NoteModel> _parseNotes(List<Map<dynamic, dynamic>> rawNotes) {
+  final notes = <NoteModel>[];
+  for (final raw in rawNotes) {
+    try {
+      final json = <String, dynamic>{};
+      raw.forEach((k, v) => json[k.toString()] = v);
+      notes.add(NoteModel.fromJson(json));
+    } catch (_) {}
+  }
+  return notes;
 }

@@ -1,3 +1,4 @@
+import 'package:atiora/core/utils/constants.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_validation_tips.dart';
 import 'package:flutter/foundation.dart';
 
@@ -36,13 +37,19 @@ class AddBookValidationHelper {
         ),
       );
     }
-    final pagesOutOfRange =
-        currentPage > totalPages || totalPages < 1 || currentPage < 1;
-    if (pagesOutOfRange) {
+    if (totalPages < 1) {
       tips.add(
         AddBookValidationTip(
           id: 'pages',
-          message: 'Revisa el total de páginas y el progreso actual',
+          message: 'Ingresa el total de páginas del libro',
+          onTap: onPagesTap,
+        ),
+      );
+    } else if (currentPage > totalPages || currentPage < 1) {
+      tips.add(
+        AddBookValidationTip(
+          id: 'pages',
+          message: 'Revisa la página actual',
           onTap: onPagesTap,
         ),
       );
@@ -55,7 +62,7 @@ class AddBookValidationHelper {
           onTap: onStatusTap,
         ),
       );
-    } else if (status == 'Completado' && rating == 0) {
+    } else if (status == AppConstants.statusCompletado && rating == 0) {
       tips.add(
         AddBookValidationTip(
           id: 'rating',

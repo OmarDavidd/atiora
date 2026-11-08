@@ -32,13 +32,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    _booksBloc = sl<BooksBloc>()..add(LoadBooks());
-  }
-
-  @override
-  void dispose() {
-    _booksBloc.close();
-    super.dispose();
+    _booksBloc = context.read<BooksBloc>();
   }
 
   @override
@@ -49,7 +43,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         appBar: _buildAppBar(context),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
                 _buildTabs(context),
@@ -60,6 +54,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'library-add-book-fab',
           onPressed: () => _openAddBookModal(context),
           icon: const Icon(Icons.add),
           label: const Text('Agregar libro'),
@@ -70,13 +65,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      titleSpacing: 24,
+      titleSpacing: 30,
       centerTitle: false,
       title: Text(
         'Biblioteca',
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.headlineLarge,
       ),
       actions: [
         IconButton(
@@ -139,12 +132,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
         if (state is BooksLoaded) {
           final books = _filteredBooks(state.books);
           if (books.isEmpty) {
-            return _LibraryMessage(
-              icon: Icons.menu_book_outlined,
-              message: _emptyMessage,
-              onRetry: state.books.isEmpty
-                  ? () => _openAddBookModal(context)
-                  : null,
+            return RefreshIndicator(
+              onRefresh: () async => _booksBloc.add(LoadBooks()),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: _LibraryMessage(
+                    icon: Icons.menu_book_outlined,
+                    message: _emptyMessage,
+                    onRetry: state.books.isEmpty
+                        ? () => _openAddBookModal(context)
+                        : null,
+                  ),
+                ),
+              ),
             );
           }
           return RefreshIndicator(
@@ -195,7 +197,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       context: context,
       builder: (_) => Dialog(
         insetPadding: const EdgeInsets.all(20),
-        child: AddBookModal(repository: repository),
+        child: AddBookModal(repository: repository, booksBloc: _booksBloc),
       ),
     );
     if (result != null) {

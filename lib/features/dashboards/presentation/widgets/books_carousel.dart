@@ -1,4 +1,5 @@
 import 'package:atiora/core/navigation/app_router.dart';
+import 'package:atiora/core/widgets/skeleton_loader.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
@@ -8,19 +9,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class BooksCarousel extends StatefulWidget {
+class BooksCarousel extends StatelessWidget {
   const BooksCarousel({super.key});
-
-  @override
-  State<BooksCarousel> createState() => _BooksCarouselState();
-}
-
-class _BooksCarouselState extends State<BooksCarousel> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<BooksBloc>().add(LoadBooks());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +31,8 @@ class _BooksCarouselState extends State<BooksCarousel> {
         const SizedBox(height: 20),
         BlocBuilder<BooksBloc, BooksState>(
           builder: (context, state) {
-            if (state is BooksLoading) {
-              return const Center(child: CircularProgressIndicator());
+            if (state is BooksLoading || state is BooksInitial) {
+              return const BooksCarouselSkeleton();
             }
             if (state is BooksLoaded) {
               final books = _recentBooks(state.books);
@@ -95,6 +85,7 @@ class _BooksCarouselState extends State<BooksCarousel> {
                         child: BookCard(
                           title: book.title,
                           author: book.author ?? "",
+                          coverUrl: book.coverUrl,
                           coverPath: 'assets/missingbook.webp',
                           isPendingSync: book.pendingSync,
                         ),
@@ -114,7 +105,30 @@ class _BooksCarouselState extends State<BooksCarousel> {
               );
             }
             if (state is BooksError) {
-              return Text("Error");
+              return Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.message,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        context.read<BooksBloc>().add(LoadBooks());
+                      },
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              );
             }
             return const SizedBox.shrink();
           },

@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:atiora/core/errors/app_exception.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/core/utils/error_handler.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
 import 'books_event.dart';
@@ -26,10 +27,9 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
 
       try {
         final books = await _repository.getBooks();
-        final pendingOps = _hive.getPendingOperations().isNotEmpty;
+        final pendingOps = (await _hive.getPendingOperations()).isNotEmpty;
         emit(BooksLoaded(books, hasPendingOperations: pendingOps));
       } catch (e) {
-        debugPrint('BooksBloc.getBooks failed: $e');
         final message = e is AppException
             ? ErrorHandler.map(e)
             : 'Error al cargar los libros';
@@ -40,9 +40,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
     on<SyncPendingOperations>((event, emit) async {
       try {
         await _repository.processPendingOperations();
-      } catch (e) {
-        debugPrint('BooksBloc.sync error: $e');
-      }
+      } catch (_) {}
       add(LoadBooks());
     });
 
@@ -111,9 +109,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
           rating: event.rating,
           finishedAt: repoFinishedAt,
         );
-        debugPrint('BooksBloc.updateBookState persisted: ${event.newState}');
       } catch (e) {
-        debugPrint('BooksBloc.updateBookState failed: $e');
         final message = e is AppException
             ? ErrorHandler.map(e)
             : 'No pudimos actualizar el estado del libro';
@@ -123,5 +119,51 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
       }
       add(LoadBooks());
     }, transformer: restartable());
+
+    on<LogReadingSession>((event, emit) async {
+      debugPrint(
+        '📖 LogReadingSession: bookId=${event.bookId}, delta=${event.pagesDelta}',
+      );
+      if (event.pagesDelta == 0) {
+        return;
+      }
+      try {
+        await _repository.logReadingSession(
+          event.bookId,
+          event.pagesDelta,
+          sessionDate: event.sessionDate,
+        );
+        debugPrint('📖 LogReadingSession: SUCCESS');
+      } catch (e) {
+        debugPrint('📖 LogReadingSession ERROR: $e');
+        emit(BookStateUpdateError('No pudimos registrar tu sesión de lectura'));
+      }
+    });
+
+    on<UpdateBookEvent>((event, emit) async {
+      try {
+        await _repository.updateBook(event.book);
+        emit(BookUpdateSuccess());
+        add(LoadBooks());
+      } catch (e) {
+        final message = e is AppException
+            ? ErrorHandler.map(e)
+            : 'No pudimos actualizar el libro';
+        emit(BookUpdateError(message));
+      }
+    }, transformer: restartable());
+
+    on<DeleteBookEvent>((event, emit) async {
+      try {
+        await _repository.deleteBook(event.bookId);
+        emit(BookDeleteSuccess());
+        add(LoadBooks());
+      } catch (e) {
+        final message = e is AppException
+            ? ErrorHandler.map(e)
+            : 'No pudimos eliminar el libro';
+        emit(BookDeleteError(message));
+      }
+    }, transformer: droppable());
   }
 }

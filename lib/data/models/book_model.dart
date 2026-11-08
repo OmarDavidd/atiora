@@ -36,6 +36,7 @@ class BookModel extends Equatable {
   });
 
   Map<String, dynamic> toRemoteJson() => {
+    'id': id,
     'title': title,
     'author': author,
     'genre': genre,

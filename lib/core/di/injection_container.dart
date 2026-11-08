@@ -3,16 +3,23 @@ import 'package:atiora/core/di/providers/supabase_provider.dart';
 import 'package:atiora/core/storage/hive_service.dart';
 import 'package:atiora/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:atiora/features/auth/domain/repositories/auth_repository.dart';
+import 'package:atiora/features/auth/domain/usecases/clear_local_data_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/books/data/datasources/books_local_datasource.dart';
 import 'package:atiora/features/books/data/datasources/books_remote_datasource.dart';
+import 'package:atiora/features/books/data/datasources/notes_local_datasource.dart';
+import 'package:atiora/features/books/data/datasources/notes_remote_datasource.dart';
 import 'package:atiora/features/books/data/repositories/books_repository_impl.dart';
+import 'package:atiora/features/books/data/repositories/notes_repository_impl.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/books/domain/repositories/notes_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/notes_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
+import 'package:atiora/features/dashboards/presentation/bloc/stats_bloc.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/method_channel_connectivity.dart';
 import 'package:get_it/get_it.dart';
@@ -51,7 +58,13 @@ Future<void> init() async {
 
   // Auth Bloc
   sl.registerFactory<AuthBloc>(
-    () => AuthBloc(sl<SignInUseCase>(), sl<SignUpUseCase>()),
+    () => AuthBloc(
+      sl<SignInUseCase>(),
+      sl<SignUpUseCase>(),
+      sl<SignoutUseCase>(),
+      authProvider: sl<AuthProvider>(),
+      clearLocalDataUseCase: sl<ClearLocalDataUseCase>(),
+    ),
   );
 
   sl.registerLazySingleton<ConnectivityPlatform>(MethodChannelConnectivity.new);
@@ -67,7 +80,7 @@ Future<void> init() async {
   );
 
   // Books Repository
-  sl.registerLazySingleton<BooksRepository>(
+  sl.registerFactory<BooksRepository>(
     () => BooksRepositoryImpl(
       sl<BooksLocalDataSource>(),
       sl<BooksRemoteDataSource>(),
@@ -76,9 +89,40 @@ Future<void> init() async {
     ),
   );
 
-  // Books Bloc
-  sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));
+  // Clear local data use case (depends on BooksRepository)
+  sl.registerLazySingleton<ClearLocalDataUseCase>(
+    () => ClearLocalDataUseCase(sl<HiveService>(), sl<BooksRepository>()),
+  );
 
   // Home stats Bloc
   sl.registerFactory<HomeStatsBloc>(() => HomeStatsBloc(sl<BooksRepository>()));
+
+  // Stats Bloc
+  sl.registerFactory<StatsBloc>(() => StatsBloc(sl<BooksRepository>()));
+
+  // Books Bloc
+  sl.registerFactory<BooksBloc>(() => BooksBloc(sl<BooksRepository>()));
+
+  // Notes Local
+  sl.registerLazySingleton<NotesLocalDataSource>(
+    () => NotesLocalDataSource(sl<HiveService>()),
+  );
+
+  // Notes Remote
+  sl.registerLazySingleton<NotesRemoteDataSource>(
+    () => NotesRemoteDataSource(sl<SupabaseClient>()),
+  );
+
+  // Notes Repository
+  sl.registerLazySingleton<NotesRepository>(
+    () => NotesRepositoryImpl(
+      sl<NotesLocalDataSource>(),
+      sl<NotesRemoteDataSource>(),
+      connectivity: sl<ConnectivityPlatform>(),
+      hive: sl<HiveService>(),
+    ),
+  );
+
+  // Notes Bloc
+  sl.registerFactory<NotesBloc>(() => NotesBloc(sl<NotesRepository>()));
 }

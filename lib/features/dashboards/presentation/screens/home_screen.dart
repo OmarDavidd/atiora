@@ -6,15 +6,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:atiora/core/di/injection_container.dart';
 import 'package:atiora/core/theme/theme_cubit.dart';
+import 'package:atiora/core/screens/main_nav_page.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/features/books/domain/repositories/book_repository.dart';
+import 'package:atiora/features/books/domain/repositories/notes_repository.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
+import 'package:atiora/features/books/presentation/bloc/books_state.dart';
+import 'package:atiora/features/books/presentation/bloc/notes_bloc.dart';
+import 'package:atiora/features/books/presentation/bloc/notes_state.dart';
 import 'package:atiora/features/books/presentation/widgets/add_book_modal.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_bloc.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_event.dart';
 import 'package:atiora/features/dashboards/presentation/bloc/home_stats_state.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/books_carousel.dart';
 import 'package:atiora/features/dashboards/presentation/widgets/home_stats_section.dart';
+import 'package:atiora/features/dashboards/presentation/widgets/recent_notes_section.dart';
+import 'package:atiora/data/models/note_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,15 +32,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final BooksBloc _booksBloc = sl<BooksBloc>();
-  final HomeStatsBloc _homeStatsBloc = sl<HomeStatsBloc>();
+  late final BooksBloc _booksBloc;
+  late final HomeStatsBloc _homeStatsBloc;
   late final Stream<List<ConnectivityResult>> _connectivityStream;
   late final ConnectivityPlatform _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  List<NoteModel> _recentNotes = [];
+  bool _notesLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _booksBloc = context.read<BooksBloc>();
+    _homeStatsBloc = context.read<HomeStatsBloc>();
+    try {
+      context.read<NotesBloc>().stream.listen((state) {
+        if (state is NoteAddSuccess || state is NoteDeleteSuccess) {
+          _loadRecentNotes();
+        }
+      });
+    } catch (_) {}
     _connectivity = sl<ConnectivityPlatform>();
     _connectivityStream = _connectivity.onConnectivityChanged;
     _connectivitySubscription = _connectivityStream.listen((results) {
@@ -41,12 +60,32 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (hasConnection) {
         _booksBloc.add(SyncPendingOperations());
+        _loadRecentNotes();
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _booksBloc.add(LoadBooks());
       _homeStatsBloc.add(LoadHomeStats());
+      _loadRecentNotes();
     });
+  }
+
+  Future<void> _loadRecentNotes() async {
+    setState(() => _notesLoading = true);
+    try {
+      final repository = sl<NotesRepository>();
+      final notes = await repository.getRecentNotes(limit: 5);
+      if (mounted) {
+        setState(() {
+          _recentNotes = notes;
+          _notesLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _notesLoading = false);
+      }
+    }
   }
 
   @override
@@ -61,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
+          titleSpacing: 30,
           title: Text(
             "Atiora",
             style: Theme.of(context).textTheme.headlineLarge,
@@ -75,45 +115,87 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        body: BlocListener<HomeStatsBloc, HomeStatsState>(
-          listener: (context, state) {
-            if (state is HomeStatsError) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
-            }
-          },
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  BooksCarousel(),
-                  SizedBox(height: 30),
-                  BlocBuilder<HomeStatsBloc, HomeStatsState>(
-                    builder: (context, state) {
-                      final stats = state is HomeStatsLoaded
-                          ? state.stats
-                          : null;
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<HomeStatsBloc, HomeStatsState>(
+              listener: (context, state) {
+                if (state is HomeStatsError) {
+                  NotificationHelper.showError(context, state.message);
+                }
+              },
+            ),
+            BlocListener<BooksBloc, BooksState>(
+              listener: (context, state) {
+                if (state is BooksLoaded) {
+                  _homeStatsBloc.add(LoadHomeStats());
+                }
+              },
+            ),
+          ],
+          child: RefreshIndicator(
+            onRefresh: () async {
+              _booksBloc.add(LoadBooks());
+              _homeStatsBloc.add(LoadHomeStats());
+            },
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 30,
+                  right: 30,
+                  top: 24,
+                  bottom: 100,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    BooksCarousel(),
+                    const SizedBox(height: 30),
+                    BlocBuilder<HomeStatsBloc, HomeStatsState>(
+                      builder: (context, state) {
+                        final stats = state is HomeStatsLoaded
+                            ? state.stats
+                            : null;
 
-                      return HomeStatsSection(
-                        totalBooksRead: stats?.booksMonth.toString() ?? '0',
-                        totalPagesRead: stats?.pagesMonth.toString() ?? '0',
-                        streak: stats?.streak.toString() ?? '0',
-                        average: '4.2', // TODO: hacerlo dinamico
-                      );
-                    },
-                  ),
-                ],
+                        return HomeStatsSection(
+                          totalBooksRead: stats?.booksMonth.toString() ?? '0',
+                          pagesThisMonth: stats?.pagesMonth.toString() ?? '0',
+                          streakDays: stats?.streak.toString() ?? '0',
+                          averageRating:
+                              stats?.averageRating.toStringAsFixed(1) ?? '0.0',
+                          isLoading: state is HomeStatsLoading,
+                          onStatsTap: () {
+                            context
+                                .findAncestorStateOfType<MainNavPageState>()
+                                ?.setTab(2);
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 30),
+                    RecentNotesSection(
+                      notes: _recentNotes,
+                      isLoading: _notesLoading,
+                      onNoteTap: (note) {
+                        Navigator.of(context).pushNamed(
+                          '/book-detail',
+                          arguments: {
+                            'bookId': note.bookId,
+                            'booksBloc': _booksBloc,
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'home-add-book-fab',
           onPressed: () => _showAddBookModal(context),
-          icon: Icon(Icons.add),
-          label: Text("Añadir libro"),
+          icon: const Icon(Icons.add),
+          label: const Text("Añadir libro"),
         ),
       ),
     );
@@ -132,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (_) => Dialog(
         insetPadding: const EdgeInsets.all(20),
-        child: AddBookModal(repository: repository),
+        child: AddBookModal(repository: repository, booksBloc: _booksBloc),
       ),
     );
 

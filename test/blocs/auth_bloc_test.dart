@@ -4,13 +4,19 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:atiora/core/di/providers/auth_provider.dart';
 import 'package:atiora/data/models/user_model.dart';
+import 'package:atiora/features/auth/domain/usecases/clear_local_data_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:atiora/features/auth/domain/usecases/signup_usecase.dart';
+import 'package:atiora/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 
 class MockSignInUseCase extends Mock implements SignInUseCase {}
 
 class MockSignUpUseCase extends Mock implements SignUpUseCase {}
+
+class MockSignoutUseCase extends Mock implements SignoutUseCase {}
+
+class MockClearLocalDataUseCase extends Mock implements ClearLocalDataUseCase {}
 
 class MockAuthProvider extends Mock implements AuthProvider {}
 
@@ -19,6 +25,8 @@ class MockUser extends Mock implements User {}
 void main() {
   late MockSignInUseCase mockSignInUseCase;
   late MockSignUpUseCase mockSignUpUseCase;
+  late MockSignoutUseCase mockSignoutUseCase;
+  late MockClearLocalDataUseCase mockClearLocalDataUseCase;
   late MockAuthProvider mockAuthProvider;
 
   setUpAll(() {
@@ -30,6 +38,8 @@ void main() {
   setUp(() {
     mockSignInUseCase = MockSignInUseCase();
     mockSignUpUseCase = MockSignUpUseCase();
+    mockSignoutUseCase = MockSignoutUseCase();
+    mockClearLocalDataUseCase = MockClearLocalDataUseCase();
     mockAuthProvider = MockAuthProvider();
   });
 
@@ -47,7 +57,9 @@ void main() {
       final bloc = AuthBloc(
         mockSignInUseCase,
         mockSignUpUseCase,
+        mockSignoutUseCase,
         authProvider: mockAuthProvider,
+        clearLocalDataUseCase: mockClearLocalDataUseCase,
       );
 
       expect(bloc.state, isA<AuthInitial>());
@@ -62,7 +74,9 @@ void main() {
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) => bloc.add(SignInEvent('test@example.com', 'password123')),
@@ -83,7 +97,9 @@ void main() {
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) => bloc.add(SignInEvent('test@example.com', 'wrongpassword')),
@@ -99,7 +115,9 @@ void main() {
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) => bloc.add(SignInEvent('test@example.com', 'password123')),
@@ -115,7 +133,9 @@ void main() {
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) => bloc.add(SignUpEvent('new@example.com', 'password123')),
@@ -131,7 +151,9 @@ void main() {
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) =>
@@ -146,7 +168,9 @@ void main() {
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) => bloc.add(CheckAuthEvent()),
@@ -159,11 +183,14 @@ void main() {
         final mockUser = MockUser();
         when(() => mockUser.id).thenReturn('user-123');
         when(() => mockUser.email).thenReturn('test@example.com');
+        when(() => mockUser.createdAt).thenReturn('2024-01-01T00:00:00Z');
         when(() => mockAuthProvider.currentUser).thenReturn(mockUser);
         return AuthBloc(
           mockSignInUseCase,
           mockSignUpUseCase,
+          mockSignoutUseCase,
           authProvider: mockAuthProvider,
+          clearLocalDataUseCase: mockClearLocalDataUseCase,
         );
       },
       act: (bloc) => bloc.add(CheckAuthEvent()),

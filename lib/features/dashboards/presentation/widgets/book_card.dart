@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class BookCard extends StatelessWidget {
   final String title;
   final String author;
+  final String? coverUrl;
   final String coverPath;
   final VoidCallback? onTap;
   final bool isPendingSync;
@@ -11,6 +12,7 @@ class BookCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.author,
+    this.coverUrl,
     required this.coverPath,
     this.onTap,
     this.isPendingSync = false,
@@ -26,6 +28,7 @@ class BookCard extends StatelessWidget {
         child: _BookCardContent(
           title: title,
           author: author,
+          coverUrl: coverUrl,
           coverPath: coverPath,
           isPendingSync: isPendingSync,
         ),
@@ -37,12 +40,14 @@ class BookCard extends StatelessWidget {
 class _BookCardContent extends StatelessWidget {
   final String title;
   final String author;
+  final String? coverUrl;
   final String coverPath;
   final bool isPendingSync;
 
   const _BookCardContent({
     required this.title,
     required this.author,
+    this.coverUrl,
     required this.coverPath,
     required this.isPendingSync,
   });
@@ -66,15 +71,7 @@ class _BookCardContent extends StatelessWidget {
                     height: 200,
                     width: double.infinity,
                     color: theme.colorScheme.surfaceContainerHighest,
-                    child: Image.asset(
-                      coverPath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.book,
-                        size: 60,
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
+                    child: _buildCoverImage(theme),
                   ),
                 ),
               ),
@@ -95,6 +92,40 @@ class _BookCardContent extends StatelessWidget {
         if (isPendingSync)
           const Positioned(top: 12, right: 12, child: _SyncBadge()),
       ],
+    );
+  }
+
+  Widget _buildCoverImage(ThemeData theme) {
+    if (coverUrl != null && coverUrl!.isNotEmpty) {
+      return Image.network(
+        coverUrl!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        cacheWidth: 360,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+              strokeWidth: 2,
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme),
+      );
+    }
+    return _buildPlaceholder(theme);
+  }
+
+  Widget _buildPlaceholder(ThemeData theme) {
+    return Image.asset(
+      coverPath,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) =>
+          Icon(Icons.book, size: 60, color: theme.colorScheme.outline),
     );
   }
 }

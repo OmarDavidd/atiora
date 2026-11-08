@@ -32,6 +32,14 @@ class NoteModel extends Equatable {
     'updated_at': updatedAt.toIso8601String(),
   };
 
+  Map<String, dynamic> toRemoteJson() => {
+    'id': id,
+    'book_id': bookId,
+    'note_type': noteType,
+    'content': content,
+    'page_number': pageNumber,
+  };
+
   factory NoteModel.fromJson(Map<String, dynamic> json) => NoteModel(
     id: json['id'] as String,
     bookId: json['book_id'] as String,
@@ -40,7 +48,9 @@ class NoteModel extends Equatable {
     content: json['content'] as String,
     pageNumber: json['page_number'] as int?,
     createdAt: DateTime.parse(json['created_at'] as String),
-    updatedAt: DateTime.parse(json['updated_at'] as String),
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.parse(json['created_at'] as String),
   );
 
   @override

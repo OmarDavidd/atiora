@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class AppConstants {
   static const String appName = 'Atiora';
   static const String appVersion = '1.0.0';
-  static const String googleBooksApiKey = 'TU_API_KEY_AQUI';
 
   // Database
   static const String dbName = 'notium.db';
@@ -24,13 +23,44 @@ class AppConstants {
 
   // Book States
   static const List<String> bookStates = [
-    'Leyendo',
-    'Completado',
-    'Pausado',
-    'Pendiente',
+    statusLeyendo,
+    statusCompletado,
+    statusPausado,
+    statusPendiente,
   ];
+
+  static const String statusLeyendo = 'Leyendo';
+  static const String statusCompletado = 'Completado';
+  static const String statusPausado = 'Pausado';
+  static const String statusPendiente = 'Pendiente';
+
+  // Note Types
+  static const List<String> noteTypes = [
+    noteTypeResumen,
+    noteTypeAnalisis,
+    noteTypeCita,
+    noteTypeReflexion,
+    noteTypePregunta,
+  ];
+
+  static const String noteTypeResumen = 'resumen';
+  static const String noteTypeAnalisis = 'análisis';
+  static const String noteTypeCita = 'cita';
+  static const String noteTypeReflexion = 'reflexión';
+  static const String noteTypePregunta = 'pregunta';
 
   // Storage Keys
   static const String themeModeKey = 'theme_mode';
   static const String lastSyncKey = 'last_sync';
+}
+
+class PendingOperationType {
+  static const String add = 'add';
+  static const String update = 'update';
+  static const String delete = 'delete';
+  static const String state = 'state';
+  static const String readingSession = 'reading_session';
+  static const String noteAdd = 'note_add';
+  static const String noteUpdate = 'note_update';
+  static const String noteDelete = 'note_delete';
 }

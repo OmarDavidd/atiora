@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/core/screens/main_nav_page.dart';
 import 'package:atiora/features/auth/presentation/screens/login_screen.dart';
@@ -9,18 +10,25 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthAuthenticated) {
-          return const MainNavPage();
-        } else if (state is AuthLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          NotificationHelper.showError(context, state.message);
         }
-        // AuthInitial, AuthError → Login
-        return const LoginScreen();
       },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) {
+            return const MainNavPage();
+          } else if (state is AuthLoading) {
+            return Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: const Center(child: CircularProgressIndicator()),
+            );
+          }
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }

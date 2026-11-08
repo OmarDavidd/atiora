@@ -1,0 +1,26 @@
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches: ["dev"]
+
+permissions:
+  contents: read
+
+jobs:
+  # Level 1: the same single command the agent runs locally.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      # pubspec.yaml still bundles .env as an asset (removed in phase 2); an empty file keeps the build valid.
+      - name: Setup
+        run: touch .env && flutter pub get
+      - name: Check
+        run: ./scripts/check.sh

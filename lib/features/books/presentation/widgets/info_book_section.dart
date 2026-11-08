@@ -1,13 +1,15 @@
 import 'package:atiora/core/utils/constants.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/data/models/book_model.dart';
 import 'package:atiora/features/books/presentation/bloc/books_bloc.dart';
 import 'package:atiora/features/books/presentation/bloc/books_event.dart';
 import 'package:atiora/features/books/presentation/bloc/books_state.dart';
+import 'package:atiora/features/books/presentation/widgets/progress_input_dialog.dart';
+import 'package:atiora/features/books/presentation/widgets/rating_input_dialog.dart';
 import 'package:atiora/features/books/presentation/widgets/state_modal.dart';
 import 'package:atiora/features/books/presentation/widgets/info_book_cover.dart';
 import 'package:atiora/features/books/presentation/widgets/info_book_header.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class InfoBookSection extends StatefulWidget {
@@ -45,9 +47,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
       },
       listener: (context, state) {
         if (state is BookStateUpdateError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          NotificationHelper.showError(context, state.message);
           if (_lastSyncedState != null) {
             _syncStatusWithBloc(_lastSyncedState!);
           }
@@ -59,7 +59,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 40),
-          InfoBookCover(),
+          InfoBookCover(coverUrl: widget.book.coverUrl),
           const SizedBox(height: 30),
           InfoBookHeader(
             currentStatus: _currentStatus,
@@ -164,16 +164,33 @@ class _InfoBookSectionState extends State<InfoBookSection> {
     int? updatedPage;
     DateTime? finishedAt;
     bool clearFinishedAt = revertedToReading;
+    double? rating;
 
     if (revertedToReading) {
-      final newProgress = await _requestProgressInput(book);
+      final reference = _bookSnapshot ?? book;
+      final newProgress = await _requestProgressInput(reference);
       if (newProgress == null) {
         return false;
       }
       updatedPage = newProgress;
+      final delta = newProgress - reference.currentPage;
+      if (delta != 0) {
+        bloc.add(LogReadingSession(bookId: book.id, pagesDelta: delta));
+      }
     } else if (completed) {
-      updatedPage = book.totalPages;
+      final reference = _bookSnapshot ?? book;
+      updatedPage = reference.totalPages;
       finishedAt = DateTime.now();
+      rating = await _requestRatingInput(reference);
+      if (rating == null) {
+        return false;
+      }
+      final remainingPages = reference.totalPages - reference.currentPage;
+      if (remainingPages > 0) {
+        bloc.add(
+          LogReadingSession(bookId: book.id, pagesDelta: remainingPages),
+        );
+      }
     }
 
     if (!mounted) return true;
@@ -186,6 +203,7 @@ class _InfoBookSectionState extends State<InfoBookSection> {
         updatedPage: updatedPage,
         finishedAt: finishedAt,
         clearFinishedAt: clearFinishedAt,
+        rating: rating,
       ),
     );
 
@@ -197,85 +215,19 @@ class _InfoBookSectionState extends State<InfoBookSection> {
       context: context,
       barrierDismissible: false,
       useRootNavigator: true,
-      builder: (_) => _ProgressInputDialog(
+      builder: (_) => ProgressInputDialog(
         initialPage: book.currentPage,
         totalPages: book.totalPages,
       ),
     );
   }
-}
 
-class _ProgressInputDialog extends StatefulWidget {
-  final int initialPage;
-  final int totalPages;
-
-  const _ProgressInputDialog({
-    required this.initialPage,
-    required this.totalPages,
-  });
-
-  @override
-  State<_ProgressInputDialog> createState() => _ProgressInputDialogState();
-}
-
-class _ProgressInputDialogState extends State<_ProgressInputDialog> {
-  late final TextEditingController _controller;
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialPage.toString());
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final maxPage = widget.totalPages;
-    return AlertDialog(
-      title: const Text('Actualiza tu progreso'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(labelText: 'Página actual (0-$maxPage)'),
-          validator: (value) {
-            final text = value?.trim();
-            if (text == null || text.isEmpty) {
-              return 'Ingresa un número válido';
-            }
-            final page = int.tryParse(text);
-            if (page == null) {
-              return 'Solo números';
-            }
-            if (page < 0 || page > maxPage) {
-              return 'Debe estar entre 0 y $maxPage';
-            }
-            return null;
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() != true) return;
-            final value = int.tryParse(_controller.text.trim());
-            Navigator.of(context).pop(value);
-          },
-          child: const Text('Guardar'),
-        ),
-      ],
+  Future<double?> _requestRatingInput(BookModel book) {
+    return showDialog<double>(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (_) => RatingInputDialog(initialValue: book.rating),
     );
   }
 }

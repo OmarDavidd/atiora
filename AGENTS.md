@@ -1,184 +1,113 @@
-# AGENTS GUIDE
-This document is the onboarding contract for autonomous coding agents working inside `/home/davo/dev/notium`.
-Keep it handy; it encodes the workflow, conventions, and safety rails for this Flutter/Supabase app.
+# AGENTS.md — Atiora
 
-## 0. Branding Snapshot
-- Project name: **Atiora**.
-- User-facing copy must refer to “Atiora” consistently (README, UI, bundle names, etc.).
-- Supabase project keys live in `.env`; never share them.
+<!-- ia-kit: 5a67fad -->
 
-## 1. Toolchain & Environment
-- Primary stack: Flutter 3.24+/Dart 3.4+ (SDK constraint `^3.10.7`).
-- Mobile targets: Android, iOS, macOS, Linux, Windows, Web; default focus is mobile.
-- Package highlights: `flutter_bloc`, `get_it`, `supabase_flutter`, `hive`, `dio`, `carousel_slider`, `fl_chart`.
-- Ensure `flutter` CLI is on PATH; run `flutter doctor` before large edits.
-- Secrets live in `.env` (loaded via `flutter_dotenv`). Never commit or print these values.
-- Run `flutter pub get` after editing `pubspec.yaml` or when dependencies drift.
+Punto de entrada para cualquier agente de IA (Claude Code, Codex, OpenCode u otro) que trabaje en este repositorio.
 
-## 2. Build, Lint, and Test Commands
-- `flutter pub get` – instala dependencias.
-- `dart format lib test` – aplica formato oficial.
-- `flutter analyze` – valida lints (`flutter_lints`).
-- `flutter test` – corre toda la suite.
-- `flutter test path/to/file.dart` – test por archivo.
-- `flutter test path/to/file.dart --plain-name "Nombre"` – test individual.
-- `flutter test --coverage --reporter expanded` – cobertura detallada.
-- No hay CI configurado: siempre corre `flutter analyze && flutter test` antes de push/PR.
+La arquitectura, las convenciones, la infraestructura, la estrategia de pruebas y el flujo de trabajo están definidos en `.ia/`. **Leer y respetar esos documentos antes de modificar el proyecto es obligatorio.**
 
-## 3. Repo Layout Mental Map
-- `lib/main.dart`: entry point, theme setup, router, top-level BlocProviders.
-- `lib/core`: cross-cutting concerns (theme, navigation, DI, storage, utils, constants, colors, helpers, snackbars).
-- `lib/data/models`: pure data objects built on `equatable` (`BookModel`, `NoteModel`, `ProfileModel`, `UserModel`).
-- `lib/core/di`: `injection_container.dart` wires `get_it` and Supabase/Hive singletons.
-- `lib/features`: split by domain (`auth`, `books`, `dashboards`). Each feature contains data, domain, and presentation layers when needed.
-- `test/`: mirrors production structure; contains bloc, repository, model, and utility tests.
-- Platform folders (`android`, `ios`, etc.) follow stock Flutter layout; avoid editing unless platform-specific work is required.
+## 1. Qué es Atiora
 
-## 4. Dependency Injection & State Management
-- Service locator `sl` (`GetIt.instance`) is initialized inside `init()` and awaited before `runApp`.
-- Register lazy singletons for datasources/repositories, factories for blocs/cubits.
-- In UI layers, prefer `BlocProvider.value(value: sl<BooksBloc>())` when reusing existing instances; otherwise `BlocProvider(create: (_) => sl<BooksBloc>()..add(LoadBooks()))`.
-- Blocs favor `bloc_concurrency` transformers (`restartable` for book actions, `droppable` for stats) to avoid overlapping events; match the existing pattern when adding handlers.
-- Cubits: only `ThemeCubit` currently; store theme mode via `SharedPreferences` helper in `AppTheme`.
+Atiora es una app móvil en Flutter para registrar lo que lees: libros, avance por sesión, notas y citas, y estadísticas reales de hábito (racha, ritmo, meta anual). Está en transición de un prototipo escolar con Supabase y login hacia una app **local-first**: los datos viven en el teléfono (SQLite con Drift), sin cuenta obligatoria y funcionando sin conexión. El plan por fases está en `.ia/project.md`.
 
-## 5. Data Sources & Caching
-- Remote reads routed through Supabase RPC/table queries (`BooksRemoteDataSource`).
-- Local persistence via Hive boxes (books, notes, profiles) managed inside `HiveService`.
-- Repository strategy: update local cache first, attempt remote sync when `_isOnline()` (now backed by `ConnectivityPlatform`). Register `MethodChannelConnectivity` in DI for runtime and inject simple stubs (see `_StubConnectivity` under `test/repositories/books_repository_test.dart`) to keep tests hermetic.
-- When syncing, remote replaces local cache entirely; be cautious to avoid data loss if offline writes are planned.
+- Requisitos funcionales: `.ia/business-rules.md`
+- Contexto para agentes: `.ia/project.md`
 
-## 6. Error Handling & Logging
-- UI-friendly auth errors map through `ErrorHandler.handleAuthError`. Extend this helper for new code paths rather than sprinkling string checks.
-- Wrap Supabase/Hive calls in `try/catch` and rethrow when higher layers must react; repository methods often swallow errors after logging—mirror that behavior unless user-facing failure is required.
-- Avoid throwing raw `Exception` strings from UI-facing layers; convert to localized Spanish copy when surfaced to widgets.
-- Usa `AppException` como único tipo custom y enruta los mensajes finales mediante `ErrorHandler.map` antes de mostrarlos en la UI.
+## 2. Orden de lectura obligatorio
 
-## 7. Auth Flow Expectations
-- `AuthBloc` handles sign-in/up/check events; relies on injected use cases and `AuthProvider` (Supabase wrapper).
-- `CheckAuthEvent` runs on app boot to gate navigation inside `AuthWrapper`.
-- When extending auth (password reset, MFA), add new use cases plus provider calls, wire them through DI, and keep tests in `test/blocs/auth_bloc_test.dart`.
+1. `.ia/README.md`
+2. `.ia/project.md`
+3. `.ia/architecture.md`
+4. `.ia/workflow.md`
 
-## 8. Books Flow Expectations
-- `BooksBloc` orchestrates list fetching and state updates (`LoadBooks`, `UpdateBookState`).
-- Optimistic updates happen before hitting the repository; failing remote update triggers a reload (see `BooksBloc` for pattern).
-- `BookModel` should stay immutable; extend via `copyWith` and keep new fields inside constructor and JSON adapters.
-- Stats (`HomeStatsBloc`) rely on Supabase views and RPC (`get_current_streak`). Maintain the `HomeStatsData` struct for UI consumption.
+Después, los documentos de la tarea:
 
-## 9. UI & Theming Conventions
-- Theming centralizes in `AppTheme.getTheme` with light/dark `ThemeData` definitions using Material 3 and `AppColors` palette.
-- Use `GoogleFonts` only through theme definitions (see `DarkTheme`); widgets should pull typography from `Theme.of(context).textTheme`.
-- Layout uses generous padding (`EdgeInsets.symmetric(horizontal: 30)`) and rounded cards (radius 16). Match these values for consistency.
-- Widgets live under feature-specific `presentation/widgets`; keep them small and composable.
-- Navigation handled by `AppRouter.generateRoute`; adding screens requires route entries plus registration in nav flows.
+| Tarea | Leer además |
+|-------|-------------|
+| Pantallas, widgets, Blocs | `.ia/frontend.md`, `.ia/conventions.md`, `.ia/errors.md` |
+| Modelo de datos, tablas, migraciones Drift | `.ia/database.md`, `.ia/business-rules.md` |
+| Racha, estados, meta, estadísticas | `.ia/business-rules.md`, `.ia/testing.md` |
+| Portadas, imágenes, backup/export | `.ia/files.md`, `.ia/security.md` |
+| Búsqueda de libros (Open Library) | `.ia/architecture.md` §Integraciones, `.ia/errors.md` |
+| Pruebas | `.ia/testing.md`, `.ia/quality-gates.md` |
+| Build, CI, release del APK | `.ia/infrastructure.md`, `.ia/quality-gates.md` |
+| Logs y diagnóstico | `.ia/observability.md` |
 
-- Imports order: Dart SDK, third-party packages, internal `package:atiora/...`, then relative paths. Keep blank lines between groups.
-- Prefer `const` constructors and widgets whenever inputs are compile-time constants.
-- Embrace Dart null safety: mark optional fields with `?`, use required named params when possible.
-- Types: never use `var` for public members; keep method signatures explicit.
-- Naming: `PascalCase` for classes/widgets, `camelCase` for members/functions, `SCREAMING_SNAKE_CASE` for constants, and Spanish copy for user-facing strings to match existing UI.
-- Avoid `dynamic` unless interfacing with Supabase/Hive raw data; immediately coerce into typed structures.
-- Formatting: rely on `dart format`; do not hand-align code.
-- Keep widgets under ~100 lines; extract stateless sub-widgets or helper methods when tree becomes hard to read.
-- Bloc event/state classes stay in their own files; maintain `abstract class FooEvent {}` pattern.
-## 10. Coding Style Guidelines
-- Imports: Dart SDK → terceros → `package:atiora/...` → relativos (una línea en blanco entre grupos).
-- Usa `const` en widgets/valores siempre que sea posible.
-- Null safety obligatoria (`?`, `required`, evita `late` excepto cuando esté 100% controlado).
-- Sin `var` en miembros públicos; tipa explícitamente funciones y propiedades.
-- Nombres: `PascalCase` para clases/widgets, `camelCase` para métodos y variables, `SCREAMING_SNAKE_CASE` para constantes.
-- La UI siempre en español; comentarios en inglés solo para aclarar lógica.
-- Evita `dynamic` salvo cuando Supabase/Hive lo requiera, conviértelo inmediatamente a tipos concretos.
-- `dart format` manda; no intentes alinear manualmente.
-- Extrae sub-widgets cuando `build` supere ~100 líneas.
-- Reutiliza patrones `bloc` (`abstract class FooEvent`, `FooState extends Equatable` cuando aplique).
-- Imports order: Dart SDK, third-party packages, internal `package:atiora/...`, then relative paths. Keep blank lines between groups.
-- Prefer `const` constructors and widgets whenever inputs are compile-time constants.
-- Embrace Dart null safety: mark optional fields with `?`, use required named params when possible.
-- Types: never use `var` for public members; keep method signatures explicit.
-- Naming: `PascalCase` for classes/widgets, `camelCase` for members/functions, `SCREAMING_SNAKE_CASE` for constants, and Spanish copy for user-facing strings to match existing UI.
-- Avoid `dynamic` unless interfacing with Supabase/Hive raw data; immediately coerce into typed structures.
-- Formatting: rely on `dart format`; do not hand-align code.
-- Keep widgets under ~100 lines; extract stateless sub-widgets or helper methods when tree becomes hard to read.
-- Bloc event/state classes stay in their own files; maintain `abstract class FooEvent {}` pattern.
+## 3. Stack oficial (resumen)
 
-## 11. Error Boundaries & UX Resilience
-- Toda UI que dependa de async debe mostrar estados `Loading`, `Loaded`, `Error`.
-- Usa `CircularProgressIndicator` para cargas bloqueantes y `SizedBox.shrink()` como fallback limpio.
-- Para reintentar, dispara eventos del bloc (no uses `setState` manual)
-- Errores visibles en español y amigables: aprovecha `ErrorHandler.map`.
+| Capa | Tecnología |
+|------|------------|
+| App | Flutter 3.47.9 / Dart 3.13.7 (Android primero) |
+| Estado | flutter_bloc 9.1.1 + bloc_concurrency 0.3.0 |
+| DI | get_it 9.2.0 |
+| Datos locales | Drift + SQLite (objetivo, Fase 1). Legacy: Hive 2.2.3 + Supabase 2.12.0 (se retiran en Fase 2) |
+| Integración | Open Library API (búsqueda por título/ISBN, Fase 3) |
+| Pruebas | flutter_test, bloc_test 10.0.0, mocktail 1.0.4 |
 
-## 12. Networking & APIs
-- Supabase client retrieved via `Supabase.instance.client` after `SupabaseProvider.initialize()` (called inside DI init).
-- Keep queries scoped to the authenticated user via `.eq('user_id', currentUser.id)`; never fetch cross-user data.
-- RPC results vary in type (int/list/map). Normalize before returning (see `_extractStreak`). Follow this defensive approach for new RPCs.
-- When adding endpoints, place SQL function names and expected payload fields in comments to aid backend coordination.
+El detalle y lo que está prohibido introducir están en `.ia/README.md`.
 
-## 13. Storage Notes
-- Hive stores JSON maps, not generated adapters. When reading, convert dynamic keys to strings before `BookModel.fromJson`.
-- Boxes open during app init; avoid reopening frequently. Inject `HiveService` via DI to access shared instance.
-- Clearing/resyncing uses `HiveService.clearAllBooks()` followed by `saveAllBooks`; wrap bulk operations in try/catch to avoid corrupting caches.
+**Comandos:** `./scripts/check.sh` (gates), `flutter pub get`, `flutter run`, `flutter test path/to/file_test.dart --plain-name "nombre"`.
 
-## 14. Testing Philosophy
-- Prefer `bloc_test` for bloc expectations (already used widely). Seed states with `seed: () => ...` when verifying updates.
-- For repository tests, mock both local and remote datasources with `mocktail`, register fallback values for complex objects.
-- Place new tests adjacent to implementation area (e.g., `test/features/books/...` if such folder emerges).
-- Keep assertions descriptive; use `verify(() => mock.method()).called(1)` to protect behavior.
-- Snapshot/Golden tests currently absent; add only if UI work justifies.
+**Quality gates:** `./scripts/check.sh` antes de terminar cualquier tarea (detalle en `.ia/quality-gates.md`).
 
-## 15. Running Targeted Tests Quickly
-- Single bloc suite: `flutter test test/blocs/home_stats_bloc_test.dart`.
-- Single test method (name match is case-sensitive): `flutter test test/utils/error_handler_test.dart --plain-name "should return friendly message for invalid_credentials"`.
-- Debugging mode: `flutter test --coverage --reporter expanded` for verbose output.
+## 4. Reglas de idioma
 
-## 16. Code Generation & Assets
-- `build_runner` todavía no se usa; si activas generadores documenta el flujo.
-- Assets: declara directorios completos (ya está `assets/`).
-- `.env` debe existir localmente pero nunca se versiona.
-- Para tipografías usa `google_fonts` desde los temas (no agregues TTFs a menos que sea imprescindible).
+- **Código en inglés**: identificadores, endpoints, tablas, logs, tests y mensajes técnicos.
+- **Interfaz en español (tú, neutro)**: todo texto visible para el usuario.
+- **Documentación en español**: `.ia/`, `docs/`, `odd/`.
+- **Commits en inglés** con Conventional Commits.
 
-## 17. Styling, Imports, and Formatting Deep Dive
-- Keep widget build methods pure; avoid async gaps inside `build`—delegate to bloc/cubit.
-- When using extensions/helpers, place them under `lib/core/utils` and export via barrel file if usage becomes widespread.
-- Avoid `part` files unless necessary; splitting via directories keeps navigation simpler for agents.
-- Document non-obvious logic with concise comments; default language is English in code comments, Spanish for UI labels.
+## 5. Nunca sin preguntar
 
-## 18. Error Messaging & Localization
-- App currently mixes English identifiers with Spanish UI copy; continue this convention.
-- Reuse `AppHelpers.formatDate` for date strings; align new formatting utilities with this helper.
-- When surfacing Supabase errors, map their codes to friendly strings through `ErrorHandler` or a new helper.
+El agente DEBE pedir confirmación antes de:
 
-## 19. Logging & Diagnostics
-- Keep print volume low in production code, but `debugPrint` with emoji tags is acceptable during development.
-- Remove `debugPrint` statements that leak secrets or user PII before merging.
-- For long-running sync operations, log both start and completion to aid debugging.
-- Usa `debugPrint` amigable para producción; evita emojis.
+- hacer `git push`, abrir, aprobar o mergear un PR;
+- crear, modificar o eliminar migraciones o cambiar el modelo de datos;
+- agregar, quitar o actualizar dependencias;
+- cambiar un contrato público (API, eventos, CLI, formatos de archivo);
+- cambiar la arquitectura, la autenticación o la autorización;
+- ejecutar operaciones destructivas sobre datos o sobre el repositorio;
+- tocar la CI, el despliegue de producción o los secretos;
+- desactivar un quality gate, bajar un umbral, agregar una supresión o saltear hooks.
 
-## 20. Git & Workflow Expectations
-- Branch naming is up to you; align commit messages with change intent (feature/fix/chore).
-- Never commit `.env`, platform secrets, or generated artifacts (`*.lock` already tracked; honor that).
-- When tests fail locally, fix before handing work back; mention pending failures only if blocked by upstream issues.
-- Commits siguen el formato `<tipo>(optional-scope): descripción en modo imperativo` usando prefijos como `feat`, `fix`, `chore`, `refactor`, `docs`, `test`; mantén el mensaje bajo 72 caracteres.
-- Siempre redacta los mensajes de commit en inglés siguiendo la regla anterior.
+Los commits locales en la rama de trabajo están permitidos cuando la tarea lo requiera.
 
-## 21. Cursor / Copilot Rules
-- No `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` exist, so there are no external agent mandates beyond this file.
-- If such rule files appear later, update this section and propagate key points upward in the doc.
+## 6. Carpetas que no se tocan
 
-## 22. Extending the System
-- When adding features, follow the existing domain-driven folder split (data/domain/presentation).
-- Introduce new blocs with dedicated event/state files, tests, and DI registrations.
-- For UI additions, craft bespoke layouts; avoid generic Material scaffolds per repo instructions.
-- Keep Supabase schema assumptions documented in code comments when referencing new tables/RPCs.
+- `android/`, `ios/`, `linux/`, `macos/`, `web/`, `windows/`: generadas por Flutter; solo se cambian para permisos, íconos o configuración de build, y con confirmación.
+- `correcciones/`: observaciones de la evaluación escolar; solo lectura.
+- `.ia/_legacy/`: respaldo del AGENTS.md anterior; solo lectura.
 
-## 23. Failure Recovery & Offline Strategy
-- Repositories should degrade gracefully when Supabase is unreachable (return cache, avoid crashes).
-- When optimistic updates fail, revert UI state via reloads (pattern already present in `BooksBloc`).
-- Consider exponential backoff or queued mutations if future tasks demand robust offline support.
+## 7. Flujo de trabajo
 
-## 24. When You’re Done
-- Always run `flutter analyze` and relevant `flutter test` invocations before concluding substantial work.
-- Update this `AGENTS.md` when conventions change; treat it as living documentation.
-- Summarize changes succinctly for the user, referencing touched files and next steps (tests, builds, etc.).
-- Las respuestas al usuario deben redactarse en español cuando el usuario lo especifique.
+El flujo completo está en `.ia/workflow.md`. Resumen:
 
-Stay deliberate, keep the UX intentional, and prefer clarity over cleverness.
+1. Leer los documentos que corresponden.
+2. Inspeccionar el código existente antes de crear algo nuevo.
+3. Para features grandes, usar el documento ODD en `odd/tasks/<feature>.md` (local, no se sube).
+4. Prueba primero (RED → GREEN) en reglas de negocio.
+5. Cambio mínimo, sin refactors no pedidos.
+6. Correr las pruebas relacionadas y `./scripts/check.sh`, y reportar el resultado real.
+7. Resumir qué cambió, qué se probó y qué queda pendiente.
+
+### Automático (skills de ia-kit)
+
+El agente encadena estos pasos solo, sin que el usuario los pida. Si la skill no está instalada en el agente, avisarlo una vez y seguir el mismo criterio a mano.
+
+| Cuándo | Qué hace el agente |
+|--------|--------------------|
+| Al empezar una feature grande | `ia-spec`: escribe las specs `S#` en el documento ODD antes de tocar código |
+| Antes de terminar un cambio que toca la UI | `ia-design-check` sobre los archivos cambiados (solo si existe `.ia/design/`) |
+| Antes de terminar cualquier tarea | `./scripts/check.sh` y reporta la salida real |
+| Al notar que este `AGENTS.md` o `.ia/` contradice el código | Lo informa y ofrece `ia-sync` |
+| Cuando el usuario pregunta cómo va el proyecto | `ia-metrics` sobre la rama principal |
+
+Lo que exige confirmación (§5) sigue pidiéndola aunque el paso sea automático.
+
+## 8. Precedencia
+
+1. Instrucción explícita y actual del usuario.
+2. `.ia/` (este repositorio).
+3. Código existente.
+
+Si `.ia/` y el código se contradicen, el agente no elige en silencio: informa la contradicción y pregunta cuando afecta la arquitectura, la seguridad, los datos o los contratos. Durante la transición (Fases 1–2) el código todavía usa Supabase y Hive: eso es estado legacy esperado, no una contradicción.

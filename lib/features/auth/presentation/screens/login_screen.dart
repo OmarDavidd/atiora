@@ -1,5 +1,5 @@
 import 'package:atiora/core/navigation/app_router.dart';
-import 'package:atiora/core/utils/app_colors.dart';
+import 'package:atiora/core/utils/notification_helper.dart';
 import 'package:atiora/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:atiora/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:flutter/material.dart';
@@ -39,20 +39,15 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 4),
-              ),
-            );
+            NotificationHelper.showError(context, state.message);
           }
         },
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
+            final colors = Theme.of(context).colorScheme;
             return Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35),
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: SingleChildScrollView(
                   child: Form(
                     key: _formKey,
@@ -67,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.jaini(
                             fontSize: 56,
                             fontWeight: FontWeight.w300,
-                            color: AppColors.neutral0,
+                            color: colors.primary,
                             letterSpacing: 6,
                             height: 1.0,
                           ),
@@ -91,6 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           hint: '••••••••',
                           icon: Icons.lock_outline,
                           obscureText: true,
+                          showToggle: true,
                           validator: (value) => (value?.isEmpty ?? true)
                               ? 'Contraseña requerida'
                               : (value!.length < 6)

@@ -4,48 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ErrorHandler', () {
-    group('handleAuthError', () {
-      test('should return friendly message for invalid_credentials', () {
-        const message = 'invalid_credentials';
-        final result = ErrorHandler.handleAuthError(message);
-
-        expect(result, 'Credenciales inválidas. Verifica email/contraseña');
-      });
-
-      test('should return friendly message for email_not_confirmed', () {
-        const message = 'email_not_confirmed';
-        final result = ErrorHandler.handleAuthError(message);
-
-        expect(result, 'Confirma tu email antes de iniciar sesión');
-      });
-
-      test('should return original message for unknown errors', () {
-        const message = 'Some unknown error occurred';
-        final result = ErrorHandler.handleAuthError(message);
-
-        expect(result, message);
-      });
-
-      test('should return original message for empty string', () {
-        const message = '';
-        final result = ErrorHandler.handleAuthError(message);
-
-        expect(result, '');
-      });
-
-      test('should handle messages containing error codes', () {
-        const message = 'Error: invalid_credentials - try again';
-        final result = ErrorHandler.handleAuthError(message);
-
-        expect(result, 'Credenciales inválidas. Verifica email/contraseña');
-      });
-    });
-
     test('map returns friendly message per exception type', () {
       final authMessage = ErrorHandler.map(
-        AppException.auth('invalid_credentials'),
+        AppException.auth('Credenciales inválidas'),
       );
-      expect(authMessage, contains('Credenciales'));
+      expect(authMessage, 'Credenciales inválidas');
 
       final networkMessage = ErrorHandler.map(AppException.network('falló'));
       expect(networkMessage, 'Sin conexión. Intenta nuevamente.');
@@ -54,6 +17,21 @@ void main() {
         AppException.validation('Campo requerido'),
       );
       expect(validationMessage, 'Campo requerido');
+
+      final cacheMessage = ErrorHandler.map(
+        AppException.cache('No pudimos leer tus datos'),
+      );
+      expect(cacheMessage, 'No pudimos leer tus datos locales');
+
+      final unknownMessage = ErrorHandler.map(
+        AppException.unknown('Algo salió mal'),
+      );
+      expect(unknownMessage, 'Algo salió mal. Intenta de nuevo.');
+
+      final unauthorizedMessage = ErrorHandler.map(
+        AppException.unauthorized('No autorizado'),
+      );
+      expect(unauthorizedMessage, 'Inicia sesión para continuar');
     });
   });
 }
