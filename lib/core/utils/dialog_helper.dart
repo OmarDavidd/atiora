@@ -15,21 +15,13 @@ class DialogHelper {
       builder: (context) => AlertDialog(
         title: Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         content: Text(
           message,
-          style: TextStyle(
-            color: AppColors.neutral400,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.neutral400, fontSize: 14),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -41,7 +33,9 @@ class DialogHelper {
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: isDangerous ? AppColors.error : AppColors.primary,
+              backgroundColor: isDangerous
+                  ? AppColors.error
+                  : AppColors.primary,
             ),
             child: Text(confirmText),
           ),
@@ -61,21 +55,13 @@ class DialogHelper {
       builder: (context) => AlertDialog(
         title: Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         content: Text(
           message,
-          style: TextStyle(
-            color: AppColors.neutral400,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.neutral400, fontSize: 14),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),

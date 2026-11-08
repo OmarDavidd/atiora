@@ -71,10 +71,12 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final confirmed = await DialogHelper.showConfirmation(
+    final confirmed =
+        await DialogHelper.showConfirmation(
           context: context,
           title: '¿Actualizar contraseña?',
-          message: 'Tu contraseña será actualizada inmediatamente. ¿Deseas continuar?',
+          message:
+              'Tu contraseña será actualizada inmediatamente. ¿Deseas continuar?',
           confirmText: 'Estoy seguro',
         ) ??
         false;
@@ -87,10 +89,16 @@ class _PasswordFormSheetState extends State<_PasswordFormSheet> {
       await sl<AuthProvider>().updatePassword(_passwordController.text);
       if (!mounted) return;
       Navigator.of(context).pop();
-      NotificationHelper.showSuccess(context, 'Contraseña actualizada con éxito');
+      NotificationHelper.showSuccess(
+        context,
+        'Contraseña actualizada con éxito',
+      );
     } catch (_) {
       if (!mounted) return;
-      NotificationHelper.showError(context, 'No pudimos actualizar la contraseña');
+      NotificationHelper.showError(
+        context,
+        'No pudimos actualizar la contraseña',
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

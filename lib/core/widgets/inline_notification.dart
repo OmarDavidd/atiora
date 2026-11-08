@@ -60,10 +60,7 @@ class InlineNotification extends StatelessWidget {
       decoration: BoxDecoration(
         color: _backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _iconColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: _iconColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         children: [
@@ -72,20 +69,13 @@ class InlineNotification extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                color: _iconColor,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: _iconColor, fontWeight: FontWeight.w500),
             ),
           ),
           if (onDismiss != null)
             GestureDetector(
               onTap: onDismiss,
-              child: Icon(
-                Icons.close,
-                color: _iconColor,
-                size: 18,
-              ),
+              child: Icon(Icons.close, color: _iconColor, size: 18),
             ),
         ],
       ),

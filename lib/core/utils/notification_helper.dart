@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:atiora/core/utils/app_colors.dart';
 
-enum NotificationType {
-  success,
-  error,
-  warning,
-  info,
-}
+enum NotificationType { success, error, warning, info }
 
 class NotificationHelper {
   static Color _getBackgroundColor(NotificationType type) {
@@ -46,11 +41,7 @@ class NotificationHelper {
       SnackBar(
         content: Row(
           children: [
-            Icon(
-              _getIcon(type),
-              color: AppColors.neutral0,
-              size: 20,
-            ),
+            Icon(_getIcon(type), color: AppColors.neutral0, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -66,9 +57,7 @@ class NotificationHelper {
         backgroundColor: _getBackgroundColor(type),
         behavior: SnackBarBehavior.floating,
         duration: duration,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -78,7 +67,12 @@ class NotificationHelper {
   }
 
   static void showError(BuildContext context, String message) {
-    show(context, message, type: NotificationType.error, duration: const Duration(seconds: 4));
+    show(
+      context,
+      message,
+      type: NotificationType.error,
+      duration: const Duration(seconds: 4),
+    );
   }
 
   static void showWarning(BuildContext context, String message) {
